@@ -1,0 +1,8 @@
+_MVS_ATTR_* -> Refers to attributes
+_MVS_MFUNC_* -> Refers to macro functions
+mcamelcase_t -> Refers to primitive or derived types
+mCapitalCase_t -> Refers to enums
+MVSCapitalCase -> Refers to structures and Unions
+mvs_* -> A function
+
+*Those macro functions that don't have the _MFUNC_ are special cases as they are much more like a function itself(having a simple body at the very least) and thus follow similar convention as a function
