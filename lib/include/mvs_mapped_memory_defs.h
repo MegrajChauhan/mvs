@@ -1,0 +1,11 @@
+#ifndef _MVS_MAPPED_MEMORY_DEFS_
+#define _MVS_MAPPED_MEMORY_DEFS_
+
+#define MVS_MMAPPED_FLAG_READ (1 << 0)
+#define MVS_MMAPPED_FLAG_WRITE (1 << 1)
+#define MVS_MMAPPED_FLAG_EXEC (1 << 2)
+#define MVS_MMAPPED_FLAG_SHARE (1 << 3)
+#define MVS_MMAPPED_FLAG_PRIVATE (1 << 4)
+#define MVS_MMAPPED_FLAG_SYNC (1 << 5)
+
+#endif

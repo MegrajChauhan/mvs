@@ -6,3 +6,9 @@ MVSCapitalCase -> Refers to structures and Unions
 mvs_* -> A function
 
 *Those macro functions that don't have the _MFUNC_ are special cases as they are much more like a function itself(having a simple body at the very least) and thus follow similar convention as a function
+
+MVS_*Comp*_CONF_* -> Refers to configuration flag for "Comp" component
+MVS_*Comp*_STATE_* -> Refers to the state of "Comp" component
+MVS_*Comp*_FLAG_* -> Refers to the flag that is used to change the behavior of the "Comp" component
+
+__mvs_*comp*_* -> Used to define labels for goto statements for component "comp"

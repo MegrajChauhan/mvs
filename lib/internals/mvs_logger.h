@@ -13,7 +13,6 @@ enum mLogLvl_t {
   MVS_LOG_WARN,
   MVS_LOG_ERR,
   MVS_LOG_DBG,
-  MVS_LOG_LPOINTS, // log points(extra information here and there)
 };
 
 _MVS_MFUNC_DEFINE_FUNC_PTR_(void, mlogFunc_t, mLogLvl_t, mstr_t, ...);
@@ -39,12 +38,11 @@ void mvs_logger_enable_info();
 #define MVS_NOTE(msg, ...)                                                     \
   do {                                                                         \
     if (logger.info_enabled)                                                   \
-      logger.logger(0, msg, __VA_ARGS__);                                      \
+      logger.logger(MVS_LOG_WARN, msg, __VA_ARGS__);                                      \
   } while (0)
 
 #define MVS_ERR(msg, ...) MVS_LOG(MVS_LOG_ERR, msg, __VA_ARGS__)
 #define MVS_WARN(msg, ...) MVS_LOG(MVS_LOG_WARN, msg, __VA_ARGS__)
 #define MVS_DBG(msg, ...) MVS_LOG(MVS_LOG_DBG, msg, __VA_ARGS__)
-#define MVS_LPOINTS(msg, ...) MVS_LOG(MVS_LOG_LPOINTS, msg, __VA_ARGS__)
 
 #endif

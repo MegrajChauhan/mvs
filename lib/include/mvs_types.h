@@ -9,7 +9,6 @@
 #define mfalse 0
 
 typedef unsigned char mbool_t; // bool
-typedef _Atomic mbool_t atm_mbool_t;
 
 // these are the memory data types
 typedef unsigned char mbyte_t;
@@ -30,6 +29,8 @@ typedef msize_t muid_t;  // UID of something
 typedef msize_t mguid_t; // Group ID of something
 
 typedef _Atomic msize_t atm_msize_t;
+typedef _Atomic mbool_t atm_mbool_t;
+typedef _Atomic mqword_t atm_mqword_t; 
 
 // define function pointers
 #define _MVS_MFUNC_DEFINE_FUNC_PTR_(ret, func_name, ...)                       \
