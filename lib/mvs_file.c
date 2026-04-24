@@ -8,11 +8,12 @@ mResult_t mvs_file_create(MVSFile **file, mqword_t conf) {
     return res;
   if ((res = mvs_interface_configure(*file, conf)) != MRES_SUCCESS)
     return res;
-  if ((res = mvs_interface_init(*file, MMINTERFACE_TYPE_FILE)) != MRES_SUCCESS) {
-     mvs_interface_destroy(*file);
-     *file = NULL;
+  if ((res = mvs_interface_init(*file, MMINTERFACE_TYPE_FILE)) !=
+      MRES_SUCCESS) {
+    mvs_interface_destroy(*file);
+    *file = NULL;
     return res;
-  }	
+  }
   return MRES_SUCCESS;
 }
 
@@ -25,22 +26,26 @@ mResult_t mvs_file_open(MVSFile *file, mstr_t file_path, mqword_t modes) {
   // the following isn't the best way to deal with flags
   // But lets deal with that in the future
   int open_modes = 0;
-  if (modes & MVS_FILE_MODE_APPEND) open_modes = O_APPEND;
-  if (modes & MVS_FILE_MODE_READ) open_modes |= O_RDONLY;
+  if (modes & MVS_FILE_MODE_APPEND)
+    open_modes = O_APPEND;
+  if (modes & MVS_FILE_MODE_READ)
+    open_modes |= O_RDONLY;
   if ((modes & MVS_FILE_MODE_WRITE) && (modes & MVS_FILE_MODE_APPEND)) {
     mvs_interface_free(file); // free the interface as stated
-    return MRES_INVALID_ARGS;  	
+    return MRES_INVALID_ARGS;
   } else {
-  	open_modes |= O_WRONLY;
+    open_modes |= O_WRONLY;
   }
-  if ((modes & MVS_FILE_MODE_READ_WRITE) && ((modes & MVS_FILE_MODE_WRITE) || (modes & MVS_FILE_MODE_READ) || (modes & MVS_FILE_MODE_APPEND))) {
+  if ((modes & MVS_FILE_MODE_READ_WRITE) &&
+      ((modes & MVS_FILE_MODE_WRITE) || (modes & MVS_FILE_MODE_READ) ||
+       (modes & MVS_FILE_MODE_APPEND))) {
     mvs_interface_free(file); // free the interface as stated
-    return MRES_INVALID_ARGS;  	    
+    return MRES_INVALID_ARGS;
   } else {
-  	open_modes |= O_RDWR;
+    open_modes |= O_RDWR;
   }
   if (modes & MVS_FILE_MODE_CREATE)
-     open_modes |= O_CREAT;
+    open_modes |= O_CREAT;
   file->file.fd = open(file_path, open_modes, MVS_FILE_MODE_PERMISSIONS);
   if (file->file.fd == -1) {
     mvs_interface_free(file); // free the interface as stated
@@ -49,10 +54,14 @@ mResult_t mvs_file_open(MVSFile *file, mstr_t file_path, mqword_t modes) {
 #else
 // not yet
 #endif
-  file->file.flags.append = (modes & MVS_FILE_MODE_APPEND)?1:0;
-  file->file.flags.write = (modes & MVS_FILE_MODE_WRITE)?1: (modes & MVS_FILE_MODE_READ_WRITE)? 1:0;
-  file->file.flags.read = (modes & MVS_FILE_MODE_READ)?1: (modes & MVS_FILE_MODE_READ_WRITE)? 1:0;
-  file->file.flags.new = (modes & MVS_FILE_MODE_CREATE)? 1:0;
+  file->file.flags.append = (modes & MVS_FILE_MODE_APPEND) ? 1 : 0;
+  file->file.flags.write = (modes & MVS_FILE_MODE_WRITE)        ? 1
+                           : (modes & MVS_FILE_MODE_READ_WRITE) ? 1
+                                                                : 0;
+  file->file.flags.read = (modes & MVS_FILE_MODE_READ)         ? 1
+                          : (modes & MVS_FILE_MODE_READ_WRITE) ? 1
+                                                               : 0;
+  file->file.flags.new = (modes & MVS_FILE_MODE_CREATE) ? 1 : 0;
   return MRES_SUCCESS;
 }
 
@@ -82,8 +91,8 @@ mResult_t mvs_file_destroy(MVSFile *file) {
   return MRES_SUCCESS;
 }
 
-mResult_t mvs_file_seek(MVSFile *file, msqword_t off,
-                          msize_t whence, msize_t* _len) {
+mResult_t mvs_file_seek(MVSFile *file, msqword_t off, msize_t whence,
+                        msize_t *_len) {
   if (!file)
     return MRES_INVALID_ARGS;
   if (file->interface != MINTERFACE_TYPE_FILE)
@@ -112,8 +121,8 @@ mResult_t mvs_file_tell(MVSFile *file, msize_t *off) {
   return MRES_SUCCESS;
 }
 
-mResult_t mvs_file_read(MVSFile *file, mbptr_t buf,
-                          msize_t num_of_bytes, msize_t *bytes_read) {
+mResult_t mvs_file_read(MVSFile *file, mbptr_t buf, msize_t num_of_bytes,
+                        msize_t *bytes_read) {
   if (!file || !buf)
     return MRES_INVALID_ARGS;
   if (file->interface != MINTERFACE_TYPE_FILE)
@@ -132,8 +141,8 @@ mResult_t mvs_file_read(MVSFile *file, mbptr_t buf,
   return MRES_SUCCESS;
 }
 
-mResult_t mvs_file_write(MVSFile *file, mbptr_t buf,
-                           msize_t num_of_bytes, msize_t *bytes_written) {
+mResult_t mvs_file_write(MVSFile *file, mbptr_t buf, msize_t num_of_bytes,
+                         msize_t *bytes_written) {
   if (!file || !buf)
     return MRES_INVALID_ARGS;
   if (file->interface != MINTERFACE_TYPE_FILE)

@@ -5,17 +5,17 @@
 #include <mvs_tools.h>
 #include <mvs_types.h>
 #include <stdlib.h>
-#include <strings.h>
+#include <string.h>
 
 #define _MVS_MFUNC_STACK_CHECK_FULL_(stack)                                    \
   (((stack)->sp + 1) >= (stack)->sp_max)
 #define _MVS_MFUNC_STACK_CHECK_EMPTY_(stack) ((stack)->sp == (msize_t)(-1))
 #define _MVS_MFUNC_STACK_CHECK_CAPACITY_(stack, n) (((stack)->sp + 1) >= (n))
-#define _MVS_MFUNC_STACK_CHECK_CAPACITY_LEFT_(stack, n)
-(((stack)->sp - (stack)->sp_max) >= (n))
+#define _MVS_MFUNC_STACK_CHECK_CAPACITY_LEFT_(stack, n)                        \
+  (((stack)->sp - (stack)->sp_max) >= (n))
 
-    // The stacks are going to be static only
-    typedef struct MVSStack MVSStack;
+// The stacks are going to be static only
+typedef struct MVSStack MVSStack;
 struct MVSStack {
   mptr_t buf;
   msize_t sp;

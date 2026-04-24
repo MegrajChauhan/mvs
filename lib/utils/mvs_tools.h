@@ -13,9 +13,9 @@
 #endif
 
 #if defined(_MVS_MODE_OPTIMIZE_)
-#define _MVS_ATTR_ALWAYS_INLINE_ inline __attribute__((always_inline))
-#else
 #define _MVS_ATTR_ALWAYS_INLINE_ static inline
+#else
+#define _MVS_ATTR_ALWAYS_INLINE_ static inline __attribute__((always_inline))
 #endif
 
 #define _MVS_ATTR_NO_DISCARD_ __attribute__((nodiscard))

@@ -10,11 +10,19 @@ enum mResult_t {
                      // ERRNO)
   MRES_COULDNT_COMPLETE, // operation didn't fail but it couldn't be
                          // completed(due to source specific reason)
-  MRES_RESOURCE_SHARED,  // The operation failed because the resource is shared and the requestor is not the sole owner of the resource
-  MRES_RESOURCE_STATE_INVALID, // the requested operand resources' state was invalid
-  MRES_RESOURCE_TYPE_INVALID, // the used operation doesn't take the provided type of operand 
-  MRES_RESOURCE_NOT_CONFIGURED, // The used operand was not configured for the requested operation
-  MRES_RESOURCE_SIZE_LIMITED,  // the resource's size is too small for the request
+  MRES_RESOURCE_SHARED,  // The operation failed because the resource is shared
+                         // and the requestor is not the sole owner of the
+                         // resource
+  MRES_RESOURCE_STATE_INVALID,  // the requested operand resources' state was
+                                // invalid
+  MRES_RESOURCE_TYPE_INVALID,   // the used operation doesn't take the provided
+                                // type of operand
+  MRES_RESOURCE_NOT_CONFIGURED, // The used operand was not configured for the
+                                // requested operation
+  MRES_RESOURCE_SIZE_LIMITED,   // the resource's size is too small for the
+                                // request
+  MRES_CONTAINER_FULL, // any buffer used is full and cannot store any more data
+  MRES_CONTAINER_EMPTY, // any buffer used is empty and cannot be read from
   // MRES_RESOURCE_NOT_EXISTS,    // operation failed because something was
   // accessed but it doesn't exist MRES_OPER_NOT_AVAI, // operation failed
   // because the requested operation isn't available for some reason

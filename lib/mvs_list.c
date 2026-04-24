@@ -1,7 +1,7 @@
 #include <mvs_list.h>
 
-mResult_t mvs_static_list_create(msize_t cap, msize_t elem_len,
-                                 MVSStaticList **lst) {
+mResult_t mvs_static_list_create(MVSStaticList **lst, msize_t cap,
+                                 msize_t elem_len) {
   if (!lst || cap == 0 || elem_len == 0)
     return MRES_INVALID_ARGS;
   *lst = (MVSStaticList *)malloc(sizeof(MVSStaticList));
@@ -52,21 +52,6 @@ mResult_t mvs_static_list_pop(MVSStaticList *lst, mptr_t elem) {
   return MRES_SUCCESS;
 }
 
-mResult_t mvs_static_list_at(MVSStaticList *lst, mptr_t elem, msize_t ind) {
-  if (!lst || !elem || (ind >= lst->cap))
-    return MRES_INVALID_ARGS;
-  memcpy(elem, (mptr_t)((mbptr_t)lst->buf + (ind * lst->elem_len)),
-         lst->elem_len);
-  return MRES_SUCCESS;
-}
-
-mResult_t mvs_static_list_ref_of(MVSStaticList *lst, mptr_t elem, msize_t ind) {
-  if (!lst || !elem || (ind >= lst->cap))
-    return MRES_INVALID_ARGS;
-  *(mbptr_t *)elem = (mbptr_t)lst->buf + (lst->elem_len * ind);
-  return MRES_SUCCESS;
-}
-
 mResult_t mvs_static_list_resize(MVSStaticList *lst, msize_t resize_factor) {
   if (!lst || !resize_factor)
     return MRES_INVALID_ARGS;
@@ -83,87 +68,15 @@ mResult_t mvs_static_list_resize(MVSStaticList *lst, msize_t resize_factor) {
   return MRES_SUCCESS;
 }
 
-_MVS_ATTR_ALWAYS_INLINE_ msize_t mvs_static_list_size(MVSStaticList *lst) {
-  if (!lst)
-    return (msize_t)-1;
-  return lst->curr_ind;
-}
-
-_MVS_ATTR_ALWAYS_INLINE_ msize_t mvs_static_list_index_of(MVSStaticList *lst,
-                                                          mptr_t elem) {
-  if (!lst || !elem)
-    return (msize_t)-1;
-  return (msize_t)(((mbptr_t)elem - (mbptr_t)lst->buf) / lst->elem_len);
-}
-
-mResult_t mvs_lf_list_create(msize_t cap, msize_t elem_len, MVSLFList **lst) {
-  if (!lst || cap == 0 || !elem_len)
+mResult_t mvs_dynamic_listl_create(MVSDynamicListLinear **lst, msize_t cap,
+                                   msize_t elem_len) {
+  if (!lst || !cap || !elem_len)
     return MRES_INVALID_ARGS;
-  *lst = (MVSLFList *)malloc(sizeof(MVSLFList));
+  *lst = (MVSDynamicListLinear *)malloc(sizeof(MVSDynamicListLinear));
   if (!(*lst)) {
     return MRES_SYS_FAILURE;
   }
-  (*lst)->buf = (mptr_t)calloc(cap, elem_len);
-
-  if (!(*lst)->buf) {
-    free(lst);
-    return MRES_SYS_FAILURE;
-  }
-  (*lst)->cap = cap;
-  (*lst)->curr_ind = 0;
-  (*lst)->elem_len = elem_len;
-  return MRES_SUCCESS;
-}
-
-mResult_t mvs_lf_list_destroy(MVSLFList *lst) {
-  if (!lst)
-    return MRES_INVALID_ARGS;
-  free(lst->buf);
-  free(lst);
-}
-
-mResult_t mvs_lf_list_push(MVSLFList *lst, mptr_t elem) {
-  if (!lst || !elem)
-    return MRES_INVALID_ARGS;
-  msize_t ind = atomic_fetch_add_explicit((_Atomic msize_t *)&lst->curr_ind, 1,
-                                          memory_order_relaxed);
-  if (ind >= lst->cap) {
-    atomic_fetch_sub_explicit((_Atomic msize_t *)&lst->curr_ind, 1,
-                              memory_order_relaxed);
-    return MRES_COULDNT_COMPLETE;
-  }
-  memcpy((mptr_t)((mbptr_t)lst->buf + (ind * lst->elem_len)), elem,
-         lst->elem_len);
-  return MRES_SUCCESS;
-}
-
-mResult_t mvs_lf_list_pop(MVSLFList *lst, mptr_t elem) {
-  if (!lst)
-    return MRES_INVALID_ARGS;
-  msize_t ind = atomic_fetch_sub_explicit((_Atomic msize_t *)curr_ind, 1,
-                                          memory_order_relaxed);
-  // since msize_t is just uint64_t so 0 - 1 would cause ind to be (msize_t)-1
-  // i.e 2^64 or whatever it is called I forgot
-  if (ind >= lst->cap) {
-    atomic_fetch_sub_explicit((_Atomic msize_t *)&lst->curr_ind, 1,
-                              memory_order_relaxed);
-    return MRES_COULDNT_COMPLETE;
-  }
-  if (elem)
-    memcpy(elem, (mptr_t)((mbptr_t)lst->buf + (ind * lst->elem_len)),
-           lst->elem_len);
-  return MRES_SUCCESS;
-}
-
-mResult_t mvs_dynamic_list_create(msize_t cap, msize_t elem_len,
-                                  MVSDynamicList **lst) {
-  if (cap == 0 || !elem_len || !lst)
-    return MRES_INVALID_ARGS;
-  *lst = (MVSDynamicList *)malloc(sizeof(MVSDynamicList));
-  if (!(*lst)) {
-    return MRES_SYS_FAILURE;
-  }
-  (*lst)->buf = (mptr_t)calloc(cap, elem_len);
+  (*lst)->buf = (mptr_t)malloc(cap * elem_len);
   if (!(*lst)->buf) {
     free(*lst);
     return MRES_SYS_FAILURE;
@@ -171,22 +84,24 @@ mResult_t mvs_dynamic_list_create(msize_t cap, msize_t elem_len,
   (*lst)->cap = cap;
   (*lst)->curr_ind = 0;
   (*lst)->elem_len = elem_len;
+  (*lst)->resize_factor = 2;
   return MRES_SUCCESS;
 }
 
-mResult_t mvs_dynamic_list_destroy(MVSDynamicList *lst) {
+mResult_t mvs_dynamic_listl_destroy(MVSDynamicListLinear *lst) {
   if (!lst)
     return MRES_INVALID_ARGS;
   free(lst->buf);
   free(lst);
 }
 
-mResult_t mvs_dynamic_list_push(MVSDynamicList *lst, mptr_t elem) {
+mResult_t mvs_dynamic_listl_push(MVSDynamicListLinear *lst, mptr_t elem) {
   if (!lst || !elem)
     return MRES_INVALID_ARGS;
   if (lst->curr_ind >= lst->cap) {
     mResult_t res;
-    if ((res = mvs_dynamic_list_resize(lst, 2)) != MRES_SUCCESS)
+    if ((res = mvs_dynamic_list_resize(lst, lst->resize_factor)) !=
+        MRES_SUCCESS)
       return res;
   }
   memcpy((mptr_t)((mbptr_t)lst->buf + (lst->curr_ind * lst->elem_len)), elem,
@@ -195,7 +110,7 @@ mResult_t mvs_dynamic_list_push(MVSDynamicList *lst, mptr_t elem) {
   return MRES_SUCCESS;
 }
 
-mResult_t mvs_dynamic_list_pop(MVSDynamicList *lst, mptr_t elem) {
+mResult_t mvs_dynamic_listl_pop(MVSDynamicListLinear *lst, mptr_t elem) {
   if (!lst)
     return MRES_INVALID_ARGS;
   if (lst->curr_ind == 0)
@@ -207,23 +122,10 @@ mResult_t mvs_dynamic_list_pop(MVSDynamicList *lst, mptr_t elem) {
   return MRES_SUCCESS;
 }
 
-mResult_t mvs_dynamic_list_at(MVSDynamicList *lst, mptr_t elem, msize_t ind) {
-  if (!lst || !elem || (ind >= lst->cap))
-    return MRES_INVALID_ARGS;
-  memcpy(elem, (mptr_t)((mbptr_t)lst->buf + (ind * lst->elem_len)),
-         lst->elem_len);
-  return MRES_SUCCESS;
-}
+mResult_t mvs_dynamic_listl_size(MVSDynamicListLinear *lst, msize_t *res) {}
 
-mResult_t mvs_dynamic_list_ref_of(MVSDynamicList *lst, mptr_t *elem,
-                                  msize_t ind) {
-  if (!lst || !elem || (ind >= lst->cap))
-    return MRES_INVALID_ARGS;
-  *(mbptr_t *)elem = (mptr_t)((mbptr_t)lst->buf + (ind * lst->elem_len));
-  return MRES_SUCCESS;
-}
-
-mResult_t mvs_dynamic_list_resize(MVSDynamicList *lst, msize_t resize_factor) {
+mResult_t mvs_dynamic_listl_resize(MVSDynamicListLinear *lst,
+                                   msize_t resize_factor) {
   if (!lst)
     return MRES_INVALID_ARGS;
   mptr_t new_buf = (mptr_t)malloc(lst->elem_len * lst->cap * resize_factor);
@@ -237,15 +139,121 @@ mResult_t mvs_dynamic_list_resize(MVSDynamicList *lst, msize_t resize_factor) {
   return MRES_SUCCESS;
 }
 
-_MVS_ATTR_ALWAYS_INLINE_ msize_t mvs_dynamic_list_size(MVSDynamicList *lst) {
-  if (!lst)
-    return (msize_t)(-1);
-  return lst->curr_ind;
+_MVS_ATTR_INTERNAL_ void
+mvs_dynamic_listll_push_to_free_list(MVSDynamicListLinkedList *lst,
+                                     MVSDynamicListLinkedListNode *node) {
+  if (lst->free_list_len == lst->free_list_limit) {
+    free(node); // cannot store the node
+    return;
+  }
+  node->next = lst->free_list;
+  node->prev = NULL;
+  lst->free_list->prev = node;
+  lst->free_list = node;
+  lst->free_list_len++;
+  return;
 }
 
-_MVS_ATTR_ALWAYS_INLINE_ msize_t mvs_dynamic_list_index_of(MVSDynamicList *lst,
-                                                           mptr_t elem) {
+_MVS_ATTR_INTERNAL_ MVSDynamicListLinkedListNode *
+mvs_dynamic_listll_get_new_node(MVSDynamicListLinkedList *lst) {
+  MVSDynamicListLinkedListNode *res = NULL;
+  if (lst->free_list_len) {
+    res = lst->free_list;
+    if (res->next)
+      res->next->prev = NULL;
+    lst->free_list = res->next;
+    lst->free_list_len--;
+    if (!lst->free_list_len) {
+      lst->free_list = NULL;
+    }
+  } else {
+    res = (MVSDynamicListLinkedListNode *)malloc(
+        sizeof(MVSDynamicListLinkedListNode) + lst->elem_len);
+    if (res) {
+      /// TODO: Maybe here it isn't 8 but 1
+      // Since gcc incorporates data type length by default during address
+      // calculations. &(mbptr_t)res->data becomes a pointer to a pointer i.e
+      // has a size of 8-bytes. Which means +8 would add 8*8 instead which
+      // wouldn't be ideal.
+      res->data = (mptr_t)(&(mbptr_t)res->data +
+                           8); // We have a buffer after the 'data' field that
+                               // stores the data
+    }
+  }
+  return res;
+}
+
+mResult_t mvs_dynamic_listll_create(MVSDynamicListLinkedList **lst,
+                                    msize_t elem_len) {
+  if (!lst || !elem_len)
+    return MRES_INVALID_ARGS;
+  MVSDynamicListLinkedList *l =
+      (MVSDynamicListLinkedList *)malloc(sizeof(MVSDynamicListLinkedList));
+  if (!l)
+    return MRES_SYS_FAILURE;
+  l->chain = NULL;
+  l->free_list = NULL;
+  l->data_count = 0;
+  l->elem_len = elem_len;
+  l->free_list_len = 0;
+  l->free_list_limit = 10; // by default
+  *lst = l;
+  return MRES_SUCCESS;
+}
+
+mResult_t mvs_dynamic_listll_destroy(MVSDynamicListLinkedList *lst) {
+  if (!lst)
+    return MRES_INVALID_ARGS;
+  MVSDynamicListLinkedListNode *curr = lst->head;
+  while (curr) {
+    MVSDynamicListLinkedListNode *tmp = curr->next;
+    free(curr);
+    curr = tmp;
+  }
+  curr = lst->free_list;
+  while (curr) {
+    MVSDynamicListLinkedListNode *tmp = curr->next;
+    free(curr);
+    curr = tmp;
+  }
+  free(lst);
+  return MRES_SUCCESS;
+}
+
+mResult_t mvs_dynamic_listll_push(MVSDynamicListLinkedList *lst, mptr_t elem) {
   if (!lst || !elem)
-    return 0;
-  return (msize_t)(((mbptr_t)elem - (mbptr_t)lst->buf) / lst->elem_len);
+    return MRES_INVALID_ARGS;
+  MVSDynamicListLinkedListNode *new_node = mvs_dynamic_listll_get_new_node(buf);
+  if (!new_node)
+    return MRES_SYS_FAILURE;
+  memcpy(new_node->data, elem, buf->elem_len);
+  if (!lst->data_count) {
+    new_node->next = NULL;
+    new_node->prev = NULL;
+    lst->chain = new_node;
+    head = new_node;
+  } else {
+    new_node->prev = lst->chain;
+    lst->chain->next = new_node;
+    lst->chain = new_node;
+  }
+  buf->data_count++;
+  return MRES_SUCCESS;
+}
+
+mResult_t mvs_dynamic_listll_pop(MVSDynamicListLinkedList *lst, mptr_t elem) {
+  if (!lst || !elem)
+    return MRES_INVALID_ARGS;
+  if (!lst->data_count)
+    return MRES_CONTAINER_EMPTY;
+  MVSDynamicListLinkedListNode *data_node = lst->chain;
+  memcpy(elem, data_node->data, lst->elem_len);
+  lst->head = lst->head->next;
+  mvs_dynamic_listll_push_to_free_list(lst, data_node);
+  lst->data_count--;
+  if (!lst->data_count) {
+    buf->head = NULL;
+    buf->chain = NULL;
+  }
+  return MRES_SUCCESS;
 }

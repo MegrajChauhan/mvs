@@ -30,11 +30,8 @@ typedef msize_t mguid_t; // Group ID of something
 
 typedef _Atomic msize_t atm_msize_t;
 typedef _Atomic mbool_t atm_mbool_t;
-typedef _Atomic mqword_t atm_mqword_t; 
-
-// define function pointers
-#define _MVS_MFUNC_DEFINE_FUNC_PTR_(ret, func_name, ...)                       \
-  typedef ret (*func_name)(__VA_ARGS__);
+typedef _Atomic mqword_t atm_mqword_t;
+typedef _Atomic mbyte_t atm_mbyte_t;
 
 // pointers for memory types
 typedef mbyte_t *mbptr_t;
@@ -52,9 +49,9 @@ typedef void *mptr_t;
 #else
 #endif
 
-_MVS_MFUNC_DEFINE_FUNC_PTR_(mthreadRet_t, mthexec_t, mptr_t);
-_MVS_MFUNC_DEFINE_FUNC_PTR_(mResult_t, mhcleanfunc_t, mptr_t);
-_MVS_MFUNC_DEFINE_FUNC_PTR_(msize_t, mhhfunc_t, mptr_t, msize_t);
-_MVS_MFUNC_DEFINE_FUNC_PTR_(mbool_t, mhkeycmpfunc_t, mptr_t, mptr_t);
+typedef mthreadRet_t (*mthexec_t)(mptr_t);
+typedef mResult_t (*mhcleanfunc_t)(mptr_t);
+typedef msize_t (*mhhashfunc_t)(msize_t);
+typedef mbool_t (*mhkeycmpfunc_t)(mptr_t, mptr_t);
 
 #endif

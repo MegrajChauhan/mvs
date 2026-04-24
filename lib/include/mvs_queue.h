@@ -1,131 +1,144 @@
 #ifndef _MVS_QUEUE_
 #define _MVS_QUEUE_
 
-#include <mvs_results.h>
-#include <mvs_tools.h>
-#include <mvs_types.h>
-#include <stdatomic.h>
-#include <stdlib.h>
-#include <string.h>
+#include <mvs_queuefer.h>
 
 /*
- * We will need:
- * 1. Dynamic Queue using Linked Lists
- * 2. Static Queue
- * 3. Lock free static queue
- * Lock free Dynamic queue will be extremely hard
- * */
-
-/*----------DYNAMIC QUEUE------------*/
-/*
- * The Dynamic Queue only stores pointers although 8-byte numbers could be
- * stored. That would require using MVSPtrToQword or something similar for the
- * conversion
+ * Available queue types:
+ * Static Queue(ring-queuefer)
+ * Dynamic Queue(ring-queuefer and linked list)
+ * Multi-threaded queues(A generic queue that can be used for SPSC, SPMC, MPSC,
+ * MPMC)
  */
-typedef struct MVSLLQueueNode MVSLLQueueNode;
-typedef struct MVSLLQueue MVSLLQueue;
-struct MVSLLQueueNode {
-  MVSLLQueueNode *next_node, *prev_node;
-  mptr_t data;
-};
 
-struct MVSLLQueue {
-  MVSLLQueueNode *head, *tail;
-  MVSLLQueueNode *free_list;
-  msize_t data_avai;
-  msize_t free_list_lim;
-  msize_t free_list_avai;
-  /*
-   * Here the free_list acts exactly what it sounds like- a list of free nodes
-   * Constant allocating and freeing of nodes would be too inefficient but then
-   * not freeing at all would also be too devastating, thus, free_list_lim is
-   * used to limit how much nodes can be stored. That should be a configurable
-   * option though it is hardcoded to be 10 at the moment
-   */
-};
+typedef MVSSimpleStaticqueuefer MVSStaticQueue;
+typedef MVSSimpleDynamicBufferLinear MVSDynamicQueueLinear;
+typedef MVSSimpleDynamicBufferLinkedList MVSDynamicQueueLinkedList;
+typedef MVSHybridConcurrencyModelBuffer MVSHybridConcurrencyModelQueue;
 
-mResult_t mvs_llqueue_init(MVSLLQueue **queue);
-/*
- * Here 'data' should be a pointer to a pointer. Eg:
- * int *tmp = malloc(400);
- * mvs_llqueue_push(queue, &tmp);
- * Thus the queue will store the pointer itself
- */
-mResult_t mvs_llqueue_push(MVSLLQueue *queue, mptr_t data);
-/*
- * Here, _store_in must be a pointer to a pointer. As the queue stores pointers
- * directly, it will also return the pointer directly
- */
-mResult_t mvs_llqueue_pop(MVSLLQueue *queue, mptr_t _store_in);
-mResult_t mvs_llqueue_clear(MVSLLQueue *queue);
-mResult_t mvs_llqueue_destroy(MVSLLQueue *queue);
+#define _MVS_MFUNC_STATIC_QUEUE_CHECK_ISFULL_(queue)                           \
+  _MVS_MFUNC_SIMPLE_STATIC_queue_CHECK_ISFULL_(queue)
+#define _MVS_MFUNC_STATIC_QUEUE_CHECK_ISEMPTY_(queue)                          \
+  _MVS_MFUNC_SIMPLE_STATIC_queue_CHECK_ISEMPTY_(queue)
 
-/*----------END DYNAMIC QUEUE------------*/
+_MVS_ATTR_ALWAYS_INLINE_ mResult_t
+mvs_static_queue_create(MVSStaticQueue **queue, msize_t cap, msize_t elem_len) {
+  return mvs_simple_static_queue_create(queue, cap, elem_len);
+}
 
-/*----------STATIC QUEUE------------*/
-typedef struct MVSSQueue MVSSQueue;
+_MVS_ATTR_ALWAYS_INLINE_ mResult_t
+mvs_static_queue_destroy(MVSStaticQueue *queue) {
+  return mvs_simple_static_buf_destroy(queue);
+}
 
-struct MVSSQueue {
-  msize_t head, rear;
-  mptr_t buf;
-  msize_t buf_cap;
-  msize_t elem_len;
-};
+_MVS_ATTR_ALWAYS_INLINE_ mResult_t
+mvs_static_queue_dequeue(MVSStaticQueue *queue, mptr_t store_in) {
+  return mvs_simple_static_buf_read(queue, store_in);
+}
 
-#define _MVS_MFUNC_STATIC_QUEUE_CHECK_EMPTY_(queue)                            \
-  ((queue)->head == (mqword_t)(-1))
-#define _MVS_MFUNC_STATIC_QUEUE_CHECK_FULL_(queue)
-((((queue)->rear + 1) % (queue)->buf_cap) == (queue)->head)
-#define _MVS_MFUNC_STATIC_QUEUE_CLEAR_(queue)
-    ((queue)->head = (queue)->rear = (mqword_t)(-1))
+_MVS_ATTR_ALWAYS_INLINE_ mResult_t
+mvs_static_queue_enqueue(MVSStaticQueue *queue, mptr_t elem) {
+  return mvs_simple_static_buf_write(queue, elem);
+}
 
-        mResult_t mvs_squeue_create(MVSSQueue **queue, msize_t cap,
-                                    msize_t elen);
+_MVS_ATTR_ALWAYS_INLINE_ mResult_t
+mvs_static_queue_flush(MVSStaticQueue *queue) {
+  return mvs_simple_static_buf_flush(queue);
+}
 
-/*
- * This doesn't remove the element but returns a pointer to it.
- * Thus elem must be a pointer to a pointer
- */
-mResult_t mvs_squeue_top(MVSSQueue *queue, mptr_t elem);
+#define _MVS_MFUNC_DYNAMIC_LQUEUE_CHECK_ISFULL_(queue)                         \
+  _MVS_MFUNC_SIMPLE_DYNAMIC_Lqueue_CHECK_ISFULL_(queue)
+#define _MVS_MFUNC_DYNAMIC_LQUEUE_CHECK_ISEMPTY_(queue)                        \
+  _MVS_MFUNC_SIMPLE_DYNAMIC_Lqueue_CHECK_ISEMPTY_(queue)
 
-mResult_t mvs_squeue_enqueue(MVSSQueue *queue, mptr_t elem);
+_MVS_ATTR_ALWAYS_INLINE_
+    mResult_t mvs_dynamic_lqueue_create(MVSDynamicQueueLinear **queue,
+                                        msize_t cap, msize_t elem_len) {
+  return mvs_simple_dynamic_lbuf_create(queue, cap, elem_len);
+}
 
-mResult_t mvs_squeue_dequeue(MVSSQueue *queue, mptr_t elem);
+_MVS_ATTR_ALWAYS_INLINE_ mResult_t
+mvs_dynamic_lqueue_destroy(MVSDynamicQueueLinear *queue) {
+  return mvs_simple_dynamic_lbuf_destroy(queue);
+}
 
-mResult_t mvs_squeue_destroy(MVSSQueue *queue);
+_MVS_ATTR_ALWAYS_INLINE_ mResult_t
+mvs_dynamic_lqueue_dequeue(MVSDynamicQueueLinear *queue, mptr_t store_in) {
+  return mvs_simple_dynamic_lbuf_read(queue, store_in);
+}
 
-/*----------END STATIC QUEUE------------*/
+_MVS_ATTR_ALWAYS_INLINE_ mResult_t
+mvs_dynamic_lqueue_enqueue(MVSDynamicQueueLinear *queue, mptr_t elem) {
+  return mvs_simple_dynamic_lbuf_write(queue, elem);
+}
 
-/*----------LF STATIC QUEUE------------*/
-/*
- * This queue shares the same property of the MVSLFList which is that there
- * should only be one consumer while there could be multiple producers
- */
-typedef struct MVSSQueueAtm MVSSQueueAtm;
+_MVS_ATTR_ALWAYS_INLINE_ mResult_t
+mvs_dynamic_lqueue_flush(MVSDynamicQueueLinear *queue) {
+  return mvs_simple_dynamic_lbuf_flush(queue);
+}
 
-struct MVSSQueueAtm {
-  _Atomic msize_t head, rear;
-  mptr_t buf;
-  msize_t buf_cap;
-  msize_t elem_len;
-};
+_MVS_ATTR_ALWAYS_INLINE_ mResult_t
+mvs_dynamic_lqueue_resize(MVSDynamicQueueLinear *queue, msize_t factor) {
+  return mvs_simple_dynamic_lbuf_resize(queue, factor);
+}
 
-#define _MVS_MFUNC_STATIC_QUEUE_ATM_CHECK_EMPTY_(queue, idx)                   \
-  ((queue)->head == (idx))
-#define _MVS_MFUNC_STATIC_QUEUE_ATM_CHECK_FULL_(queue, idx)
-(((idx + 1) % (queue)->buf_cap) == (queue)->head)
-#define _MVS_MFUNC_STATIC_QUEUE_ATM_CLEAR_(queue)
-    ((queue)->head = (queue)->rear = (mqword_t)(-1))
+#define _MVS_MFUNC_DYNAMIC_LLQUEUE_CHECK_ISEMPTY_(queue)                       \
+  _MVS_MFUNC_SIMPLE_DYNAMIC_LLBUF_CHECK_ISEMPTY_(queue)
 
-        mResult_t merry_squeue_atm_create(MVSSQueueAtm **queue, msize_t cap,
-                                          msize_t elen);
+_MVS_ATTR_ALWAYS_INLINE_
+    mResult_t mvs_dynamic_llqueue_create(MVSDynamicQueueLinkedList **queue,
+                                         msize_t elem_len) {
+  return mvs_simple_dynamic_llbuf_create(queue, elem_len);
+}
 
-mResult_t mvs_squeue_atm_enqueue(MVSSQueueAtm *queue, mptr_t elem);
+_MVS_ATTR_ALWAYS_INLINE_ mResult_t
+mvs_dynamic_llqueue_destroy(MVSDynamicQueueLinkedList *queue) {
+  return mvs_simple_dynamic_llbuf_destroy(queue);
+}
 
-mResult_t mvs_squeue_atm_dequeue(MVSSQueueAtm *queue, mptr_t elem);
+_MVS_ATTR_ALWAYS_INLINE_ mResult_t
+mvs_dynamic_llqueue_dequeue(MVSDynamicQueueLinkedList *queue, mptr_t store_in) {
+  return mvs_simple_dynamic_llbuf_read(queue, store_in);
+}
 
-mResult_t mvs_squeue_atm_destroy(MVSSQueueAtm *queue);
+_MVS_ATTR_ALWAYS_INLINE_ mResult_t
+mvs_dynamic_llqueue_enqueue(MVSDynamicQueueLinkedList *queue, mptr_t elem) {
+  return mvs_simple_dynamic_llbuf_write(queue, elem);
+}
 
-/*----------END LF STATIC QUEUE------------*/
+_MVS_ATTR_ALWAYS_INLINE_ mResult_t
+mvs_dynamic_llqueue_flush(MVSDynamicQueueLinkedList *queue) {
+  return mvs_simple_dynamic_llbuf_flush(queue);
+}
+
+#define _MVS_HYBRID_CONCURRENCY_MODEL_QUEUE_CHECK_ISFULL_(queue)               \
+  _MVS_HYBRID_CONCURRENCY_MODEL_BUF_CHECK_ISFULL_(queue)
+#define _MVS_HYBRID_CONCURRENCY_MODEL_QUEUE_CHECK_ISEMPTY_(queue)              \
+  _MVS_HYBRID_CONCURRENCY_MODEL_BUF_CHECK_ISEMPTY_(queue)
+
+_MVS_ATTR_ALWAYS_INLINE_ mResult_t mvs_hybrid_concurrency_model_queue_create(
+    MVSHybridConcurrencyModelQueue **queue, msize_t cap, msize_t elem_len) {
+  return mvs_hybrid_concurrency_model_buf_create(queue, cap, elem_len);
+}
+
+_MVS_ATTR_ALWAYS_INLINE_ mResult_t mvs_hybrid_concurrency_model_queue_destroy(
+    MVSHybridConcurrencyModelQueue *queue) {
+  return mvs_hybrid_concurrency_model_buf_destroy(queue);
+}
+
+_MVS_ATTR_ALWAYS_INLINE_ mResult_t mvs_hybrid_concurrency_model_queue_dequeue(
+    MVSHybridConcurrencyModelQueue *queue, mptr_t store_in) {
+  return mvs_hybrid_concurrency_model_buf_read(queue, store_in);
+}
+
+_MVS_ATTR_ALWAYS_INLINE_ mResult_t mvs_hybrid_concurrency_model_queue_enqueue(
+    MVSHybridConcurrencyModelQueue *queue, mptr_t elem) {
+  return mvs_hybrid_concurrency_model_buf_write(queue, elem);
+}
+
+_MVS_ATTR_ALWAYS_INLINE_ mResult_t mvs_hybrid_concurrency_model_queue_add_owner(
+    MVSHybridConcurrencyModelQueue *queue) {
+  return mvs_hybrid_concurrency_model_buf_add_owner(queue);
+}
 
 #endif

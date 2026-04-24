@@ -2,10 +2,10 @@
 #define _MVS_LIST_
 
 /*
- * We are gonna have:
+ * Available list types:
  * 1. Static list
  * 2. lock free static list here
- * 3. Dynamic list(not lock free)
+ * 3. Dynamic list(linear and linked list)
  * */
 
 #include <mvs_logger.h>
@@ -16,8 +16,11 @@
 #include <stdlib.h>
 #include <string.h> // memcpy
 
-/*------------------STATIC LIST---------------------*/
 typedef struct MVSStaticList MVSStaticList;
+typedef struct MVSDynamicListLinear MVSDynamicListLinear;
+typedef struct MVSDynamicListLinkedListNode MVSDynamicListLinkedListNode;
+typedef struct MVSDynamicListLinkedList MVSDynamicListLinkedList;
+typedef struct MVSHybridConcurrencyModelList MVSHybridConcurrencyModelList;
 
 struct MVSStaticList {
   msize_t cap;
@@ -26,94 +29,136 @@ struct MVSStaticList {
   mptr_t buf;
 };
 
-mResult_t mvs_static_list_create(msize_t cap, msize_t elem_len,
-                                 MVSStaticList **lst);
+#define _MVS_MFUNC_STATIC_LIST_CHECK_ISFULL_(lst)                              \
+  ((lst) && ((lst)->curr_ind == (lst)->cap))
+#define _MVS_MFUNC_STATIC_LIST_CHECK_ISEMPTY_(lst)                             \
+  ((lst) && ((lst)->curr_ind == 0))
+
+mResult_t mvs_static_list_create(MVSStaticList **lst, msize_t cap,
+                                 msize_t elem_len);
 mResult_t mvs_static_list_destroy(MVSStaticList *lst);
-
-/*
- * It should be a pointer like:
- * For 'int' list:
- * int a = 90; // to store 90
- * mvs_static_list_push(lst, &a);
- * The list will copy the value and store it
- * If you want to store a pointer(valid and allocated), just use pointers
- */
 mResult_t mvs_static_list_push(MVSStaticList *lst, mptr_t elem);
-/*
- * The same logic applies to mvs_static_list_pop as it applied to
- * mvs_static_list_push Here, the function will dereference the pointer to store
- * the popped element instead It can be NULL to indicate that the popped element
- * is not desired
- */
 mResult_t mvs_static_list_pop(MVSStaticList *lst, mptr_t elem);
-mResult_t mvs_static_list_at(MVSStaticList *lst, mptr_t elem, msize_t ind);
 mResult_t mvs_static_list_resize(MVSStaticList *lst, msize_t resize_factor);
-/*
- * The reason that some functions(like below) don't use mResult_t is because for
- * functions such as this that only access a property without doing major
- * changes or accesses are okay to not use mResult_t(as the function can't even
- * fail in more than 1 way) But why mvs_static_list_destroy used mResult_t even
- * with just one way to fail? That's because it performed the radical operation
- * of destroying the resource itself which requires observation
- */
-msize_t mvs_static_list_size(MVSStaticList *lst);
-/*
- * Here, the function returns a reference to the element.
- * The pointer provided as 'elem' should be a reference to a pointer that points
- * to the stored element type
- */
-mResult_t mvs_static_list_ref_of(MVSStaticList *lst, mptr_t elem, msize_t ind);
 
-/*
- * the mvs_*_list_index_of function takes elem pointer which must be a pointer
- * returned by mvs_*_list_ref_of and not a pointer to a pointer
- */
-msize_t mvs_static_list_index_of(MVSStaticList *lst, mptr_t elem);
+_MVS_ATTR_ALWAYS_INLINE_ mResult_t mvs_static_list_size(MVSStaticList *lst,
+                                                        msize_t *res) {
+  if (!lst || !res)
+    return MRES_INVALID_ARGS;
+  *res = lst->curr_ind;
+  return MRES_SUCCESS;
+}
 
-/*-----------------END STATIC LIST--------------------*/
+_MVS_ATTR_ALWAYS_INLINE_ mResult_t mvs_static_list_ref_of(MVSStaticList *lst,
+                                                          mptr_t elem,
+                                                          msize_t ind) {
+  if (!lst || !elem || (ind >= lst->curr_ind))
+    return MRES_INVALID_ARGS;
+  *(mbptr_t *)elem = (mbptr_t)lst->buf + ind * lst->elem_len;
+  return MRES_SUCCESS;
+}
 
-/*------------------LF STATIC LIST---------------------*/
-/*
- * The only use of this list is if there is only one owner that pops elements
- * whereas any number of owners may push. As there is no way to tell the state
- * of the list without either push or pop operation, one should decide who will
- * be the producer and who will be the consumer
- */
-typedef struct MVSLFList MVSLFList;
-struct MVSLFList {
+_MVS_ATTR_ALWAYS_INLINE_ mResult_t mvs_static_list_index_of(MVSStaticList *lst,
+                                                            mptr_t elem,
+                                                            msize_t *idx) {
+  if (!lst || !elem || !idx)
+    return MRES_INVALID_ARGS;
+  msize_t i = (msize_t)(((mbptr_t)elem - (mbptr_t)lst->buf) / lst->elem_len);
+  if (i >= lst->cap)
+    return MRES_INVALID_ARGS;
+  *idx = i;
+  return MRES_SUCCESS;
+}
+
+_MVS_ATTR_ALWAYS_INLINE_ mResult_t mvs_static_list_at(MVSStaticList *lst,
+                                                      mptr_t elem,
+                                                      msize_t ind) {
+  if (!lst || !elem || (ind >= lst->cap))
+    return MRES_INVALID_ARGS;
+  memcpy(elem, (mptr_t)((mbptr_t)lst->buf + (ind * lst->elem_len)),
+         lst->elem_len);
+  return MRES_SUCCESS;
+}
+
+struct MVSDynamicListLinear {
   msize_t cap;
   msize_t curr_ind;
   msize_t elem_len;
+  msize_t resize_factor; // by default: 2
   mptr_t buf;
 };
 
-mResult_t mvs_lf_list_create(msize_t cap, msize_t elem_len, MVSLFList **lst);
-mResult_t mvs_lf_list_destroy(MVSLFList *lst);
-mResult_t mvs_lf_list_push(MVSLFList *lst, mptr_t elem);
-mResult_t mvs_lf_list_pop(MVSLFList *lst, mptr_t elem);
+#define _MVS_MFUNC_DYNAMIC_LISTL_CHECK_ISFULL_(lst)                            \
+  ((lst) && ((lst)->curr_ind == (lst)->cap))
+#define _MVS_MFUNC_DYNAMIC_LISTL_CHECK_ISEMPTY_(lst)                           \
+  ((lst) && ((lst)->curr_ind == 0))
 
-/*-----------------END LF STATIC LIST--------------------*/
+mResult_t mvs_dynamic_listl_create(MVSDynamicListLinear **lst, msize_t cap,
+                                   msize_t elem_len);
+mResult_t mvs_dynamic_listl_destroy(MVSDynamicListLinear *lst);
+mResult_t mvs_dynamic_listl_push(MVSDynamicListLinear *lst, mptr_t elem);
+mResult_t mvs_dynamic_listl_pop(MVSDynamicListLinear *lst, mptr_t elem);
+mResult_t mvs_dynamic_listl_resize(MVSDynamicListLinear *lst,
+                                   msize_t resize_factor);
 
-/*------------------DYNAMIC LIST---------------------*/
-typedef struct MVSDynamicList MVSDynamicList;
-struct MVSDynamicList {
-  msize_t cap;
-  msize_t curr_ind;
+_MVS_ATTR_ALWAYS_INLINE_ mResult_t
+mvs_dynamic_listl_size(MVSDynamicListLinear *lst, msize_t *res) {
+  if (!lst || !res)
+    return MRES_INVALID_ARGS;
+  *res = lst->curr_ind;
+  return MRES_SUCCESS;
+}
+
+_MVS_ATTR_ALWAYS_INLINE_ mResult_t
+mvs_dynamic_listl_ref_of(MVSDynamicListLinear *lst, mptr_t elem, msize_t ind) {
+  if (!lst || !elem || (ind >= lst->cap))
+    return MRES_INVALID_ARGS;
+  *(mbptr_t *)elem = (mptr_t)((mbptr_t)lst->buf + (ind * lst->elem_len));
+  return MRES_SUCCESS;
+}
+
+_MVS_ATTR_ALWAYS_INLINE_ mResult_t
+mvs_dynamic_listl_at(MVSDynamicListLinear *lst, mptr_t elem, msize_t ind) {
+  if (!lst || !elem || (ind >= lst->cap))
+    return MRES_INVALID_ARGS;
+  memcpy(elem, (mptr_t)((mbptr_t)lst->buf + (ind * lst->elem_len)),
+         lst->elem_len);
+  return MRES_SUCCESS;
+}
+
+struct MVSDynamicListLinkedListNode {
+  MVSDynamicListLinkedListNode *next, *prev;
+  mptr_t data;
+};
+
+struct MVSDynamicListLinkedList {
+  MVSDynamicListLinkedListNode *chain, *head;
+  MVSDynamicListLinkedListNode *free_list;
+  msize_t data_count;
   msize_t elem_len;
-  mptr_t buf;
+  msize_t free_list_len;
+  msize_t free_list_limit; // 10 by default
 };
-mResult_t mvs_dynamic_list_create(msize_t cap, msize_t elem_len,
-                                  MVSDynamicList **lst);
-mResult_t mvs_dynamic_list_destroy(MVSDynamicList *lst);
-mResult_t mvs_dynamic_list_push(MVSDynamicList *lst, mptr_t elem);
-mResult_t mvs_dynamic_list_pop(MVSDynamicList *lst, mptr_t elem);
-mResult_t mvs_dynamic_list_at(MVSDynamicList *lst, mptr_t elem, msize_t ind);
-mResult_t mvs_dynamic_list_resize(MVSDynamicList *lst, msize_t resize_factor);
-msize_t mvs_dynamic_list_size(MVSDynamicList *lst);
-mResult_t mvs_dynamic_list_ref_of(MVSDynamicList *lst, mptr_t *elem,
-                                  msize_t ind);
-msize_t mvs_dynamic_list_index_of(MVSDynamicList *lst, mptr_t elem);
 
-/*-----------------END DYNAMIC LIST--------------------*/
+#define _MVS_MFUNC_DYNAMIC_LISTLL_CHECK_ISEMPTY_(lst) ((lst) && !(lst)->chain)
+
+mResult_t mvs_dynamic_listll_create(MVSDynamicListLinkedList **lst,
+                                    msize_t elem_len);
+mResult_t mvs_dynamic_listll_destroy(MVSDynamicListLinkedList *lst);
+mResult_t mvs_dynamic_listll_push(MVSDynamicListLinkedList *lst, mptr_t elem);
+mResult_t mvs_dynamic_listll_pop(MVSDynamicListLinkedList *lst, mptr_t elem);
+
+_MVS_ATTR_ALWAYS_INLINE_ mResult_t
+mvs_dynamic_listll_size(MVSDynamicListLinkedList *lst, msize_t *res) {
+  if (!lst || !res)
+    return MRES_INVALID_ARGS;
+  *res = lst->data_count;
+  return MRES_SUCCESS;
+}
+
+/*
+ * Lock-free lists are a nightmare to implement. Just use synchronization
+ * primitives and the above basic structures.
+ */
 
 #endif
