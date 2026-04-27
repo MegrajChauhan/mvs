@@ -208,8 +208,8 @@ mvs_simple_dynamic_llbuf_get_new_node(MVSSimpleDynamicBufferLinkedList *buf) {
     res = (MVSAllDynamicBufferLinkedListNode *)malloc(
         sizeof(MVSAllDynamicBufferLinkedListNode) + buf->elem_len);
     if (res) {
-      res->data = (mptr_t)(&(mbptr_t)res->data +
-                           8); // We have a buffer after the 'data' field that
+      res->data = (mptr_t)(&res->data +
+                           sizeof(mbptr_t)); // We have a buffer after the 'data' field that
                                // stores the data
     }
   }
@@ -311,7 +311,7 @@ mvs_simple_dynamic_llbuf_flush(MVSSimpleDynamicBufferLinkedList *buf) {
   MVSAllDynamicBufferLinkedListNode *curr = buf->head;
   while (curr) {
     MVSAllDynamicBufferLinkedListNode *nxt = curr->nxt;
-    mvs_simple_dynamic_llbuf_push_to_free_list(curr);
+    mvs_simple_dynamic_llbuf_push_to_free_list(buf, curr);
     curr = nxt;
   }
   buf->data_count = 0;
@@ -383,7 +383,7 @@ mvs_hybrid_concurrency_model_buf_read(MVSHybridConcurrencyModelBuffer *buf,
 
     if (atomic_load_explicit(&buf->slot_states[slot], memory_order_acquire)) {
       if (atomic_compare_exchange_weak_explicit(
-              &buf->head, buf->head, buf->head + 1, memory_order_relaxed,
+              &buf->head, &buf->head, buf->head + 1, memory_order_relaxed,
               memory_order_relaxed)) {
         memcpy(store_in, (mptr_t)(buf->buffer + slot * buf->elem_len),
                buf->elem_len);
@@ -411,7 +411,7 @@ mvs_hybrid_concurrency_model_buf_write(MVSHybridConcurrencyModelBuffer *buf,
 
     if (!atomic_load_explicit(&buf->slot_states[slot], memory_order_acquire)) {
       if (atomic_compare_exchange_weak_explicit(
-              &buf->tail, buf->tail, buf->tail + 1, memory_order_relaxed,
+              &buf->tail, &buf->tail, buf->tail + 1, memory_order_relaxed,
               memory_order_relaxed)) {
         memcpy((mptr_t)(buf->buffer + slot * buf->elem_len), elem,
                buf->elem_len);

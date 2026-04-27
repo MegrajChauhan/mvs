@@ -1,4 +1,4 @@
-#include <mvs_dynamic_libs.h>
+#include <mvs_dynamic_lib.h>
 
 mResult_t mvs_dynamic_lib_create(MVSDynamicLib **lib) {
   if (!lib)
@@ -9,7 +9,7 @@ mResult_t mvs_dynamic_lib_create(MVSDynamicLib **lib) {
     return res;
   }
   mvs_interface_configure(*lib, 0);
-  if ((res = mvs_interface_init(file, MINTERFACE_TYPE_DYNAMIC_LIBRARY)) !=
+  if ((res = mvs_interface_init(*lib, MINTERFACE_TYPE_DYNAMIC_LIBRARY)) !=
       MRES_SUCCESS) {
     mvs_interface_destroy(*lib);
     return res;
@@ -23,7 +23,7 @@ mResult_t mvs_dynamic_lib_load_library(MVSDynamicLib *lib, mstr_t path) {
     return MRES_INVALID_ARGS;
   if (lib->interface != MINTERFACE_TYPE_DYNAMIC_LIBRARY)
     return MRES_RESOURCE_TYPE_INVALID;
-  if (lib->interface.dynamic_lib.entry)
+  if (lib->dynamic_lib.entry)
     return MRES_RESOURCE_STATE_INVALID; // already in use!
 #if defined(_USE_LINUX_)
   lib->dynamic_lib.entry = dlopen(path, RTLD_LAZY | RTLD_GLOBAL);
@@ -39,10 +39,10 @@ mResult_t mvs_dynamic_lib_unload_library(MVSDynamicLib *lib) {
     return MRES_INVALID_ARGS;
   if (lib->interface != MINTERFACE_TYPE_DYNAMIC_LIBRARY)
     return MRES_RESOURCE_TYPE_INVALID;
-  if (!lib->interface.dynamic_lib.entry)
+  if (!lib->dynamic_lib.entry)
     return MRES_RESOURCE_STATE_INVALID; // not in use!
 #if defined(_USE_LINUX_)
-  dlclose(entry);
+  dlclose(lib->dynamic_lib.entry);
 #elif defined(_USE_WIN_)
 #endif
   lib->dynamic_lib.entry = NULL;
@@ -55,10 +55,10 @@ mResult_t mvs_dynamic_lib_get_symbol(MVSDynamicLib *lib, mstr_t sym_name,
     return MRES_INVALID_ARGS;
   if (lib->interface != MINTERFACE_TYPE_DYNAMIC_LIBRARY)
     return MRES_RESOURCE_TYPE_INVALID;
-  if (!lib->interface.dynamic_lib.entry)
+  if (!lib->dynamic_lib.entry)
     return MRES_RESOURCE_STATE_INVALID; // not in use!
 #if defined(_USE_LINUX_)
-  *res = dlsym(entry, sym_name);
+  *res = dlsym(lib->dynamic_lib.entry, sym_name);
   if (!(*res))
     return MRES_SYS_FAILURE;
 #endif

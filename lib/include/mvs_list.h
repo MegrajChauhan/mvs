@@ -26,7 +26,7 @@ struct MVSStaticList {
   msize_t cap;
   msize_t curr_ind;
   msize_t elem_len;
-  mptr_t buf;
+  mbptr_t buf;
 };
 
 #define _MVS_MFUNC_STATIC_LIST_CHECK_ISFULL_(lst)                              \
@@ -54,7 +54,7 @@ _MVS_ATTR_ALWAYS_INLINE_ mResult_t mvs_static_list_ref_of(MVSStaticList *lst,
                                                           msize_t ind) {
   if (!lst || !elem || (ind >= lst->curr_ind))
     return MRES_INVALID_ARGS;
-  *(mbptr_t *)elem = (mbptr_t)lst->buf + ind * lst->elem_len;
+  *(mbptr_t *)elem = lst->buf + ind * lst->elem_len;
   return MRES_SUCCESS;
 }
 
@@ -63,7 +63,7 @@ _MVS_ATTR_ALWAYS_INLINE_ mResult_t mvs_static_list_index_of(MVSStaticList *lst,
                                                             msize_t *idx) {
   if (!lst || !elem || !idx)
     return MRES_INVALID_ARGS;
-  msize_t i = (msize_t)(((mbptr_t)elem - (mbptr_t)lst->buf) / lst->elem_len);
+  msize_t i = (msize_t)(((mbptr_t)elem - lst->buf) / lst->elem_len);
   if (i >= lst->cap)
     return MRES_INVALID_ARGS;
   *idx = i;
@@ -75,7 +75,7 @@ _MVS_ATTR_ALWAYS_INLINE_ mResult_t mvs_static_list_at(MVSStaticList *lst,
                                                       msize_t ind) {
   if (!lst || !elem || (ind >= lst->cap))
     return MRES_INVALID_ARGS;
-  memcpy(elem, (mptr_t)((mbptr_t)lst->buf + (ind * lst->elem_len)),
+  memcpy(elem, (mptr_t)(lst->buf + (ind * lst->elem_len)),
          lst->elem_len);
   return MRES_SUCCESS;
 }
@@ -85,7 +85,7 @@ struct MVSDynamicListLinear {
   msize_t curr_ind;
   msize_t elem_len;
   msize_t resize_factor; // by default: 2
-  mptr_t buf;
+  mbptr_t buf;
 };
 
 #define _MVS_MFUNC_DYNAMIC_LISTL_CHECK_ISFULL_(lst)                            \
@@ -113,7 +113,7 @@ _MVS_ATTR_ALWAYS_INLINE_ mResult_t
 mvs_dynamic_listl_ref_of(MVSDynamicListLinear *lst, mptr_t elem, msize_t ind) {
   if (!lst || !elem || (ind >= lst->cap))
     return MRES_INVALID_ARGS;
-  *(mbptr_t *)elem = (mptr_t)((mbptr_t)lst->buf + (ind * lst->elem_len));
+  *(mbptr_t *)elem = (mptr_t)(lst->buf + (ind * lst->elem_len));
   return MRES_SUCCESS;
 }
 
@@ -121,14 +121,14 @@ _MVS_ATTR_ALWAYS_INLINE_ mResult_t
 mvs_dynamic_listl_at(MVSDynamicListLinear *lst, mptr_t elem, msize_t ind) {
   if (!lst || !elem || (ind >= lst->cap))
     return MRES_INVALID_ARGS;
-  memcpy(elem, (mptr_t)((mbptr_t)lst->buf + (ind * lst->elem_len)),
+  memcpy(elem, (mptr_t)(lst->buf + (ind * lst->elem_len)),
          lst->elem_len);
   return MRES_SUCCESS;
 }
 
 struct MVSDynamicListLinkedListNode {
   MVSDynamicListLinkedListNode *next, *prev;
-  mptr_t data;
+  mbptr_t data;
 };
 
 struct MVSDynamicListLinkedList {

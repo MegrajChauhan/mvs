@@ -2,6 +2,7 @@
 #define _MVS_PLATFORM_
 
 #include <mvs_config.h>
+#include <mvs_types.h>
 
 #ifdef _USE_LINUX_
 #include <dlfcn.h>

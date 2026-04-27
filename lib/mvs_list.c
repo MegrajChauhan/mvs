@@ -8,7 +8,7 @@ mResult_t mvs_static_list_create(MVSStaticList **lst, msize_t cap,
   if (!(*lst)) {
     return MRES_SYS_FAILURE;
   }
-  (*lst)->buf = (mptr_t)calloc(cap, elem_len);
+  (*lst)->buf = (mbptr_t)calloc(cap, elem_len);
   if (!(*lst)->buf) {
     free(*lst);
     return MRES_SYS_FAILURE;
@@ -32,9 +32,9 @@ mResult_t mvs_static_list_push(MVSStaticList *lst, mptr_t elem) {
     return MRES_INVALID_ARGS;
 
   if (lst->curr_ind >= lst->cap)
-    return MRES_COULDNT_COMPLETE;
+    return MRES_CONTAINER_FULL;
 
-  memcpy((mptr_t)((mbptr_t)lst->buf + (lst->curr_ind * lst->elem_len)), elem,
+  memcpy((mptr_t)(lst->buf + (lst->curr_ind * lst->elem_len)), elem,
          lst->elem_len);
   lst->curr_ind++;
   return MRES_SUCCESS;
@@ -44,10 +44,10 @@ mResult_t mvs_static_list_pop(MVSStaticList *lst, mptr_t elem) {
   if (!lst)
     return MRES_INVALID_ARGS;
   if (lst->curr_ind == 0)
-    return MRES_COULDNT_COMPLETE;
+    return MRES_CONTAINER_EMPTY;
   lst->curr_ind--;
   if (elem)
-    memcpy(elem, (mptr_t)((mbptr_t)lst->buf + (lst->curr_ind * lst->elem_len)),
+    memcpy(elem, (mptr_t)(lst->buf + (lst->curr_ind * lst->elem_len)),
            lst->elem_len);
   return MRES_SUCCESS;
 }
@@ -57,11 +57,11 @@ mResult_t mvs_static_list_resize(MVSStaticList *lst, msize_t resize_factor) {
     return MRES_INVALID_ARGS;
   if (resize_factor == 1)
     return MRES_SUCCESS;
-  mptr_t new_buf = (mptr_t)malloc(lst->elem_len * lst->cap * resize_factor);
+  mbptr_t new_buf = (mbptr_t)malloc(lst->elem_len * lst->cap * resize_factor);
   if (!new_buf)
     return MRES_SYS_FAILURE;
   mempcpy(new_buf, lst->buf, lst->curr_ind * lst->elem_len);
-  mptr_t tmp = lst->buf;
+  mbptr_t tmp = lst->buf;
   lst->buf = new_buf;
   lst->cap *= resize_factor;
   free(tmp);
@@ -76,7 +76,7 @@ mResult_t mvs_dynamic_listl_create(MVSDynamicListLinear **lst, msize_t cap,
   if (!(*lst)) {
     return MRES_SYS_FAILURE;
   }
-  (*lst)->buf = (mptr_t)malloc(cap * elem_len);
+  (*lst)->buf = (mbptr_t)malloc(cap * elem_len);
   if (!(*lst)->buf) {
     free(*lst);
     return MRES_SYS_FAILURE;
@@ -93,6 +93,7 @@ mResult_t mvs_dynamic_listl_destroy(MVSDynamicListLinear *lst) {
     return MRES_INVALID_ARGS;
   free(lst->buf);
   free(lst);
+  return MRES_SUCCESS;
 }
 
 mResult_t mvs_dynamic_listl_push(MVSDynamicListLinear *lst, mptr_t elem) {
@@ -100,11 +101,11 @@ mResult_t mvs_dynamic_listl_push(MVSDynamicListLinear *lst, mptr_t elem) {
     return MRES_INVALID_ARGS;
   if (lst->curr_ind >= lst->cap) {
     mResult_t res;
-    if ((res = mvs_dynamic_list_resize(lst, lst->resize_factor)) !=
+    if ((res = mvs_dynamic_listl_resize(lst, lst->resize_factor)) !=
         MRES_SUCCESS)
       return res;
   }
-  memcpy((mptr_t)((mbptr_t)lst->buf + (lst->curr_ind * lst->elem_len)), elem,
+  memcpy((mptr_t)(lst->buf + (lst->curr_ind * lst->elem_len)), elem,
          lst->elem_len);
   lst->curr_ind++;
   return MRES_SUCCESS;
@@ -114,25 +115,23 @@ mResult_t mvs_dynamic_listl_pop(MVSDynamicListLinear *lst, mptr_t elem) {
   if (!lst)
     return MRES_INVALID_ARGS;
   if (lst->curr_ind == 0)
-    return MRES_COULDNT_COMPLETE;
+    return MRES_CONTAINER_EMPTY;
   lst->curr_ind--;
   if (elem)
-    memcpy(elem, (mptr_t)((mbptr_t)lst->buf + (lst->curr_ind * lst->elem_len)),
+    memcpy(elem, (mptr_t)(lst->buf + (lst->curr_ind * lst->elem_len)),
            lst->elem_len);
   return MRES_SUCCESS;
 }
-
-mResult_t mvs_dynamic_listl_size(MVSDynamicListLinear *lst, msize_t *res) {}
 
 mResult_t mvs_dynamic_listl_resize(MVSDynamicListLinear *lst,
                                    msize_t resize_factor) {
   if (!lst)
     return MRES_INVALID_ARGS;
-  mptr_t new_buf = (mptr_t)malloc(lst->elem_len * lst->cap * resize_factor);
+  mbptr_t new_buf = (mbptr_t)malloc(lst->elem_len * lst->cap * resize_factor);
   if (!new_buf)
     return MRES_SYS_FAILURE;
   mempcpy(new_buf, lst->buf, lst->curr_ind * lst->elem_len);
-  mptr_t tmp = lst->buf;
+  mbptr_t tmp = lst->buf;
   lst->buf = new_buf;
   lst->cap *= resize_factor;
   free(tmp);
@@ -175,8 +174,8 @@ mvs_dynamic_listll_get_new_node(MVSDynamicListLinkedList *lst) {
       // calculations. &(mbptr_t)res->data becomes a pointer to a pointer i.e
       // has a size of 8-bytes. Which means +8 would add 8*8 instead which
       // wouldn't be ideal.
-      res->data = (mptr_t)(&(mbptr_t)res->data +
-                           8); // We have a buffer after the 'data' field that
+      res->data = (mptr_t)(&res->data +
+                           sizeof(mbptr_t)); // We have a buffer after the 'data' field that
                                // stores the data
     }
   }
@@ -223,21 +222,21 @@ mResult_t mvs_dynamic_listll_destroy(MVSDynamicListLinkedList *lst) {
 mResult_t mvs_dynamic_listll_push(MVSDynamicListLinkedList *lst, mptr_t elem) {
   if (!lst || !elem)
     return MRES_INVALID_ARGS;
-  MVSDynamicListLinkedListNode *new_node = mvs_dynamic_listll_get_new_node(buf);
+  MVSDynamicListLinkedListNode *new_node = mvs_dynamic_listll_get_new_node(lst);
   if (!new_node)
     return MRES_SYS_FAILURE;
-  memcpy(new_node->data, elem, buf->elem_len);
+  memcpy(new_node->data, elem, lst->elem_len);
   if (!lst->data_count) {
     new_node->next = NULL;
     new_node->prev = NULL;
     lst->chain = new_node;
-    head = new_node;
+    lst->head = new_node;
   } else {
     new_node->prev = lst->chain;
     lst->chain->next = new_node;
     lst->chain = new_node;
   }
-  buf->data_count++;
+  lst->data_count++;
   return MRES_SUCCESS;
 }
 
@@ -252,8 +251,8 @@ mResult_t mvs_dynamic_listll_pop(MVSDynamicListLinkedList *lst, mptr_t elem) {
   mvs_dynamic_listll_push_to_free_list(lst, data_node);
   lst->data_count--;
   if (!lst->data_count) {
-    buf->head = NULL;
-    buf->chain = NULL;
+    lst->head = NULL;
+    lst->chain = NULL;
   }
   return MRES_SUCCESS;
 }

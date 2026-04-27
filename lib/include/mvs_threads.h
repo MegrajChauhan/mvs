@@ -5,7 +5,6 @@
 #include <mvs_platform.h>
 #include <mvs_results.h>
 #include <mvs_types.h>
-#include <mvs_utils.h>
 
 mResult_t mvs_thread_create(mthread_t *th, mthexec_t func, mptr_t arg);
 

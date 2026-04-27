@@ -16,7 +16,7 @@ mvs_umap_find_bucket(MVSUmap *map, mptr_t key, msize_t *bucket_index) {
 }
 
 mResult_t mvs_umap_create(MVSUmap **umap, msize_t bucket_count,
-                          mhhfunc_t hash_func, mhkeycmpfunc_t kcmp,
+                          mhhashfunc_t hash_func, mhkeycmpfunc_t kcmp,
                           mhcleanfunc_t kcf, mhcleanfunc_t vcf) {
   if (!umap || !hash_func || !kcf || !vcf || !kcmp || bucket_count == 0)
     return MRES_INVALID_ARGS;
@@ -42,7 +42,7 @@ mResult_t mvs_umap_insert(MVSUmap *map, mptr_t key, mptr_t value) {
   if (!map || !key || !value)
     return MRES_INVALID_ARGS;
   msize_t bucket_index;
-  MVSUmapBucket *bucket = mvs_find_bucket(map, key, &bucket_index);
+  MVSUmapBucket *bucket = mvs_umap_find_bucket(map, key, &bucket_index);
   if (bucket) {
     // key already exists, update value
     bucket->value = value;
@@ -67,12 +67,12 @@ mResult_t mvs_umap_insert(MVSUmap *map, mptr_t key, mptr_t value) {
 }
 
 // Find Value by Key
-mResult_t mvs_umap_find(MVSUmap *map, mptr_t key, mptr_t *res) {
+mResult_t mvs_umap_find(MVSUmap *map, mptr_t key, mptr_t res) {
   if (!map || !key || !res)
     return MRES_INVALID_ARGS;
   msize_t bucket_index;
-  MVSUmapBucket *bucket = mvs_find_bucket(map, key, &bucket_index);
-  *res = bucket ? bucket->value : NULL;
+  MVSUmapBucket *bucket = mvs_umap_find_bucket(map, key, &bucket_index);
+  *(mbptr_t*)res = bucket ? bucket->value : NULL;
   return MRES_SUCCESS;
 }
 

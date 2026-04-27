@@ -6,7 +6,6 @@
 #include <mvs_platform.h>
 #include <mvs_results.h>
 #include <mvs_types.h>
-#include <mvs_utils.h>
 
 // we don't know what type of function we might want
 typedef MVSInterface MVSDynamicLib;

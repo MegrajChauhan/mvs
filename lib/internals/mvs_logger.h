@@ -15,38 +15,54 @@
 #include <mvs_threads.h>
 #include <mvs_tools.h>
 #include <mvs_types.h>
+#include <mvs_queue.h>
+#include <mvs_protectors.h>
+#include <mvs_results.h>
 #include <stdio.h>
+#include <stdarg.h>
+#include <stdatomic.h>
 
-typedef enum mLogLvl_t mLogLvl_t;
+typedef enum mLogLvl_t mLogLvl_t; 
 typedef struct MVSLogger MVSLogger;
+typedef struct MVSLogEntry MVSLogEntry;
 
 enum mLogLvl_t {
-  MVS_LOG_ERR,
-  MVS_LOG_WARN,
-  MVS_LOG_NOTE,
-  MVS_LOG_DBG,
+	MLOG_NOTE,
+	MLOG_WARN,
+	MLOG_ERR,
+	MLOG_DBG
 };
 
-typedef void (*mlogFunc_t)(mLogLvl_t, mstr_t, ...);
+struct MVSLogEntry {
+	mLogLvl_t lvl; // level of the log message
+	char msg[128]; // allowed level of just 128 characters including the terminating byte
+};
 
 struct MVSLogger {
-  mLogLvl_t lvl;
-  mlogFunc_t func;
+	mLogLvl_t allowed_lvl;
+	MVSHybridConcurrencyModelQueue *queue; // the lock-free queue that the loggers will use
+	mmutex_t lock;
+	mcond_t cond;
+	atm_mbool_t stop;
 };
 
-_MVS_ATTR_EXTERNAL_ MVSLogger logger;
+/*
+ * Maybe the logger will never fail...?
+ * Even if it fails, it will print a message for the user but the system never knows
+ * The logger remains silent...
+ * If the logger failed to initialize or start, the system will know but any failures to
+ * log won't be made known to the caller or the system
+ */
 
-void mvs_init_logger(mlogFunc_t func, mLogLvl_t lvl);
+mResult_t mvs_logger_init(mLogLvl_t allowed);
+mResult_t mvs_logger_destroy();
+mthreadRet_t mvs_logger_run(mptr_t _l);
+void mvs_logger_wakeup(mbool_t flag);
 
-#define MVS_LOG(lvl, msg, ...)                                                 \
-  do {                                                                         \
-    if (logger.lvl <= lvl)                                                     \
-      logger.logger(lvl, msg, ##__VA_ARGS__);                                  \
-  } while (0)
-
-#define MVS_NOTE(msg, ...) MVS_LOG(MVS_LOG_NOTE, msg, __VA_ARGS__)
-#define MVS_ERR(msg, ...) MVS_LOG(MVS_LOG_ERR, msg, __VA_ARGS__)
-#define MVS_WARN(msg, ...) MVS_LOG(MVS_LOG_WARN, msg, __VA_ARGS__)
-#define MVS_DBG(msg, ...) MVS_LOG(MVS_LOG_DBG, msg, __VA_ARGS__)
+// Logging functions
+void mvs_log_note(mstr_t fmt, ...);
+void mvs_log_warn(mstr_t fmt, ...);
+void mvs_log_err(mstr_t fmt, ...);
+void mvs_log_dbg(mstr_t fmt, ...);
 
 #endif

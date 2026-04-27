@@ -41,8 +41,7 @@ mResult_t mvs_interface_free(MVSInterface *interface) {
   return MRES_SUCCESS;
 }
 
-_MVS_ATTR_ALWAYS_INLINE_ mResult_t
-mvs_interface_destroy(MVSInterface *interface) {
+mResult_t mvs_interface_destroy(MVSInterface *interface) {
   if (!interface)
     return MRES_INVALID_ARGS;
   if (interface->configured &&
@@ -60,7 +59,7 @@ mResult_t mvs_interface_init(MVSInterface *interface, mInterface_t type) {
   if (interface->state & MVS_INTERFACE_STATE_INITIALIZED) // already initialized
     return MRES_RESOURCE_STATE_INVALID;
   interface->state = MVS_INTERFACE_STATE_INITIALIZED;
-  interface->type = type;
+  interface->interface = type;
   return MRES_SUCCESS;
 }
 
@@ -83,7 +82,7 @@ mResult_t mvs_interface_share(MVSInterface **source, MVSInterface **dest) {
     return MRES_RESOURCE_NOT_CONFIGURED;
   if (!((*source)->state & MVS_INTERFACE_STATE_INITIALIZED))
     return MRES_RESOURCE_STATE_INVALID;
-  if (!((*source)->conf & MVS_INTERFACE_CONF_SHAREABLE))
+  if (!((*source)->config & MVS_INTERFACE_CONF_SHAREABLE))
     return MRES_RESOURCE_STATE_INVALID;
   (*source)->owner_count++;
   (*source)->state |= MVS_INTERFACE_STATE_SHARED;
@@ -97,7 +96,7 @@ mResult_t mvs_interface_disown(MVSInterface *interface) {
   if (!interface->configured)
     return MRES_RESOURCE_NOT_CONFIGURED;
   if (!(interface->state & MVS_INTERFACE_STATE_INITIALIZED) ||
-      !(interface->conf & MVS_INTERFACE_CONF_SHAREABLE))
+      !(interface->config & MVS_INTERFACE_CONF_SHAREABLE))
     return MRES_RESOURCE_STATE_INVALID;
   if (!(interface->state & MVS_INTERFACE_STATE_SHARED))
     return MRES_RESOURCE_STATE_INVALID;

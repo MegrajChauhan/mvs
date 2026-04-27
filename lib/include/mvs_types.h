@@ -51,7 +51,7 @@ typedef void *mptr_t;
 
 typedef mthreadRet_t (*mthexec_t)(mptr_t);
 typedef mResult_t (*mhcleanfunc_t)(mptr_t);
-typedef msize_t (*mhhashfunc_t)(msize_t);
+typedef msize_t (*mhhashfunc_t)(mptr_t, msize_t);
 typedef mbool_t (*mhkeycmpfunc_t)(mptr_t, mptr_t);
 
 #endif

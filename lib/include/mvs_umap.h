@@ -25,14 +25,14 @@ struct MVSUmapBucket {
 struct MVSUmap {
   MVSUmapBucket **buckets;
   msize_t bucket_count;
-  mhhfunc_t hash_func;
+  mhhashfunc_t hash_func;
   mhkeycmpfunc_t cmp_func;
   mhcleanfunc_t key_clean_func;   // if the key needs to be cleaned
   mhcleanfunc_t value_clean_func; // if the value needs to be cleaned
 };
 
 mResult_t mvs_umap_create(MVSUmap **umap, msize_t bucket_count,
-                          mhhfunc_t hash_func, mhkeycmpfunc_t kcmp,
+                          mhhashfunc_t hash_func, mhkeycmpfunc_t kcmp,
                           mhcleanfunc_t kcf, mhcleanfunc_t vcf);
 
 mResult_t mvs_umap_insert(MVSUmap *map, mptr_t key, mptr_t value);

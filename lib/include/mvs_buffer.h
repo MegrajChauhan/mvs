@@ -43,7 +43,7 @@ typedef struct MVSHybridConcurrencyModelBuffer
 
 struct MVSAllDynamicBufferLinkedListNode {
   MVSAllDynamicBufferLinkedListNode *nxt, *prev;
-  mptr_t data; // the element
+  mbptr_t data; // the element
 };
 
 struct MVSSimpleStaticBuffer {
@@ -76,7 +76,7 @@ struct MVSSimpleDynamicBufferLinear {
   msize_t buffer_capacity;
   msize_t elem_count;
   msize_t elem_len;
-  msize_t ptr;
+  msize_t head, tail;
   msize_t resize_factor; // by default 2
 };
 
@@ -141,11 +141,11 @@ struct MVSHybridConcurrencyModelBuffer {
 
 #define _MVS_HYBRID_CONCURRENCY_MODEL_BUF_CHECK_ISFULL_(buf)                   \
   ((buf) &&                                                                    \
-   (atomic_load_explicit(&(buf)->element_count, memory_order_relaxed) ==       \
+   (atomic_load_explicit(&(buf)->elem_count, memory_order_relaxed) ==       \
     (buf)->buffer_capacity))
 #define _MVS_HYBRID_CONCURRENCY_MODEL_BUF_CHECK_ISEMPTY_(buf)                  \
   ((buf) &&                                                                    \
-   (atomic_load_explicit(&(buf)->element_count, memory_order_relaxed) == 0))
+   (atomic_load_explicit(&(buf)->elem_count, memory_order_relaxed) == 0))
 
 mResult_t
 mvs_hybrid_concurrency_model_buf_create(MVSHybridConcurrencyModelBuffer **buf,

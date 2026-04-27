@@ -8,7 +8,7 @@ mResult_t mvs_file_create(MVSFile **file, mqword_t conf) {
     return res;
   if ((res = mvs_interface_configure(*file, conf)) != MRES_SUCCESS)
     return res;
-  if ((res = mvs_interface_init(*file, MMINTERFACE_TYPE_FILE)) !=
+  if ((res = mvs_interface_init(*file, MINTERFACE_TYPE_FILE)) !=
       MRES_SUCCESS) {
     mvs_interface_destroy(*file);
     *file = NULL;

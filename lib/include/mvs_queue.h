@@ -1,7 +1,7 @@
 #ifndef _MVS_QUEUE_
 #define _MVS_QUEUE_
 
-#include <mvs_queuefer.h>
+#include <mvs_buffer.h>
 
 /*
  * Available queue types:
@@ -11,19 +11,19 @@
  * MPMC)
  */
 
-typedef MVSSimpleStaticqueuefer MVSStaticQueue;
+typedef MVSSimpleStaticBuffer MVSStaticQueue;
 typedef MVSSimpleDynamicBufferLinear MVSDynamicQueueLinear;
 typedef MVSSimpleDynamicBufferLinkedList MVSDynamicQueueLinkedList;
 typedef MVSHybridConcurrencyModelBuffer MVSHybridConcurrencyModelQueue;
 
 #define _MVS_MFUNC_STATIC_QUEUE_CHECK_ISFULL_(queue)                           \
-  _MVS_MFUNC_SIMPLE_STATIC_queue_CHECK_ISFULL_(queue)
+  _MVS_MFUNC_SIMPLE_STATIC_BUF_CHECK_ISFULL_(queue)
 #define _MVS_MFUNC_STATIC_QUEUE_CHECK_ISEMPTY_(queue)                          \
-  _MVS_MFUNC_SIMPLE_STATIC_queue_CHECK_ISEMPTY_(queue)
+  _MVS_MFUNC_SIMPLE_STATIC_BUF_CHECK_ISEMPTY_(queue)
 
 _MVS_ATTR_ALWAYS_INLINE_ mResult_t
 mvs_static_queue_create(MVSStaticQueue **queue, msize_t cap, msize_t elem_len) {
-  return mvs_simple_static_queue_create(queue, cap, elem_len);
+  return mvs_simple_static_buf_create(queue, cap, elem_len);
 }
 
 _MVS_ATTR_ALWAYS_INLINE_ mResult_t
@@ -47,9 +47,9 @@ mvs_static_queue_flush(MVSStaticQueue *queue) {
 }
 
 #define _MVS_MFUNC_DYNAMIC_LQUEUE_CHECK_ISFULL_(queue)                         \
-  _MVS_MFUNC_SIMPLE_DYNAMIC_Lqueue_CHECK_ISFULL_(queue)
+  _MVS_MFUNC_SIMPLE_DYNAMIC_LBUF_CHECK_ISFULL_(queue)
 #define _MVS_MFUNC_DYNAMIC_LQUEUE_CHECK_ISEMPTY_(queue)                        \
-  _MVS_MFUNC_SIMPLE_DYNAMIC_Lqueue_CHECK_ISEMPTY_(queue)
+  _MVS_MFUNC_SIMPLE_DYNAMIC_LBUF_CHECK_ISEMPTY_(queue)
 
 _MVS_ATTR_ALWAYS_INLINE_
     mResult_t mvs_dynamic_lqueue_create(MVSDynamicQueueLinear **queue,

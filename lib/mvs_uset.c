@@ -13,7 +13,7 @@ mvs_uset_find_bucket(MVSUset *set, mptr_t key, msize_t *bucket_index) {
 }
 
 mResult_t mvs_uset_create(MVSUset **uset, msize_t bucket_count,
-                          mhhfunc_t hash_func, mhkeycmpfunc_t cmp_func,
+                          mhhashfunc_t hash_func, mhkeycmpfunc_t cmp_func,
                           mhcleanfunc_t kcf) {
   if (!uset || !hash_func || !kcf || !cmp_func || bucket_count == 0)
     return MRES_INVALID_ARGS;
