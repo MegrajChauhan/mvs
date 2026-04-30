@@ -12,3 +12,5 @@ MVS_*Comp*_STATE_* -> Refers to the state of "Comp" component
 MVS_*Comp*_FLAG_* -> Refers to the flag that is used to change the behavior of the "Comp" component
 
 __mvs_*comp*_* -> Used to define labels for goto statements for component "comp"
+
+_MVS_CONSTANT_* -> Refers to some constant. The name will provide the needed information to defer which component the constant is used by

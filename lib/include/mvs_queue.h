@@ -52,8 +52,8 @@ mvs_static_queue_flush(MVSStaticQueue *queue) {
   _MVS_MFUNC_SIMPLE_DYNAMIC_LBUF_CHECK_ISEMPTY_(queue)
 
 _MVS_ATTR_ALWAYS_INLINE_
-    mResult_t mvs_dynamic_lqueue_create(MVSDynamicQueueLinear **queue,
-                                        msize_t cap, msize_t elem_len) {
+mResult_t mvs_dynamic_lqueue_create(MVSDynamicQueueLinear **queue, msize_t cap,
+                                    msize_t elem_len) {
   return mvs_simple_dynamic_lbuf_create(queue, cap, elem_len);
 }
 
@@ -86,8 +86,8 @@ mvs_dynamic_lqueue_resize(MVSDynamicQueueLinear *queue, msize_t factor) {
   _MVS_MFUNC_SIMPLE_DYNAMIC_LLBUF_CHECK_ISEMPTY_(queue)
 
 _MVS_ATTR_ALWAYS_INLINE_
-    mResult_t mvs_dynamic_llqueue_create(MVSDynamicQueueLinkedList **queue,
-                                         msize_t elem_len) {
+mResult_t mvs_dynamic_llqueue_create(MVSDynamicQueueLinkedList **queue,
+                                     msize_t elem_len) {
   return mvs_simple_dynamic_llbuf_create(queue, elem_len);
 }
 

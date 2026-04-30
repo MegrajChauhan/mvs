@@ -174,9 +174,10 @@ mvs_dynamic_listll_get_new_node(MVSDynamicListLinkedList *lst) {
       // calculations. &(mbptr_t)res->data becomes a pointer to a pointer i.e
       // has a size of 8-bytes. Which means +8 would add 8*8 instead which
       // wouldn't be ideal.
-      res->data = (mptr_t)(&res->data +
-                           sizeof(mbptr_t)); // We have a buffer after the 'data' field that
-                               // stores the data
+      res->data =
+          (mptr_t)(&res->data +
+                   sizeof(mbptr_t)); // We have a buffer after the 'data' field
+                                     // that stores the data
     }
   }
   return res;

@@ -20,7 +20,6 @@ typedef struct MVSStaticList MVSStaticList;
 typedef struct MVSDynamicListLinear MVSDynamicListLinear;
 typedef struct MVSDynamicListLinkedListNode MVSDynamicListLinkedListNode;
 typedef struct MVSDynamicListLinkedList MVSDynamicListLinkedList;
-typedef struct MVSHybridConcurrencyModelList MVSHybridConcurrencyModelList;
 
 struct MVSStaticList {
   msize_t cap;
@@ -75,8 +74,7 @@ _MVS_ATTR_ALWAYS_INLINE_ mResult_t mvs_static_list_at(MVSStaticList *lst,
                                                       msize_t ind) {
   if (!lst || !elem || (ind >= lst->cap))
     return MRES_INVALID_ARGS;
-  memcpy(elem, (mptr_t)(lst->buf + (ind * lst->elem_len)),
-         lst->elem_len);
+  memcpy(elem, (mptr_t)(lst->buf + (ind * lst->elem_len)), lst->elem_len);
   return MRES_SUCCESS;
 }
 
@@ -113,7 +111,7 @@ _MVS_ATTR_ALWAYS_INLINE_ mResult_t
 mvs_dynamic_listl_ref_of(MVSDynamicListLinear *lst, mptr_t elem, msize_t ind) {
   if (!lst || !elem || (ind >= lst->cap))
     return MRES_INVALID_ARGS;
-  *(mbptr_t *)elem = (mptr_t)(lst->buf + (ind * lst->elem_len));
+  *(mbptr_t *)elem = (mbptr_t)(lst->buf + (ind * lst->elem_len));
   return MRES_SUCCESS;
 }
 
@@ -121,8 +119,7 @@ _MVS_ATTR_ALWAYS_INLINE_ mResult_t
 mvs_dynamic_listl_at(MVSDynamicListLinear *lst, mptr_t elem, msize_t ind) {
   if (!lst || !elem || (ind >= lst->cap))
     return MRES_INVALID_ARGS;
-  memcpy(elem, (mptr_t)(lst->buf + (ind * lst->elem_len)),
-         lst->elem_len);
+  memcpy(elem, (mptr_t)(lst->buf + (ind * lst->elem_len)), lst->elem_len);
   return MRES_SUCCESS;
 }
 

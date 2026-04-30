@@ -140,7 +140,8 @@ mResult_t mvs_mapped_memory_mapf(MVSMappedMemory *map, mstr_t file_path,
         mvs_file_create(&map->mapped_mem.backing, 0); // no configuration
     if (res != MRES_SUCCESS)
       return res;
-    if ((res = mvs_file_open(map->mapped_mem.backing, file_path, file_flags)) != MRES_SUCCESS) {
+    if ((res = mvs_file_open(map->mapped_mem.backing, file_path, file_flags)) !=
+        MRES_SUCCESS) {
       mvs_file_destroy(map->mapped_mem.backing);
       return res;
     }

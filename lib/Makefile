@@ -1,5 +1,5 @@
 CC = gcc
-FLAGS = -Wall -Wextra -MMD -MP -g -fsanitize=address -fno-omit-frame-pointer -fPIC
+FLAGS = -Wall -Wextra -MMD -MP -g -fsanitize=address -fno-omit-frame-pointer
 DIRS = 	arch/x86_64 \
 		comps \
 		include \
@@ -20,7 +20,7 @@ OUTPUT_FILES_NAME += ${patsubst %.S, ${OUTPUT_DIR}%.o, ${ASM_FILES}}
 DEPS=${patsubst %.c, ${OUTPUT_DEPS}%.d, ${FILES_TO_COMPILE}}
 
 all: directories ${OUTPUT_FILES_NAME}
-	${CC} -shared ${OUTPUT_FILES_NAME} -o ${OUTPUT_DIR}/libmvs.so
+	ar rcs  ${OUTPUT_DIR}libmvs.a ${OUTPUT_FILES_NAME}
 
 ${OUTPUT_DIR}%.o: %.c
 	${CC} ${FLAGS} ${INC_DIRS} -c $< -o $@

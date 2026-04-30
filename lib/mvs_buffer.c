@@ -124,7 +124,8 @@ mResult_t mvs_simple_dynamic_lbuf_write(MVSSimpleDynamicBufferLinear *buf,
     return MRES_INVALID_ARGS;
   if (buf->elem_count == buf->buffer_capacity) {
     mResult_t res;
-    if ((res = mvs_simple_dynamic_lbuf_resize(buf, 2)) != MRES_SUCCESS)
+    if ((res = mvs_simple_dynamic_lbuf_resize(
+             buf, _MVS_CONSTANT_BUFFER_DEFAULT_RESIZE_FACTOR_)) != MRES_SUCCESS)
       return res;
   }
   memcpy((mptr_t)(buf->buffer +
@@ -149,7 +150,7 @@ mResult_t mvs_simple_dynamic_lbuf_resize(MVSSimpleDynamicBufferLinear *buf,
   if (!buf)
     return MRES_INVALID_ARGS;
   if (!factor)
-    factor = 2; // default value
+    factor = _MVS_CONSTANT_BUFFER_DEFAULT_RESIZE_FACTOR_; // default value
   mbptr_t temp = (mbptr_t)malloc(buf->buffer_capacity * factor * buf->elem_len);
   if (!temp)
     return MRES_SYS_FAILURE;
@@ -208,9 +209,10 @@ mvs_simple_dynamic_llbuf_get_new_node(MVSSimpleDynamicBufferLinkedList *buf) {
     res = (MVSAllDynamicBufferLinkedListNode *)malloc(
         sizeof(MVSAllDynamicBufferLinkedListNode) + buf->elem_len);
     if (res) {
-      res->data = (mptr_t)(&res->data +
-                           sizeof(mbptr_t)); // We have a buffer after the 'data' field that
-                               // stores the data
+      res->data =
+          (mptr_t)(&res->data +
+                   sizeof(mbptr_t)); // We have a buffer after the 'data' field
+                                     // that stores the data
     }
   }
   return res;

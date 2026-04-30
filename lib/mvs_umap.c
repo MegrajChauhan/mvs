@@ -72,7 +72,7 @@ mResult_t mvs_umap_find(MVSUmap *map, mptr_t key, mptr_t res) {
     return MRES_INVALID_ARGS;
   msize_t bucket_index;
   MVSUmapBucket *bucket = mvs_umap_find_bucket(map, key, &bucket_index);
-  *(mbptr_t*)res = bucket ? bucket->value : NULL;
+  *(mbptr_t *)res = bucket ? bucket->value : NULL;
   return MRES_SUCCESS;
 }
 

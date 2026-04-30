@@ -12,52 +12,51 @@
  */
 
 #include <mvs_config.h>
+#include <mvs_protectors.h>
+#include <mvs_queue.h>
+#include <mvs_results.h>
 #include <mvs_threads.h>
 #include <mvs_tools.h>
 #include <mvs_types.h>
-#include <mvs_queue.h>
-#include <mvs_protectors.h>
-#include <mvs_results.h>
-#include <stdio.h>
 #include <stdarg.h>
 #include <stdatomic.h>
+#include <stdio.h>
 
-typedef enum mLogLvl_t mLogLvl_t; 
+typedef enum mLogLvl_t mLogLvl_t;
 typedef struct MVSLogger MVSLogger;
 typedef struct MVSLogEntry MVSLogEntry;
 
-enum mLogLvl_t {
-	MLOG_NOTE,
-	MLOG_WARN,
-	MLOG_ERR,
-	MLOG_DBG
-};
+enum mLogLvl_t { MLOG_NOTE, MLOG_WARN, MLOG_ERR, MLOG_DBG };
 
 struct MVSLogEntry {
-	mLogLvl_t lvl; // level of the log message
-	char msg[128]; // allowed level of just 128 characters including the terminating byte
+  mLogLvl_t lvl; // level of the log message
+  char msg[128]; // allowed level of just 128 characters including the
+                 // terminating byte
 };
 
 struct MVSLogger {
-	mLogLvl_t allowed_lvl;
-	MVSHybridConcurrencyModelQueue *queue; // the lock-free queue that the loggers will use
-	mmutex_t lock;
-	mcond_t cond;
-	atm_mbool_t stop;
+  mLogLvl_t allowed_lvl;
+  MVSHybridConcurrencyModelQueue
+      *queue; // the lock-free queue that the loggers will use
+  mmutex_t lock;
+  mcond_t cond;
+  atm_mbool_t stop;
+  atm_mbool_t dead;
 };
 
 /*
  * Maybe the logger will never fail...?
- * Even if it fails, it will print a message for the user but the system never knows
- * The logger remains silent...
- * If the logger failed to initialize or start, the system will know but any failures to
- * log won't be made known to the caller or the system
+ * Even if it fails, it will print a message for the user but the system never
+ * knows The logger remains silent... If the logger failed to initialize or
+ * start, the user will know but any failures to log won't be made known to the
+ * caller or the system
  */
 
 mResult_t mvs_logger_init(mLogLvl_t allowed);
 mResult_t mvs_logger_destroy();
 mthreadRet_t mvs_logger_run(mptr_t _l);
 void mvs_logger_wakeup(mbool_t flag);
+void mvs_logger_wait_for_termination();
 
 // Logging functions
 void mvs_log_note(mstr_t fmt, ...);

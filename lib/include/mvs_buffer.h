@@ -14,6 +14,7 @@
  * new pointer.
  */
 
+#include <mvs_lib_constants.h>
 #include <mvs_results.h>
 #include <mvs_tools.h>
 #include <mvs_types.h>
@@ -140,9 +141,8 @@ struct MVSHybridConcurrencyModelBuffer {
 };
 
 #define _MVS_HYBRID_CONCURRENCY_MODEL_BUF_CHECK_ISFULL_(buf)                   \
-  ((buf) &&                                                                    \
-   (atomic_load_explicit(&(buf)->elem_count, memory_order_relaxed) ==       \
-    (buf)->buffer_capacity))
+  ((buf) && (atomic_load_explicit(&(buf)->elem_count, memory_order_relaxed) == \
+             (buf)->buffer_capacity))
 #define _MVS_HYBRID_CONCURRENCY_MODEL_BUF_CHECK_ISEMPTY_(buf)                  \
   ((buf) &&                                                                    \
    (atomic_load_explicit(&(buf)->elem_count, memory_order_relaxed) == 0))
