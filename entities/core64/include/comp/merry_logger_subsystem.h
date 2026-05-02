@@ -1,0 +1,6 @@
+#ifndef _MERRY_LOGGER_SUBSYSTEM_
+#define _MERRY_LOGGER_SUBSYSTEM_
+
+
+
+#endif

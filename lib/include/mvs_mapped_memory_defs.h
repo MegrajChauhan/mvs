@@ -7,5 +7,6 @@
 #define MVS_MMAPPED_FLAG_SHARE (1 << 3)
 #define MVS_MMAPPED_FLAG_PRIVATE (1 << 4)
 #define MVS_MMAPPED_FLAG_SYNC (1 << 5)
+#define MVS_MMAPPED_FLAG_ALIGN (1 << 6) // Only works for memory mapped files
 
 #endif

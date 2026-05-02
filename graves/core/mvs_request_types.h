@@ -4,8 +4,8 @@
 typedef enum mRequest_t mRequest_t;
 
 enum mRequest_t {
-	MREQ_SPAWN_ENTITY,
-	MREQ_COUNT,
+  MREQ_SPAWN_ENTITY,
+  MREQ_COUNT,
 };
 
 #endif

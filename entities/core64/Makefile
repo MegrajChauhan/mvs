@@ -1,33 +1,25 @@
-# Variable definitions
 CC = gcc
 FLAGS = -Wall -Wextra -MMD -MP -g -fsanitize=address -fno-omit-frame-pointer
-DIRS = lib/arch/x86_64 \
-      lib/comps \
-      lib/include \
-      lib/internals \
-      lib/utils \
-      graves/comps \
-      graves/core \
-      graves/ent \
-      int 
+DIRS = ../../lib/arch/x86_64 \
+      ../../lib/comps \
+      ../../lib/include \
+      ../../lib/internals \
+      ../../lib/utils \
+      ../../int 
       
-SRC_DIR = graves/
+SRC_DIR = 
 INC_DIRS = ${addprefix -I, ${DIRS}}
 FLAGS += ${flags}
 
-OUTPUT_DIR = build/
-OUTPUT_DEPS= build/
+OUTPUT_DIR = ../../build/
+OUTPUT_DEPS= ../../build/
 
 FILES_TO_COMPILE = ${foreach _D, ${SRC_DIR},${wildcard ${_D}*.c}}
 OUTPUT_FILES_NAME = ${patsubst %.c, ${OUTPUT_DIR}%.o, ${FILES_TO_COMPILE}}
 DEPS=${patsubst %.c, ${OUTPUT_DEPS}%.d, ${FILES_TO_COMPILE}}
 
-LINKS = -lmvs -lcore64
-
 all: directories ${OUTPUT_FILES_NAME}
-	make -C lib
-	make -C entities
-	${CC} ${FLAGS} ${OUTPUT_FILES_NAME} mvs.c -Lbuild ${LINKS} ${INC_DIRS} -o ${OUTPUT_DIR}mvs
+	ar rcs  ${OUTPUT_DIR}libcore64.a ${OUTPUT_FILES_NAME}
 
 WATCH_PROJECT: directories ${OUTPUT_FILES_NAME}
 

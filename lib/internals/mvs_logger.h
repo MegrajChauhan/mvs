@@ -56,6 +56,7 @@ mResult_t mvs_logger_init(mLogLvl_t allowed);
 mResult_t mvs_logger_destroy();
 mthreadRet_t mvs_logger_run(mptr_t _l);
 void mvs_logger_wakeup(mbool_t flag);
+void mvs_logger_wait_to_launch();
 void mvs_logger_wait_for_termination();
 
 // Logging functions

@@ -16,10 +16,11 @@ typedef struct MVSInterface MVSMappedMemory;
  */
 mResult_t mvs_mapped_memory_create(MVSMappedMemory **map, mqword_t conf);
 
+mResult_t mvs_mapped_memory_add_align_param(MVSMappedMemory *map, msize_t align_param);
 /*
  * Here, the default map we create is an anonymous mapping.
- * The owner should using the following call to map the size needed by the file
- * if file mapping is needed afterwards
+ * If 'map' is to be used for a file mapping, than, directly use mvs_mapped_memory_mapf
+ * and it will allocate an anonymous map automatically before mapping the actual file 
  */
 mResult_t mvs_mapped_memory_map(MVSMappedMemory *map, msize_t len);
 
@@ -41,6 +42,8 @@ mResult_t mvs_mapped_memory_mapf(MVSMappedMemory *map, mstr_t file_path,
 
 mResult_t mvs_mapped_memory_obtain_ptr(MVSMappedMemory *map, mbptr_t *ptr,
                                        msize_t off);
+
+mResult_t mvs_mapped_memory_obtain_map_size(MVSMappedMemory *map, msize_t *len);
 
 mResult_t merry_mapped_memory_destroy(MVSMappedMemory *map);
 

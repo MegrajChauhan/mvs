@@ -48,6 +48,10 @@ _MVS_ATTR_ALWAYS_INLINE_ mResult_t mvs_static_list_size(MVSStaticList *lst,
   return MRES_SUCCESS;
 }
 
+_MVS_ATTR_ALWAYS_INLINE_ msize_t mvs_static_list_size_unsafe(MVSStaticList *lst) {
+  return lst->curr_ind;
+}
+
 _MVS_ATTR_ALWAYS_INLINE_ mResult_t mvs_static_list_ref_of(MVSStaticList *lst,
                                                           mptr_t elem,
                                                           msize_t ind) {
@@ -55,6 +59,10 @@ _MVS_ATTR_ALWAYS_INLINE_ mResult_t mvs_static_list_ref_of(MVSStaticList *lst,
     return MRES_INVALID_ARGS;
   *(mbptr_t *)elem = lst->buf + ind * lst->elem_len;
   return MRES_SUCCESS;
+}
+
+_MVS_ATTR_ALWAYS_INLINE_ mptr_t mvs_static_list_ref_of_unsafe(MVSStaticList *lst, msize_t ind) {
+  return (mptr_t)(lst->buf + ind * lst->elem_len);
 }
 
 _MVS_ATTR_ALWAYS_INLINE_ mResult_t mvs_static_list_index_of(MVSStaticList *lst,
@@ -67,6 +75,11 @@ _MVS_ATTR_ALWAYS_INLINE_ mResult_t mvs_static_list_index_of(MVSStaticList *lst,
     return MRES_INVALID_ARGS;
   *idx = i;
   return MRES_SUCCESS;
+}
+
+_MVS_ATTR_ALWAYS_INLINE_ msize_t mvs_static_list_index_of_unsafe(MVSStaticList *lst,
+                                                            mptr_t elem) {
+  return (msize_t)(((mbptr_t)elem - lst->buf) / lst->elem_len);
 }
 
 _MVS_ATTR_ALWAYS_INLINE_ mResult_t mvs_static_list_at(MVSStaticList *lst,
@@ -107,12 +120,22 @@ mvs_dynamic_listl_size(MVSDynamicListLinear *lst, msize_t *res) {
   return MRES_SUCCESS;
 }
 
+_MVS_ATTR_ALWAYS_INLINE_ msize_t
+mvs_dynamic_listl_size_unsafe(MVSDynamicListLinear *lst) {
+  return lst->curr_ind;
+}
+
 _MVS_ATTR_ALWAYS_INLINE_ mResult_t
 mvs_dynamic_listl_ref_of(MVSDynamicListLinear *lst, mptr_t elem, msize_t ind) {
   if (!lst || !elem || (ind >= lst->cap))
     return MRES_INVALID_ARGS;
   *(mbptr_t *)elem = (mbptr_t)(lst->buf + (ind * lst->elem_len));
   return MRES_SUCCESS;
+}
+
+_MVS_ATTR_ALWAYS_INLINE_ mResult_t
+mvs_dynamic_listl_ref_of_unsafe(MVSDynamicListLinear *lst, mptr_t elem, msize_t ind) {
+  return (mbptr_t)(lst->buf + (ind * lst->elem_len));
 }
 
 _MVS_ATTR_ALWAYS_INLINE_ mResult_t
@@ -151,6 +174,11 @@ mvs_dynamic_listll_size(MVSDynamicListLinkedList *lst, msize_t *res) {
     return MRES_INVALID_ARGS;
   *res = lst->data_count;
   return MRES_SUCCESS;
+}
+
+_MVS_ATTR_ALWAYS_INLINE_ mResult_t
+mvs_dynamic_listll_size_unsafe(MVSDynamicListLinkedList *lst) {
+  return lst->data_count;
 }
 
 /*

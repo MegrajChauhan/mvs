@@ -72,10 +72,11 @@ mthreadRet_t mvs_logger_run(mptr_t _l) {
       // go to sleep
       mvs_cond_wait(&_logger->cond, &_logger->lock);
     } else {
-      mvs_mutex_unlock(&_logger->lock);
       mvs_logger_log_all();
     }
+    mvs_mutex_unlock(&_logger->lock);
   }
+
   mvs_logger_log_all();
   atomic_store_explicit(&_logger->dead, mtrue, memory_order_release);
   return NULL;
@@ -149,7 +150,13 @@ void mvs_logger_wakeup(mbool_t flag) {
   mvs_cond_signal(&_logger->cond);
 }
 
+void mvs_logger_wait_to_launch() {
+  while (atomic_load_explicit(&_logger->dead, memory_order_relaxed)) {
+  }	
+}
+
 void mvs_logger_wait_for_termination() {
   while (!atomic_load_explicit(&_logger->dead, memory_order_relaxed)) {
+  	mvs_cond_signal(&_logger->cond);
   }
 }

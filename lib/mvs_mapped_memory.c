@@ -25,6 +25,15 @@ mResult_t mvs_mapped_memory_create(MVSMappedMemory **map, mqword_t conf) {
   return MRES_SUCCESS;
 }
 
+mResult_t mvs_mapped_memory_add_align_param(MVSMappedMemory *map, msize_t align_param) {
+  if (!map || !align_param)
+    return MRES_INVALID_ARGS;
+  if (map->interface != MINTERFACE_TYPE_MAPPED_MEMORY)
+    return MRES_RESOURCE_TYPE_INVALID;
+  map->mapped_mem.align_param = align_param;
+  return MRES_SUCCESS;
+}
+
 mResult_t mvs_mapped_memory_map(MVSMappedMemory *map, msize_t len) {
   if (!map || len == 0)
     return MRES_INVALID_ARGS;
@@ -79,7 +88,7 @@ mResult_t mvs_mapped_memory_mapf(MVSMappedMemory *map, mstr_t file_path,
   int host_flag = 0;
   int host_mode = 0;
   mbool_t r = mfalse, w = mfalse, e = mfalse, s = mfalse, p = mfalse,
-          syn = mfalse;
+          syn = mfalse, align = mfalse;
 /*
  * I am well-aware of the nighmare that in-function flag decoding might cause
  * especially when many platforms need to be supported but that will be taken
@@ -112,6 +121,9 @@ mResult_t mvs_mapped_memory_mapf(MVSMappedMemory *map, mstr_t file_path,
   if (flags & MVS_MMAPPED_FLAG_SYNC) {
     syn = mtrue;
   }
+  if (flags & MVS_MMAPPED_FLAG_ALIGN) {
+  	align = mtrue;
+  }
   if (!host_mode) {
     host_mode = PROT_READ | PROT_WRITE;
     r = mtrue;
@@ -123,19 +135,15 @@ mResult_t mvs_mapped_memory_mapf(MVSMappedMemory *map, mstr_t file_path,
   }
 #endif
 
-  msize_t file_len = 0;
+  msize_t file_len = 0, original_file_len = 0;
   if (file_path) {
     mqword_t file_flags = 0;
-    if (!flags)
-      file_flags = MVS_FILE_MODE_READ | MVS_FILE_MODE_WRITE;
-    else {
-      if (r)
-        file_flags = MVS_FILE_MODE_READ;
-      if (w)
-        file_flags = MVS_FILE_MODE_WRITE;
-      if (r && w)
-        file_flags = MVS_FILE_MODE_READ_WRITE;
-    }
+    if (r)
+      file_flags = MVS_FILE_MODE_READ;
+    if (w)
+      file_flags = MVS_FILE_MODE_WRITE;
+    if (r && w)
+      file_flags = MVS_FILE_MODE_READ_WRITE;
     mResult_t res =
         mvs_file_create(&map->mapped_mem.backing, 0); // no configuration
     if (res != MRES_SUCCESS)
@@ -155,23 +163,33 @@ mResult_t mvs_mapped_memory_mapf(MVSMappedMemory *map, mstr_t file_path,
       mvs_file_destroy(map->mapped_mem.backing);
       return res;
     }
-    if ((file_len - offset) > map->mapped_mem.addr_space_len) {
-      mvs_file_destroy(map->mapped_mem.backing);
-      return MRES_RESOURCE_SIZE_LIMITED;
+    original_file_len = file_len;
+    if (align) {
+      if (map->mapped_mem.align_param) {
+      	mvs_file_destroy(map->mapped_mem.backing);
+      	return MRES_INVALID_ARGS;      	
+      }
+      file_len += (map->mapped_mem.align_param - (file_len % map->mapped_mem.align_param));	
+    }
+    if (map->mapped_mem.addr_space)
+    	mvs_mapped_memory_unmap(map);
+    if ((res = mvs_mapped_memory_map(map, file_len)) != MRES_SUCCESS) {
+      	mvs_file_destroy(map->mapped_mem.backing);
+      	return res;      	    	
     }
   }
 
 #ifdef _USE_LINUX_
   if (file_path) {
     if ((map->mapped_mem.addr_space =
-             mmap(map->mapped_mem.addr_space, file_len, host_mode, host_flag,
+             mmap(map->mapped_mem.addr_space, original_file_len, host_mode, host_flag,
                   map->mapped_mem.backing->file.fd, offset)) == NULL) {
       mvs_file_destroy(map->mapped_mem.backing);
       map->mapped_mem.backing = NULL;
       return MRES_SYS_FAILURE;
     }
     map->mapped_mem.offset = offset;
-    map->mapped_mem.addr_space_len = file_len;
+    map->mapped_mem.addr_space_len = original_file_len;
   } else {
     if ((map->mapped_mem.addr_space = mmap(map->mapped_mem.addr_space, offset,
                                            host_mode, host_flag, -1, 0)) ==
@@ -203,6 +221,17 @@ mResult_t mvs_mapped_memory_obtain_ptr(MVSMappedMemory *map, mbptr_t *ptr,
   if (off > map->mapped_mem.addr_space_len)
     return MRES_INVALID_ARGS;
   *ptr = (mbptr_t)map->mapped_mem.addr_space + off;
+  return MRES_SUCCESS;
+}
+
+mResult_t mvs_mapped_memory_obtain_map_size(MVSMappedMemory *map, msize_t *len) {
+  if (!map || !len)
+    return MRES_INVALID_ARGS;
+  if (map->interface != MINTERFACE_TYPE_MAPPED_MEMORY)
+    return MRES_RESOURCE_TYPE_INVALID;
+  if (!map->mapped_mem.addr_space)
+    return MRES_RESOURCE_STATE_INVALID;
+  *len = map->mapped_mem.addr_space_len;
   return MRES_SUCCESS;
 }
 

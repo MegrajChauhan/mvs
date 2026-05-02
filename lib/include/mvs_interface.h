@@ -40,7 +40,7 @@ struct MVSInterface {
       mmap_t addr_space;
       msize_t addr_space_len;
       msize_t offset;
-
+      msize_t align_param;
       MVSInterface *backing; // Is there a backing file for this mapped memory?
 
       // if backing == NULL than, the mapping is anonymous
