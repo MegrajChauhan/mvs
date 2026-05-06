@@ -3,6 +3,7 @@
 
 #include <mvs_config.h>
 #include <mvs_entity_constants.h>
+#include <mvs_int_result.h>
 #include <mvs_types.h>
 
 struct MVSEntityIdentity;
@@ -18,7 +19,7 @@ typedef struct MVSGravesAPI MVSGravesAPI;
  * modules that are build on top of it. Graves and the components obviously have
  * their own return types.
  */
-typedef msize_t (*mgravesmr_t)(
+typedef MVSIntResult (*mgravesmr_t)(
     MVSEntityIdentityHdlr,
     struct MVSGravesRequest
         *); // Graves Make Request -> make a request to Graves

@@ -2,9 +2,10 @@
 #define _MVS_ENTITY_REGISTRY_INTERFACE_
 
 #include <mvs_entity_interface.h>
+#include <mvs_int_result.h>
 #include <mvs_types.h>
 
-typedef msize_t (*mentcreate_t)(MVSEntityContext *, mbptr_t *); // entity create
+typedef msize_t (*mentcreate_t)(MVSEntityContext *, mbptr_t *, mstr_t* /*argv*/, msize_t/*argc*/, msize_t/*signature*/); // entity create
 typedef msize_t (*mentdestroy_t)(mptr_t); // entity destroy
 typedef msize_t (*mentexec_t)(mptr_t);    // entity execute
 

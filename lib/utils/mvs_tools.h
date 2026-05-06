@@ -29,6 +29,7 @@
   static // for a variable or a function that is localized to a module only
 #define _MVS_ATTR_LOCAL_ static // any static variable inside a function
 #define _MVS_ATTR_EXTERNAL_ extern
+#define _MVS_ATTR_THREAD_LOCAL_ _Thread_local
 
 #define _stringify(x) #x
 #define _glue(x, y) x##y

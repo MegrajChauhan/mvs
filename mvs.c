@@ -1,3 +1,4 @@
+#include <mvs_graves_arg_parse.h>
 #include <mvs_arg_parse.h>
 #include <mvs_graves.h>
 
@@ -20,9 +21,10 @@ MVSArgOption opts[_MVS_CONSTANT_PARSE_ARG_OPTION_COUNT_] = {
 };
 
 int main(int argc, mstr_t *argv) {
-   MVSArgParse parser = _MVS_MFUNC_ARG_PARSE_INIT_(argc, argv, _MVS_CONSTANT_PARSE_ARG_OPTION_COUNT_, HELP_MSG, VERSION_MSG);
+   MVSArgParse parser = _MVS_MFUNC_ARG_PARSE_INIT_(argc, argv, _MVS_CONSTANT_PARSE_ARG_OPTION_COUNT_);
    MVSArgParseResult res;
-   if (!mvs_parse_all_arg(&parser, opts, &res)) {
+   mvs_graves_arg_parse_set_default(&res);
+   if (!mvs_parse_all_arg(&parser, opts, (mptr_t)(&res), mvs_HELP_MSG, mtrue, 0)) {
    	fprintf(stderr, "Terminating...\n");
    	return -1;
    }

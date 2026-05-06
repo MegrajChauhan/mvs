@@ -8,7 +8,7 @@
 #include <merry_core_registers.h>
 #include <merry_core_sysint.h>
 #include <merry_flags_regr.h>
-#include <merry_graves_request_queue.h>
+#include <mvs_entity_interface.h>
 
 struct MerryCore;
 
@@ -184,7 +184,5 @@ merry_core_ihdlr(cfflags);
 merry_core_ihdlr(reset);
 merry_core_ihdlr(cmpxchg);
 merry_core_ihdlr(cmpxchg_reg);
-
 merry_core_ihdlr(invalid_inst);
-
 #endif

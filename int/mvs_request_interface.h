@@ -5,15 +5,15 @@
 #include <mvs_protectors.h>
 #include <mvs_tools.h>
 #include <mvs_types.h>
+#include <mvs_int_result.h>
 
-_MVS_ATTR_EXTERNAL_ msize_t
+_MVS_ATTR_EXTERNAL_ MVSIntResult
 mvs_request_check_status(struct MVSGravesRequest *req);
 
-_MVS_ATTR_EXTERNAL_ msize_t mvs_request_get_result(struct MVSGravesRequest *req,
-                                                   msize_t *result);
+_MVS_ATTR_EXTERNAL_ MVSIntResult mvs_request_get_result(struct MVSGravesRequest *req);
 
-_MVS_ATTR_EXTERNAL_ struct MVSGravesRequest *
+_MVS_ATTR_EXTERNAL_ MVSIntResult
 mvs_create_req_SPAWN_ENTITY(MVSEntityIdentityHdlr iden, mcond_t *cond,
-                            msize_t ID, mqword_t config, mqword_t properties);
+                            msize_t ID, mqword_t config, mqword_t properties, struct MVSGravesRequest **req);
 
 #endif

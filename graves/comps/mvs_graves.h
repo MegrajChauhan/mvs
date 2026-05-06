@@ -21,6 +21,7 @@ struct MVSGraves {
   msize_t entity_count;    // The number of entities, active and dead, in total
   msize_t active_entities; // All of the active entities
   msize_t return_val;
+  msize_t signature_key;
 
   mcond_t graves_cond;
   mmutex_t graves_lock;

@@ -3,8 +3,9 @@
 _MVS_ATTR_INTERNAL_ mbool_t merry_input_parse_header(MerryInput *inp,
                                                     msize_t flen) {
   // inp will be valid
+  MDBG("Parsing Input Header");
   if (flen < 32)  {
-  	// err
+  	MERR("Invalid file contents: FILE_LEN=%zu", flen);
   	return mfalse;
   }
   mbyte_t chunk[8] = {0};
@@ -16,16 +17,15 @@ _MVS_ATTR_INTERNAL_ mbool_t merry_input_parse_header(MerryInput *inp,
   memcpy(chunk, inp->file_ptr, 8);
 
   if (chunk[0] != 'M' || chunk[1] != 'I' || chunk[2] != 'F') {
-    mvs_log_err("Failed to Identify Input File: IDENTIFICATION bytes"
+    MERR("Failed to Identify Input File: IDENTIFICATION bytes"
          "=%c%c%c",
          chunk[0], chunk[1], chunk[2]);
     return mfalse;
   }
 
   if (chunk[3] != _MERRY_BYTE_ORDER_) {
-    // MERR("Mismatched ENDIANNESS. The host and the input file must have the "
-    //      "same endianness.",
-    //      NULL);
+    MERR("Mismatched ENDIANNESS. The host and the input file must have the "
+         "same endianness.");
     return mfalse;
   }
   
@@ -42,16 +42,16 @@ _MVS_ATTR_INTERNAL_ mbool_t merry_input_parse_header(MerryInput *inp,
   ilen.bytes.b7 = chunk[7];
 
   if (ilen.whole_word == 0) {
-    // MERR("No instructions provided: Instruction section length is 0", NULL);
+    MERR("No instructions provided: Instruction section length is 0");
     return mfalse;  
   }
   // Must be divisible by 8
   if (ilen.whole_word % 8 != 0) {
-    // MERR("Mis-aligned instruction section length: %zu is not divisible by 8",
-         // ilen.whole_word);
+    MERR("Mis-aligned instruction section length: %zu is not 8-byte aligned",
+         ilen.whole_word);
     return mfalse;;
   }
-  // MDBG("Intruction section: Length=%zu BYTES", ilen.whole_word);
+  MDBG("Intruction section: Length=%zu BYTES", ilen.whole_word);
   memcpy(chunk, inp->file_ptr + 16, 8);
 
   dlen.bytes.b0 = chunk[0];
@@ -63,7 +63,7 @@ _MVS_ATTR_INTERNAL_ mbool_t merry_input_parse_header(MerryInput *inp,
   dlen.bytes.b6 = chunk[6];
   dlen.bytes.b7 = chunk[7];
 
-  // MDBG("Data section: Length=%zu BYTES", dlen.whole_word);
+  MDBG("Data section: Length=%zu BYTES", dlen.whole_word);
 
   memcpy(chunk, inp->file_ptr + 24, 8);
 
@@ -76,29 +76,28 @@ _MVS_ATTR_INTERNAL_ mbool_t merry_input_parse_header(MerryInput *inp,
   dbg_len.bytes.b6 = chunk[6];
   dbg_len.bytes.b7 = chunk[7];
 
-  // MDBG("Debug section: Length=%zu BYTES", dbg_len.whole_word);
+  MDBG("Debug section: Length=%zu BYTES", dbg_len.whole_word);
 
   if ((ilen.whole_word + dlen.whole_word + dbg_len.whole_word) > flen) {
-    // MERR("Input file header's information doesn't match with what was read",
-    //      NULL);
+    MERR("Input file header's information doesn't match with what was read");
     return mfalse;
   }
 
   inp->data_len = dlen.whole_word;
   inp->instruction_len = ilen.whole_word;
-  // MDBG("Header Parsing Succeded", NULL);
+  MDBG("Header Parsing Succeded");
   return mtrue;
 }
 
 MerryInput *merry_input_init() {
-  // MDBG("Initializing Input Reader", NULL);
+  MDBG("Initializing Input Reader");
   MerryInput *inp = (MerryInput *)malloc(sizeof(MerryInput));
   if (!inp) {
-    // MERR("Failed to allocate memory for input reader", NULL);
+    MERR("Failed to allocate memory for input reader");
     return NULL;
   }
   if (mvs_mapped_memory_create(&inp->mapped, 0) != MRES_SUCCESS) {
-  	// err
+  	MERR("Failed to create space for input file");
   	free(inp);
   	return NULL;
   }
@@ -109,23 +108,20 @@ MerryInput *merry_input_init() {
   inp->instruction_len = 0;
   inp->instructions = NULL;
   inp->file_ptr = NULL;
-  // MDBG("Successfully initialized input reader", NULL);
+  MDBG("Successfully initialized input reader");
   return inp;
 }
 
 mbool_t merry_input_read(MerryInput *inp, mstr_t path) {
-  // MDBG("Reading Input File %s", path);
+  MDBG("Reading Input File %s", path);
   
   if (mvs_mapped_memory_mapf(inp->mapped, path, 0, MVS_MMAPPED_FLAG_READ | MVS_MMAPPED_FLAG_WRITE | MVS_MMAPPED_FLAG_PRIVATE | MVS_MMAPPED_FLAG_ALIGN) != MRES_SUCCESS) {
-    // MDBG("Failed to initialize input reader", NULL);
+    MERR("Failed to load input contents");
     return mfalse;
   }
-  if (mvs_mapped_memory_obtain_ptr(inp->mapped, &inp->file_ptr, 0) != MRES_SUCCESS) {
-    // debugging!!!
-  	return mfalse;
-  }
+  mvs_mapped_memory_obtain_ptr(inp->mapped, &inp->file_ptr, 0); // shouldn't fail
   if (! merry_input_parse_header(inp, mvs_mapped_memory_obtain_map_size(inp->mapped))) {
-    // MERR("While parsing input file: PATH=%s", path);
+    MERR("While parsing input file: PATH=%s", path);
     return mfalse;
   }
 
@@ -133,7 +129,7 @@ mbool_t merry_input_read(MerryInput *inp, mstr_t path) {
   inp->instructions = inp->file_ptr + 32;
   inp->data = inp->instructions + inp->instruction_len;  
 
-  // MDBG("Read Input file '%s' successfully", path);
+  MDBG("Read Input file '%s' successfully", path);
   return mtrue;
 }
 
@@ -144,5 +140,5 @@ void merry_input_destroy(MerryInput *inp) {
   mvs_mapped_memory_unmap(inp->mapped);
   mvs_mapped_memory_destroy(inp->mapped);
   free(inp);
-  // MDBG("Input Reader Destroyed", NULL);
+  MDBG("Input Reader Destroyed");
 }

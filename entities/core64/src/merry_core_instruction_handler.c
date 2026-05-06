@@ -40,7 +40,7 @@ merry_core_ihdlr(sysint) {
   mqword_t req = core->REGISTER_FILE[MERRY_CORE_R15];
   if (req >= MCORE_SI_LIMIT) {
   	MLOG("Invalid SYSINT used: VALUE=%zu", req);
-    core->REGISTER_FILE[MERRY_CORE_R15] = MRES_CORE_INVALID_SIR;
+    core->REGISTER_FILE[MERRY_CORE_R15] = MERRY_RESULT_INVALID_SIR; 
   	return mtrue; // this doesn't kill the program necessarily as it is just bad argument
   }
   SIHDLRS[req](core);
@@ -57,14 +57,15 @@ merry_core_ihdlr(sysint) {
 merry_core_ihdlr(mint) {
   register mqword_t req_flags = core->REGISTER_FILE[MERRY_CORE_R14];
   mbool_t ASYNC_REQ = req_flags & _MERRY_CORE_REQ_FLAG_ASYNC_REQUEST_;
-  if (ASYNC_REQ && !core->req_list) {
+  if (ASYNC_REQ /*&& !core->req_list*/) {
   	// it hasn't been initialized just yet as it seems and we cannot 
-  	MLOG("ASYNC REQ cannot be made as the ASYNC Queue hasn't been initialized yet.", NULL);
-    core->REGISTER_FILE[MERRY_CORE_R15] = MRES_NOT_FULFILLED;
+  	//MLOG("ASYNC REQ cannot be made as the ASYNC Queue hasn't been initialized yet.");
+    MNOTE("ASYNC Requests are not yet supported.");
+    core->REGISTER_FILE[MERRY_CORE_R15] = MERRY_RESULT_UNSUPPORTED_REQ;
   	return mtrue;
   }
-  if (ASYNC_REQ) 
-    return merry_core_handle_async_requests(core);
+  /*if (ASYNC_REQ) 
+    return merry_core_handle_async_requests(core);*/
   return merry_core_handle_sync_requests(core);
 }
 
@@ -677,11 +678,11 @@ merry_core_ihdlr(call_reg) {
   frame.FRAME_BP = core->SP;
   frame.JMP_TO = addr;
   frame.RET_ADDR = core->PC;
-  if (merry_is_stack_full(core->stack_frames)) {
-    MERR("Call depth reached", NULL);
+  if (_MVS_MFUNC_STACK_CHECK_FULL_(core->stack_frames)) {
+    MERR("Call depth reached");
     return mfalse;
   }
-  if (merry_CoreProcFrame_stack_push(core->stack_frames, &frame) !=
+  if (mvs_stack_push(core->stack_frames, &frame) !=
       MRES_SUCCESS) {
     MERR("Failed to register stack frame:PROC=%zu", addr);
     return mfalse;
@@ -703,11 +704,11 @@ merry_core_ihdlr(call) {
   frame.FRAME_BP = core->SP;
   frame.JMP_TO = addr;
   frame.RET_ADDR = core->PC;
-  if (merry_is_stack_full(core->stack_frames)) {
-    MERR("Call depth reached", NULL);
+  if (_MVS_MFUNC_STACK_CHECK_FULL_(core->stack_frames)) {
+    MERR("Call depth reached");
     return mfalse;
   }
-  if (merry_CoreProcFrame_stack_push(core->stack_frames, &frame) !=
+  if (mvs_stack_push(core->stack_frames, &frame) !=
       MRES_SUCCESS) {
     MERR("Failed to register stack frame:PROC=%zu", addr);
     return mfalse;
@@ -718,13 +719,13 @@ merry_core_ihdlr(call) {
 }
 
 merry_core_ihdlr(ret) {
-  if (merry_is_stack_empty(core->stack_frames)) {
+  if (_MVS_MFUNC_STACK_CHECK_EMPTY_(core->stack_frames)) {
     MERR("Invalid RETURN: PC=%zu", core->PC);
     return mfalse;
   }
 
   MerryCoreStackFrame frame;
-  if ((merry_CoreProcFrame_stack_pop(core->stack_frames, &frame)) !=
+  if ((mvs_stack_pop(core->stack_frames, &frame)) !=
       MRES_SUCCESS) {
     MERR("Failed to restore stack frame: PC=%zu", core->PC);
     return mfalse;
@@ -914,7 +915,7 @@ merry_core_ihdlr(loop) {
 merry_core_ihdlr(push_imm64) {
   MerryHostMemLayout imm;
   if (core->SP >= (_MERRY_CORE_STACK_LEN_ / 8)) {
-    MERR("Stack Overflow", NULL);
+    MERR("Stack Overflow");
     return mfalse;
   }
   core->PC += 8;
@@ -931,7 +932,7 @@ merry_core_ihdlr(push_imm64) {
 merry_core_ihdlr(push_reg) {
   mqword_t imm = core->REGISTER_FILE[core->IR.whole_word & MERRY_CORE_R15];
   if (core->SP >= (_MERRY_CORE_STACK_LEN_ / 8)) {
-    MERR("Stack Overflow", NULL);
+    MERR("Stack Overflow");
     return mfalse;
   }
   core->stack[core->SP] = imm;
@@ -941,7 +942,7 @@ merry_core_ihdlr(push_reg) {
 
 merry_core_ihdlr(pop64) {
   if (core->SP == 0) {
-    MERR("Stack Underflow", NULL);
+    MERR("Stack Underflow");
     return mfalse;
   }
   core->SP--;
@@ -952,7 +953,7 @@ merry_core_ihdlr(pop64) {
 
 merry_core_ihdlr(pusha) {
   if (core->SP >= (_MERRY_CORE_STACK_LEN_ / 8 - MERRY_CORE_REG_COUNT)) {
-    MERR("Stack Overflow", NULL);
+    MERR("Stack Overflow");
     return mfalse;
   }
   for (msize_t i = 0; i < MERRY_CORE_REG_COUNT; i++) {
@@ -964,7 +965,7 @@ merry_core_ihdlr(pusha) {
 
 merry_core_ihdlr(popa) {
   if (core->SP < MERRY_CORE_REG_COUNT) {
-    MERR("Stack Underflow", NULL);
+    MERR("Stack Underflow");
     return mfalse;
   }
   for (msize_t i = MERRY_CORE_R15; i >= 0; i--) {
@@ -1728,10 +1729,5 @@ merry_core_ihdlr(cmpxchg_reg) {
     MERR("INVALID OPERAND at PC=%zu", core->PC);
     return mfalse;
   }
-  return mtrue;
-}
-
-merry_core_ihdlr(invalid_inst) {
-  MWARN("UNKNOWN INSTRUCTION at PC=%zu", core->PC);
   return mtrue;
 }

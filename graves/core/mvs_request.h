@@ -7,6 +7,7 @@
 #include <mvs_protectors.h>
 #include <mvs_request_types.h>
 #include <mvs_types.h>
+#include <mvs_int_result.h>
 #include <stdatomic.h>
 #include <stdlib.h>
 
@@ -18,9 +19,7 @@ struct MVSGravesRequest {
   mcond_t *wakeup_cond;
   atm_mbool_t request_served;
   atm_mbool_t queued;
-  msize_t RESULT[_MVS_CONSTANT_REQUEST_RESULT_ARRAY_LEN_]; // This where the
-                                                           // result is provided
-                                                           // for the request
+  MVSIntResult res;
   union {
     struct {
       msize_t ID;

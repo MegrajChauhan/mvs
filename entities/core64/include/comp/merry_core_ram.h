@@ -4,10 +4,10 @@
 #include <mvs_config.h>
 #include <mvs_tools.h>
 #include <mvs_types.h>
-#include <mvs_logger.h>
 #include <mvs_list.h>
 #include <mvs_results.h>
 #include <merry_core_defs.h>
+#include <merry_logger_subsystem.h>
 #include <stdatomic.h>
 #include <stdlib.h>
 

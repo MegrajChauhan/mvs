@@ -1,6 +1,12 @@
 #ifndef _MERRY_CORE_
 #define _MERRY_CORE_
 
+#include <mvs_types.h>
+#include <mvs_tools.h>
+#include <mvs_list.h>
+#include <mvs_mapped_memory.h>
+#include <mvs_protectors.h>
+#include <mvs_stack.h>
 #include <merry_core_defs.h>
 #include <merry_core_instruction_handler.h>
 #include <merry_core_internals.h>
@@ -8,50 +14,39 @@
 #include <merry_core_registers.h>
 #include <merry_core_sysint.h>
 #include <merry_flags_regr.h>
-#include <merry_graves_request_queue.h>
-#include <merry_list.h>
-#include <merry_logger.h>
-#include <merry_mapped_memory.h>
-#include <merry_protectors.h>
-#include <merry_requests.h>
-#include <merry_stack.h>
-#include <merry_threads.h>
-#include <merry_types.h>
-#include <merry_utils.h>
+#include <merry_logger_subsystem.h>
+#include <merry_input_reader.h>
+#include <merry_arg_parse.h>
+#include <mvs_entity_interface.h>
 #include <stdlib.h>
-
-_MERRY_DECLARE_STATIC_LIST_(Interface, MerryInterface *);
-_MERRY_DECLARE_STATIC_LIST_(Request, MerryGravesRequest*); // we will have static list(for maximum allowed queued requests)
-_MERRY_DECLARE_STACK_(CoreProcFrame, MerryCoreStackFrame);
-/* We are going to need so many more different lists and stacks! Oh Lord! */
 
 typedef struct MerryCore MerryCore;
 
 struct MerryCore {
+  MVSEntityContext ctx;
+  MerryParseResult res;
   MerryCoreRAM *iram, *dram;
-  MerryInterfaceList
-      *interfaces; // we will need a much more complicated data structure
-  MerryCoreProcFrameStack *stack_frames;
-  MerryMappedMemory *st;
-  MerryRequestList *req_list; // only initialized using a SYSINT if the user wants the capability  
+  MVSStack *stack_frames;
+  MerryInput *input;
+  MVSMappedMemory *st;
   MerryCoreFlagsRegr flags;
   MerryCoreFFlagsRegr fflags;
+  mcond_t cond;
   mqword_t REGISTER_FILE[MERRY_CORE_REG_COUNT];
   maddress_t BP, SP;
   maddress_t PC;
-  MerryHostMemLayout IR;
+  MVSHostMemLayout IR;
   mqptr_t stack;
   msize_t ret;
+  msize_t signature;
 };
 
-mresult_t merry_core_create(maddress_t st_addr, MerryCore **core);
+msize_t merry_core_create(MVSEntityContext *ctx, mbptr_t* repr, mstr_t *argv, msize_t argv, msize_t sig);
 
-void merry_core_destroy(MerryCore *c);
+msize_t merry_core_destroy(mptr_t c);
 
-msize_t merry_core_run(MerryCore *c);
+msize_t merry_core_run(mptr_t c);
 
-mresult_t merry_core_prepare_inst(MerryCore *c, mbptr_t inst, msize_t len);
-
-mresult_t merry_core_prepare_data(MerryCore *c, mbptr_t data, msize_t len);
+mbool_t merry_core_preinit(MerryCore *core, mstr_t *argv, msize_t argv, msize_t sig);
 
 #endif

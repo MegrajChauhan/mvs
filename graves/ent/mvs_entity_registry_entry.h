@@ -12,7 +12,7 @@ typedef struct MVSEntityRegistryEntry MVSEntityRegistryEntry;
  * 1 = Failure
  * Graves also provides the arguments for this entity via the 3rd argument and the number of arguments via the fourth argument
  */
-typedef msize_t (*mentcreate_t)(MVSEntityContext *, mbptr_t *, mstr_t*, msize_t); // entity create
+typedef msize_t (*mentcreate_t)(MVSEntityContext *, mbptr_t *, mstr_t* /*argv*/, msize_t/*argc*/, msize_t/*signature*/); // entity create
 
 /*
  * Returns don't really matter here. The returns are printed out as debug info

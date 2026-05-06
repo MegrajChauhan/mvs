@@ -3,7 +3,7 @@
 typedef msize_t (*mgravesreqhdlr_t)(MVSGravesRequest *);
 
 /*----Request Handlers----*/
-_MVS_ATTR_INTERNAL_ msize_t
+_MVS_ATTR_INTERNAL_ msize_t 
 mvs_request_handle_SPAWN_ENTITY(MVSGravesRequest *req);
 
 _MVS_ATTR_INTERNAL_ MVSGraves graves = {0};
@@ -81,6 +81,7 @@ _MVS_ATTR_INTERNAL_ msize_t mvs_graves_init(MVSArgParseResult *opts) {
   graves.entity_count = 0;
   graves.active_entities = 0;
   graves.return_val = 0;
+  graves.signature_key = 0;
   graves.cmd_opts = opts;
   graves.local_API.make_request = mvs_graves_API_make_request;
   mvs_log_dbg("Entities Registered: %zu", mvs_registry_get_count());
@@ -119,7 +120,7 @@ _MVS_ATTR_INTERNAL_ msize_t mvs_graves_run() {
       // There are no active entities running
       // Based on what there currently is: either launch a command interpreter
       // or just terminate
-      break; // and i choose terminate ]=)
+      break; // and imsize_t choose terminate ]=)
     }
     if ((req = mvs_request_queue_manager_dequeue_request(graves.req_queue)) ==
         NULL) {
@@ -130,20 +131,19 @@ _MVS_ATTR_INTERNAL_ msize_t mvs_graves_run() {
       if (!entity) {
         mvs_log_err("Invalid Request Made: ID=%zu, UID=%zu", req->iden->ID,
                     req->iden->UID);
-        req->RESULT[0] = _MVS_CONSTANT_REQUEST_REQ_INVALID_;
+        req->res = _MVS_MFUNC_MAKE_INT_RESULT_(mfalse, MINT_SRC_GRAVES, _MVS_CONSTANT_REQUEST_REQ_INVALID_ARGS_);
       } else {
         // handle the request
         if (req->type >= MREQ_COUNT) {
           mvs_log_err("Invalid Request: ID=%zu, UID=%zu, REQ=%zu",
                       req->iden->ID, req->iden->UID, req->type);
-          req->RESULT[0] = _MVS_CONSTANT_REQUEST_REQ_TYPE_INVALID_;
+		  req->res = _MVS_MFUNC_MAKE_INT_RESULT_(mfalse, MINT_SRC_GRAVES, _MVS_CONSTANT_REQUEST_REQ_TYPE_INVALID_);
         } else {
-          msize_t res = request_hdlrs[req->type](req);
-          req->RESULT[0] = _MVS_CONSTANT_REQUEST_REQ_SUCCESS_;
-          req->RESULT[1] = res;
+          msize_t ret = request_hdlrs[req->type](req);
           mvs_log_dbg("Request Served:ID=%zu, UID=%zu, REQ=%zu(RET=%zu)",
                       req->iden->ID, req->iden->UID, req->type, res);
-        }
+          req->res = _MVS_MFUNC_MAKE_INT_RESULT_(mtrue, MINT_SRC_GRAVES, ret);
+		}
       }
       atomic_store_explicit(&req->request_served, mtrue, memory_order_release);
       if (req->wakeup_cond)
@@ -190,10 +190,10 @@ void mvs_run(MVSArgParseResult *opts) {
   exit(res);
 }
 
-msize_t mvs_graves_API_make_request(MVSEntityIdentity *hdlr,
+MVSIntResult mvs_graves_API_make_request(MVSEntityIdentity *hdlr,
                                     MVSGravesRequest *req) {
   if (!hdlr || !req)
-    return 2;
+    return _MVS_MFUNC_MAKE_INT_RESULT_(mfalse, MINT_SRC_GRAVES, _MVS_CONSTANT_REQUEST_REQ_INVALID_ARGS_);
   mvs_mutex_lock(&graves.graves_lock);
   msize_t ret = 0;
   /*
@@ -206,19 +206,15 @@ msize_t mvs_graves_API_make_request(MVSEntityIdentity *hdlr,
    */
   if (req->wakeup_cond) {
     if (mvs_request_queue_manager_enqueue_request(graves.req_queue, req) != 0)
-      ret = 0;
-    else
       ret = 1;
   } else {
     if (mvs_request_queue_manager_enqueue_request_async(graves.req_queue,
                                                         req) != 0)
-      ret = 0;
-    else
       ret = 1;
   }
   mvs_cond_signal(&graves.graves_cond);
   mvs_mutex_unlock(&graves.graves_lock);
-  return ret;
+  return _MVS_MFUNC_MAKE_INT_RESULT_(ret?mfalse:mtrue, MINT_SRC_GRAVES, ret?_MVS_CONSTANT_REQUEST_REQ_SYS_FAILURE_:0);
 }
 
 /*
@@ -304,7 +300,7 @@ _MVS_ATTR_INTERNAL_ mbool_t mvs_graves_launch_new_entity(MVSEntity *entity) {
   context.self = &entity->identity;
   context.API = graves.local_API;
   mbptr_t entity_repr;
-  if (entry->create(&context, &entity_repr, NULL, 0) != 0) {
+  if (entry->create(&context, &entity_repr, NULL, 0, graves.signature_key++) != 0) {
     return mfalse;
   }
   entity->entity_repr = (mptr_t)entity_repr;
