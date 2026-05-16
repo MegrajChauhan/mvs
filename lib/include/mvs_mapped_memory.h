@@ -45,6 +45,6 @@ mResult_t mvs_mapped_memory_obtain_ptr(MVSMappedMemory *map, mbptr_t *ptr,
 
 mResult_t mvs_mapped_memory_obtain_map_size(MVSMappedMemory *map, msize_t *len);
 
-mResult_t merry_mapped_memory_destroy(MVSMappedMemory *map);
+mResult_t mvs_mapped_memory_destroy(MVSMappedMemory *map);
 
 #endif

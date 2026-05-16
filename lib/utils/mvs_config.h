@@ -26,7 +26,7 @@
 
 #if defined(__amd64) || defined(__amd64__)
 #define _MVS_HOST_CPU_AMD_
-#define _MVS_HOST_ARCH_X86_
+#define _MVS_HOST_ARCH_x86_
 #endif
 
 #if defined(__x86_64)

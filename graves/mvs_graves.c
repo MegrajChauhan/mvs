@@ -8,28 +8,43 @@ mvs_request_handle_SPAWN_ENTITY(MVSGravesRequest *req);
 
 _MVS_ATTR_INTERNAL_ MVSGraves graves = {0};
 _MVS_ATTR_INTERNAL_ mgravesreqhdlr_t request_hdlrs[] = {
-    mvs_request_handle_SPAWN_ENTITY};
+    mvs_request_handle_SPAWN_ENTITY
+};
 
 /*----Other Functions----*/
 _MVS_ATTR_INTERNAL_ msize_t mvs_graves_launch_logger(mLogLvl_t lvl);
+
 _MVS_ATTR_INTERNAL_ void mvs_graves_shutdown_logger();
+
 _MVS_ATTR_INTERNAL_ msize_t mvs_graves_init(MVSArgParseResult *opts);
+
 _MVS_ATTR_INTERNAL_ void mvs_graves_destroy();
+
 _MVS_ATTR_INTERNAL_ msize_t mvs_graves_run();
+
 _MVS_ATTR_INTERNAL_ msize_t mvs_graves_launch_all_entities();
+
 _MVS_ATTR_INTERNAL_ MVSEntity *mvs_graves_get_entity(MVSEntityIdentity *iden);
+
 _MVS_ATTR_INTERNAL_ mbool_t mvs_graves_check_config_valid(msize_t ID,
                                                           mqword_t conf);
+
 _MVS_ATTR_INTERNAL_ mbool_t mvs_graves_check_properties_valid(msize_t ID,
                                                               mqword_t prop);
+
 _MVS_ATTR_INTERNAL_ MVSEntity *mvs_graves_find_free_entity();
+
 _MVS_ATTR_INTERNAL_ MVSEntity *mvs_graves_create_new_entity();
+
 _MVS_ATTR_INTERNAL_ void mvs_graves_initialize_new_entity(MVSEntity *entity,
                                                           msize_t ID,
                                                           mqword_t conf,
                                                           mqword_t prop);
+
 _MVS_ATTR_INTERNAL_ mbool_t mvs_graves_track_new_entity(MVSEntity *entity);
+
 _MVS_ATTR_INTERNAL_ mbool_t mvs_graves_launch_new_entity(MVSEntity *entity);
+
 _MVS_ATTR_INTERNAL_ mthreadRet_t mvs_graves_entity_launcher(mptr_t ent);
 
 _MVS_ATTR_INTERNAL_ msize_t mvs_graves_launch_logger(mLogLvl_t lvl) {
@@ -52,6 +67,7 @@ _MVS_ATTR_INTERNAL_ msize_t mvs_graves_launch_logger(mLogLvl_t lvl) {
 }
 
 _MVS_ATTR_INTERNAL_ void mvs_graves_shutdown_logger() {
+  mvs_log_dbg("Shutting Down Logger[Debug messages will stop]...");
   mvs_logger_wakeup(mtrue);          // Stop the logger
   mvs_logger_wait_for_termination(); // wait for proper termination
   mvs_logger_destroy();
@@ -120,7 +136,7 @@ _MVS_ATTR_INTERNAL_ msize_t mvs_graves_run() {
       // There are no active entities running
       // Based on what there currently is: either launch a command interpreter
       // or just terminate
-      break; // and imsize_t choose terminate ]=)
+      break; // and i choose terminate ]=)
     }
     if ((req = mvs_request_queue_manager_dequeue_request(graves.req_queue)) ==
         NULL) {
@@ -131,18 +147,17 @@ _MVS_ATTR_INTERNAL_ msize_t mvs_graves_run() {
       if (!entity) {
         mvs_log_err("Invalid Request Made: ID=%zu, UID=%zu", req->iden->ID,
                     req->iden->UID);
-        req->res = _MVS_MFUNC_MAKE_INT_RESULT_(mfalse, MINT_SRC_GRAVES, _MVS_CONSTANT_REQUEST_REQ_INVALID_ARGS_);
+        req->response = _API_REQ_RESPONSE_BAD_(API_SRC_GRAVES, API_REQ_RESPONSE_INVALID_CRED);  
       } else {
         // handle the request
         if (req->type >= MREQ_COUNT) {
           mvs_log_err("Invalid Request: ID=%zu, UID=%zu, REQ=%zu",
                       req->iden->ID, req->iden->UID, req->type);
-		  req->res = _MVS_MFUNC_MAKE_INT_RESULT_(mfalse, MINT_SRC_GRAVES, _MVS_CONSTANT_REQUEST_REQ_TYPE_INVALID_);
+		  req->response = _API_REQ_RESPONSE_BAD_(API_SRC_GRAVES, API_REQ_RESPONSE_INVALID_REQ);
         } else {
-          msize_t ret = request_hdlrs[req->type](req);
-          mvs_log_dbg("Request Served:ID=%zu, UID=%zu, REQ=%zu(RET=%zu)",
-                      req->iden->ID, req->iden->UID, req->type, res);
-          req->res = _MVS_MFUNC_MAKE_INT_RESULT_(mtrue, MINT_SRC_GRAVES, ret);
+          request_hdlrs[req->type](req);
+          mvs_log_dbg("Request Served:ID=%zu, UID=%zu, REQ=%zu",
+                      req->iden->ID, req->iden->UID, req->type);
 		}
       }
       atomic_store_explicit(&req->request_served, mtrue, memory_order_release);
@@ -190,10 +205,10 @@ void mvs_run(MVSArgParseResult *opts) {
   exit(res);
 }
 
-MVSIntResult mvs_graves_API_make_request(MVSEntityIdentity *hdlr,
-                                    MVSGravesRequest *req) {
-  if (!hdlr || !req)
-    return _MVS_MFUNC_MAKE_INT_RESULT_(mfalse, MINT_SRC_GRAVES, _MVS_CONSTANT_REQUEST_REQ_INVALID_ARGS_);
+APIResult mvs_graves_API_make_request(MVSEntityIdentity *hdlr,
+                                    MVSGravesRequest **req) {
+  if (!hdlr || !req || !(*req))
+    return _API_FAILURE_(API_SRC_GRAVES, API_CODE_REQ_INVALID_ARGS);
   mvs_mutex_lock(&graves.graves_lock);
   msize_t ret = 0;
   /*
@@ -204,17 +219,22 @@ MVSIntResult mvs_graves_API_make_request(MVSEntityIdentity *hdlr,
    * hdlr isn't really important here. In future, it could help keep accounting
    * information.
    */
-  if (req->wakeup_cond) {
-    if (mvs_request_queue_manager_enqueue_request(graves.req_queue, req) != 0)
+  if ((*req)->wakeup_cond) {
+    if (mvs_request_queue_manager_enqueue_request(graves.req_queue, *req) != 0)
       ret = 1;
   } else {
     if (mvs_request_queue_manager_enqueue_request_async(graves.req_queue,
-                                                        req) != 0)
+                                                        *req) != 0)
       ret = 1;
   }
   mvs_cond_signal(&graves.graves_cond);
   mvs_mutex_unlock(&graves.graves_lock);
-  return _MVS_MFUNC_MAKE_INT_RESULT_(ret?mfalse:mtrue, MINT_SRC_GRAVES, ret?_MVS_CONSTANT_REQUEST_REQ_SYS_FAILURE_:0);
+  APIResult res;
+  if (ret)
+		  res = _API_FAILURE_(API_SRC_GRAVES, API_CODE_REQ_COMP_FAILURE);
+  else 
+		  res = _API_GOOD_CALL_();
+  return res; 
 }
 
 /*
@@ -295,8 +315,8 @@ _MVS_ATTR_INTERNAL_ mbool_t mvs_graves_track_new_entity(MVSEntity *entity) {
 }
 
 _MVS_ATTR_INTERNAL_ mbool_t mvs_graves_launch_new_entity(MVSEntity *entity) {
-  MVSEntityRegistryEntry *entry = mvs_registry_get_entry(entity->EID);
-  MVSEntityContext context;
+  EntityRegistryEntry *entry = mvs_registry_get_entry(entity->EID);
+  EntityContext context;
   context.self = &entity->identity;
   context.API = graves.local_API;
   mbptr_t entity_repr;
@@ -317,7 +337,7 @@ _MVS_ATTR_INTERNAL_ mbool_t mvs_graves_launch_new_entity(MVSEntity *entity) {
 
 _MVS_ATTR_INTERNAL_ mthreadRet_t mvs_graves_entity_launcher(mptr_t ent) {
   MVSEntity *entity = (MVSEntity *)ent;
-  MVSEntityRegistryEntry *entry = mvs_registry_get_entry(entity->EID);
+  EntityRegistryEntry *entry = mvs_registry_get_entry(entity->EID);
   atomic_store_explicit(&entity->state.state, MENTITY_RUNNING,
                         memory_order_release);
   while (mtrue) {
@@ -360,50 +380,69 @@ mvs_request_handle_SPAWN_ENTITY(MVSGravesRequest *req) {
    * Here, more checks are missing
    */
   msize_t ID = req->args.spawn_entity.ID;
+  mbool_t success = mfalse;
+  apiSrc_t src = API_SRC_NONE;
+  apiReqResponse_t resp = API_REQ_RESPONSE_NONE;
   mvs_log_dbg("Serving Request[SPAWN_ENTITY]: ID=%zu, UID=%zu for EID=%zu",
               req->iden->ID, req->iden->UID, ID);
-  MVSEntityRegistryEntry *entry = mvs_registry_get_entry(ID);
-  if (!entry) {
-    mvs_log_err("Entity[%zu] didn't register to MVS...", ID);
-    return _MVS_CONSTANT_REQUEST_REQ_ENTITY_NOT_REGISTERED_;
-  }
   if (ID >= _MVS_CONSTANT_ENTITY_COUNT_) {
     mvs_log_err("Invalid EID[%zu] provided for SPAWNING[ID=%zu, UID=%zu]", ID,
                 req->iden->ID, req->iden->UID);
-    return _MVS_CONSTANT_REQUEST_REQ_INVALID_EID_;
+    resp = API_REQ_RESPONSE_INVALID_EID;
+	src = API_SRC_GRAVES;
+    goto __mvs_graves_req_hdlr_spawn_entity_end;
+  }
+  EntityRegistryEntry *entry = mvs_registry_get_entry(ID);
+  if (!entry) {
+    mvs_log_err("Entity[%zu] didn't register to MVS...", ID);
+    resp = API_REQ_RESPONSE_UNREGISTERED_EID;
+	src = API_SRC_GRAVES;
+	goto __mvs_graves_req_hdlr_spawn_entity_end;
   }
   if (!mvs_graves_check_config_valid(ID, req->args.spawn_entity.config)) {
     mvs_log_err("Invalid Config provided for SPAWNING[ID=%zu, UID=%zu]",
                 req->iden->ID, req->iden->UID);
-    return _MVS_CONSTANT_REQUEST_REQ_INVALID_CONFIG_;
+    resp = API_REQ_RESPONSE_INVALID_CONFIG;
+	src = API_SRC_GRAVES;
+	goto __mvs_graves_req_hdlr_spawn_entity_end;
   }
   if (!mvs_graves_check_properties_valid(ID,
                                          req->args.spawn_entity.properties)) {
     mvs_log_err("Invalid Properties provided for SPAWNING[ID=%zu, UID=%zu]",
                 req->iden->ID, req->iden->UID);
-    return _MVS_CONSTANT_REQUEST_REQ_INVALID_PROPERTY_;
+    resp = API_REQ_RESPONSE_INVALID_PROPERTY;
+	src = API_SRC_GRAVES;
+	goto __mvs_graves_req_hdlr_spawn_entity_end;
   }
   MVSEntity *entity = mvs_graves_find_free_entity();
   if (!entity) {
     // gonna have to create one
     entity = mvs_graves_create_new_entity();
     if (!entity) {
-      req->RESULT[2] = errno;
-      return _MVS_CONSTANT_REQUEST_REQ_SYS_FAILURE_;
+      resp = (apiReqResponse_t)errno;
+      src = API_SRC_HOST;
+	  goto __mvs_graves_req_hdlr_spawn_entity_end;
     }
     mvs_graves_initialize_new_entity(entity, ID, req->args.spawn_entity.config,
                                      req->args.spawn_entity.properties);
     if (!mvs_graves_track_new_entity(entity)) {
-      req->RESULT[2] = errno;
-      return _MVS_CONSTANT_REQUEST_REQ_SYS_FAILURE_;
+      resp = (apiReqResponse_t)errno;
+      src = API_SRC_HOST;
+	  goto __mvs_graves_req_hdlr_spawn_entity_end;
     }
   }
-  if (!mvs_graves_launch_new_entity(entity))
-    return _MVS_CONSTANT_REQUEST_REQ_FAILED_LAUNCH_;
+  if (!mvs_graves_launch_new_entity(entity)) {
+    resp = API_REQ_RESPONSE_ENTITY_LAUNCH_FAILED;
+	src = API_SRC_GRAVES; // we cannot be sure though
+    goto __mvs_graves_req_hdlr_spawn_entity_end;
+  }
   mvs_log_dbg(
       "Serving Request[SPAWN_ENTITY] Success: ID=%zu, UID=%zu for EID=%zu",
       req->iden->ID, req->iden->UID, ID);
   mvs_log_dbg("New Entity: ID=%zu, UID=%zu", entity->identity.ID,
               entity->identity.UID);
-  return _MVS_CONSTANT_REQUEST_REQ_SUCCESS_;
+  success = mtrue;
+__mvs_graves_req_hdlr_spawn_entity_end:
+  req->response = _API_MAKE_REQUEST_RESPONSE_(success, src, resp);
+  return 0;
 }

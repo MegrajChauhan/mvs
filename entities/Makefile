@@ -1,2 +1,2 @@
 all:
-	make -C core64
+	echo Nothing

@@ -16,16 +16,12 @@ mvs_find_option_hdlr(MVSArgParse *parser, MVSArgOption *opts) {
 }
 
 mbool_t mvs_parse_all_arg(MVSArgParse *parser, MVSArgOption *opts,
-                          mptr_t res, marghdlr_t hlp, mbool_t mvs, msize_t sig) {
+                          MVSArgParseResult* res, marghdlr_t hlp) {
   while (parser->ptr < parser->argc) {
     MVSArgOption *opt = mvs_find_option_hdlr(parser, opts);
     if (!opt) {
-      if (msv)
-      	fprintf(stderr, "<INIT>: Unknown argument '%s'\n",
+      fprintf(stderr, "<INIT>: Unknown argument '%s'\n",
         	      parser->argv[parser->ptr]);
-      } else {
-      	mvs_log_err("[SIG=%zu]: Unknown argument '%s'\n", sig, parser->argv[parser->ptr]);
-      }
       hlp(parser, res);
       return mfalse;
     }

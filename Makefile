@@ -9,7 +9,7 @@ DIRS = lib/arch/x86_64 \
       graves/comps \
       graves/core \
       graves/ent \
-      int 
+      api/include 
       
 SRC_DIR = graves/
 INC_DIRS = ${addprefix -I, ${DIRS}}
@@ -22,10 +22,11 @@ FILES_TO_COMPILE = ${foreach _D, ${SRC_DIR},${wildcard ${_D}*.c}}
 OUTPUT_FILES_NAME = ${patsubst %.c, ${OUTPUT_DIR}%.o, ${FILES_TO_COMPILE}}
 DEPS=${patsubst %.c, ${OUTPUT_DEPS}%.d, ${FILES_TO_COMPILE}}
 
-LINKS = -lmvs -lcore64
+LINKS = -lmvs -lapi
 
 all: directories ${OUTPUT_FILES_NAME}
 	make -C lib
+	make -C api
 	make -C entities
 	${CC} ${FLAGS} ${OUTPUT_FILES_NAME} mvs.c -Lbuild ${LINKS} ${INC_DIRS} -o ${OUTPUT_DIR}mvs
 

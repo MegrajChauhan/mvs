@@ -2,12 +2,11 @@
 #define _MVS_REQUEST_
 
 #include <mvs_entity.h>
-#include <mvs_entity_interface.h>
 #include <mvs_graves_constants.h>
 #include <mvs_protectors.h>
 #include <mvs_request_types.h>
 #include <mvs_types.h>
-#include <mvs_int_result.h>
+#include <api_request_response.h>
 #include <stdatomic.h>
 #include <stdlib.h>
 
@@ -19,12 +18,13 @@ struct MVSGravesRequest {
   mcond_t *wakeup_cond;
   atm_mbool_t request_served;
   atm_mbool_t queued;
-  MVSIntResult res;
+  APIRequestResponse response;
   union {
     struct {
       msize_t ID;
       mqword_t config;
       mqword_t properties;
+	  mqword_t internal_conf; // 0 would imply 'default'
     } spawn_entity;
   } args;
 };

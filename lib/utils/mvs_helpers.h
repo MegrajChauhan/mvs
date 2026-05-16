@@ -8,17 +8,17 @@
 #include <mvs_types.h>
 #include <string.h>
 
-#define MVS_SIGN_EXTEND8(val)                                                  \
+#define _MVS_MFUNC_SIGN_EXTEND8_(val)                                                  \
   do {                                                                         \
     if ((val >> 7) == 1)                                                       \
       val |= 0xFFFFFFFFFFFFFF00;                                               \
   } while (0)
-#define MVS_SIGN_EXTEND16(val)                                                 \
+#define _MVS_MFUNC_SIGN_EXTEND16_(val)                                                 \
   do {                                                                         \
     if ((val >> 15) == 1)                                                      \
       val |= 0xFFFFFFFFFFFF0000;                                               \
   } while (0)
-#define MVS_SIGN_EXTEND32(val)                                                 \
+#define _MVS_MFUNC_SIGN_EXTEND32_(val)                                                 \
   do {                                                                         \
     if ((val >> 31) == 1)                                                      \
       val |= 0xFFFFFFFFFF000000;                                               \
