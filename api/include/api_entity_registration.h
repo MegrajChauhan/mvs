@@ -14,7 +14,7 @@
 
 typedef struct EntityRegistryEntry EntityRegistryEntry;
 
-typedef msize_t (*entcreate_t)(EntityContext *, mbptr_t *, mstr_t* /*argv*/, msize_t/*argc*/,msize_t/*conf*/, msize_t/*signature*/); // entity create
+typedef msize_t (*entcreate_t)(EntityContext *, mbptr_t *, msize_t/*conf*/); // entity create
 
 /*
  * Returns don't really matter here. The returns are printed out as debug info

@@ -18,6 +18,7 @@ struct MVSEntitySpawnCommand {
   msize_t instances;
   msize_t props;
   msize_t confs;
+  msize_t in_setup;
   mbool_t slist; // Was the command provided in the slist?
   msize_t argc;
   mstr_t *argv;
@@ -26,6 +27,8 @@ struct MVSEntitySpawnCommand {
 
 struct MVSArgParseResult {
   msize_t log_lvl;
+  mbool_t ensure_success; // If at least one entity fails to launch, terminate entirely
+  msize_t entities_to_spawn;
   MVSEntitySpawnCommand *spawn_commands;
 };
 

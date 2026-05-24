@@ -25,8 +25,10 @@
   } while (0)
 
 #define _MVS_MFUNC_BIT_GROUP_(name, len) unsigned name : len
+#define _MVS_MFUNC_ISUPPER_(ch) ((ch) >= 'A' && (ch) <= 'Z')
+#define _MVS_MFUNC_ISLOWER_(ch) ((ch) >= 'a' && (ch) <= 'z')
 #define _MVS_MFUNC_ISALPHA_(ch)                                                \
-  (((ch) >= 'a' && (ch) <= 'z') || ((ch) >= 'Z' && (ch) <= 'Z'))
+  (_MVS_MFUNC_ISLOWER_(ch) || _MVS_MFUNC_ISUPPER_(ch))
 #define _MVS_MFUNC_ISNUM_(ch) (((ch) >= '0' && (ch) <= '9'))
 #define _MVS_MFUNC_ISALNUM_(ch)                                                \
   (_MVS_MFUNC_ISALPHA_(ch) || _MVS_MFUNC_ISNUM_(ch))
@@ -36,6 +38,7 @@ typedef union MVSPtrToQword MVSPtrToQword;
 typedef union MVSHostMemLayout MVSHostMemLayout;
 typedef union MVSFloatToDword MVSFloatToDword;
 typedef union MVSDoubleToQword MVSDoubleToQword;
+typedef struct MVSStrSlice MVSStrSlice;
 
 union MVSPtrToQword {
   mptr_t ptr;
@@ -102,6 +105,11 @@ union MVSFloatToDword {
 union MVSDoubleToQword {
   double d_val;
   mqword_t q_val;
+};
+
+struct MVSStrSlice {
+		mstr_t ptr;
+		msize_t len;
 };
 
 // void MVS_LITTLE_ENDIAN_to_BIG_ENDIAN(MVSHostMemLayout *le);

@@ -1,0 +1,50 @@
+; This is a comment
+; Defining an entity is generally done as
+; ID: {
+;    eid: 10,
+;    config: {
+;       local_list = true|false,
+;       ll_lim = 100,
+;    },
+;    properties: {
+;       ....
+;    },
+;    setup: {
+;       prop_1 = value,
+;       prop_2 = "abc",
+;       prop_3 = true,
+;       prop_4 = 100
+;    },
+;    args: {
+;       "arg1",
+;       "arg2=11",
+;       "-arg3",
+;       "arg4=a,b,c",
+;    },
+;    add_to_ll: {
+;       2 = 0, ; The format is ID = LID where LID= local ID
+;    }
+; }
+; If any other instance needs to copy the above
+; ID2: [ID]
+; Note that ID must start from 0 and incrementally grow. For eg, you cannot have 10 at the first
+; Also, note that LID in add_to_ll must also grow incrementally
+; example:
+0: {
+  eid: 100,
+  config: {
+     local_list = true,
+  },
+  args: {
+     "-f=\"hello.txt\"",
+  },
+  setup: {
+    io = true, 
+  },
+  add_to_ll: {
+     1 = 0
+  }
+}
+1: [0]
+
+

@@ -18,6 +18,8 @@ mbool_t mvs_SPAWN_ENTITY_COMMAND(MVSArgParse *parser, MVSArgParseResult *res);
 
 mbool_t mvs_SLIST(MVSArgParse *parser, MVSArgParseResult *res);
 
+mbool_t mvs_ES(MVSArgParse *parser, MVSArgParseResult *res);
+
 void mvs_graves_arg_parse_set_default(MVSArgParseResult* res);
 
 #endif

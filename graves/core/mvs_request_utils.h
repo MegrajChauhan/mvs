@@ -12,16 +12,17 @@
 #include <stdatomic.h>
 #include <string.h>
 
-APIResult mvs_request_check_status(MVSGravesRequest *req);
+apiRes_t mvs_request_check_status(MVSGravesRequest *req);
 
-APIResult mvs_request_get_response(MVSGravesRequest *req, APIRequestResponse *res);
+apiRes_t mvs_request_get_response(MVSGravesRequest *req, APIRequestResponse *res);
 
+apiRes_t mvs_request_get_result(MVSGravesRequest *req, GravesRequestResult *res);
 /*
  * In case of every request, if the condition variable is NULL than the request
  * is automatically inferenced as an async request.
  */
 
-APIResult mvs_create_req_SPAWN_ENTITY(MVSEntityIdentity *iden,
+apiRes_t mvs_create_req_SPAWN_ENTITY(MVSEntityIdentity *iden,
                                               mcond_t *cond, msize_t ID,
                                               mqword_t config,
                                               mqword_t properties,

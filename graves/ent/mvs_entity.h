@@ -4,6 +4,7 @@
 #include <mvs_entity_defs.h>
 #include <mvs_tools.h>
 #include <mvs_types.h>
+#include <mvs_list.h>
 
 typedef struct MVSEntity MVSEntity;
 typedef struct MVSEntityIdentity MVSEntityIdentity;
@@ -25,7 +26,12 @@ union MVSEntityConfig {
    * This represents the configuration that the entity starts in
    */
   struct {
-    mqword_t resb;
+    mqword_t can_spawn_entity: 1;  // Can the entity spawn more entity? 
+    mqword_t local_ent_list_en: 1; // Enable local entity list?
+    mqword_t local_ent_list_size_lim: 1; // Set limit to the number of entities that the local list can store
+									 // Effectively limiting the number of entities one 
+									 // entity can interact with
+	mqword_t resb: 61;
   } _;
   mqword_t config;
 };
@@ -53,6 +59,11 @@ struct MVSEntity {
   MVSEntityConfig config;
   MVSEntityProperties properties;
   mptr_t entity_repr;
+
+  msize_t entity_local_list_size_lim;
+  msize_t entity_local_list_tracks;
+  msize_t entity_local_list_history;
+  MVSDynamicListLinear *entity_local_list;
 };
 
 #endif

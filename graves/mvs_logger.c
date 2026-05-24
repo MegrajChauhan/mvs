@@ -2,7 +2,7 @@
 
 _MVS_ATTR_INTERNAL_ MVSLogger *_logger; // Lets keep a local copy instead of
                                         // passing it as argument each time
-_MVS_ATTR_INTERNAL_ mstr_t msg_type[] = {"Note", "Warning", "Error", "Debug"};
+_MVS_ATTR_INTERNAL_ mstr_t msg_type[] = {"Note", "Warning", "Error", "Debug", "Entity"};
 
 _MVS_ATTR_INTERNAL_ void mvs_logger_log_all() {
   MVSLogEntry entry;
@@ -18,47 +18,47 @@ _MVS_ATTR_INTERNAL_ void mvs_logger_log_all() {
   }
 }
 
-mResult_t mvs_logger_init(mLogLvl_t allowed) {
+mbool_t mvs_logger_init(mLogLvl_t allowed) {
   if (_logger)
-    return MRES_SUCCESS;
+    return mfalse;
   _logger = (MVSLogger *)malloc(sizeof(MVSLogger));
   if (!_logger)
-    return MRES_SYS_FAILURE;
+    return mfalse;
   mResult_t res = mvs_hybrid_concurrency_model_queue_create(
       &_logger->queue, 100 /*100 logs for now*/, sizeof(MVSLogEntry));
   if (res != MRES_SUCCESS) {
     free(_logger);
-    return res;
+    return mfalse;
   }
   if ((res = mvs_mutex_init(&_logger->lock)) != MRES_SUCCESS) {
     mvs_hybrid_concurrency_model_queue_destroy(_logger->queue);
     free(_logger);
-    return res;
+    return mfalse;
   }
   if ((res = mvs_cond_init(&_logger->cond)) != MRES_SUCCESS) {
     mvs_hybrid_concurrency_model_queue_destroy(_logger->queue);
     mvs_mutex_destroy(&_logger->lock);
     free(_logger);
-    return res;
+    return mfalse;
   }
   atomic_init(&_logger->stop, mfalse);
   atomic_init(&_logger->dead, mtrue);
   _logger->allowed_lvl = allowed;
-  return MRES_SUCCESS;
+  return mtrue;
 }
 
-mResult_t mvs_logger_destroy() {
+mbool_t mvs_logger_destroy() {
   /*
    * The logger is guaranteed to log all messages before being destroyed
    */
   if (!_logger)
-    return MRES_SUCCESS;
+    return mfalse;
   mvs_hybrid_concurrency_model_queue_destroy(_logger->queue);
   mvs_mutex_destroy(&_logger->lock);
   mvs_cond_destroy(&_logger->cond);
   free(_logger);
   _logger = NULL;
-  return MRES_SUCCESS;
+  return mtrue;
 }
 
 mthreadRet_t mvs_logger_run(mptr_t _l) {
@@ -139,6 +139,16 @@ void mvs_log_dbg(mstr_t fmt, ...) {
   va_start(args, fmt);
   vsnprintf(entry.msg, 128, fmt, args);
   va_end(args);
+  mvs_hybrid_concurrency_model_queue_enqueue(_logger->queue, &entry);
+  mvs_cond_signal(&_logger->cond);
+}
+
+void mvs_vlog(mstr_t fmt, va_list _l) {
+  if (!_logger || !fmt || !_l)
+    return;
+  MVSLogEntry entry;
+  entry.lvl = MLOG_EXT;
+  vsnprintf(entry.msg, 128, fmt, _l);
   mvs_hybrid_concurrency_model_queue_enqueue(_logger->queue, &entry);
   mvs_cond_signal(&_logger->cond);
 }

@@ -7,10 +7,20 @@
 #include <mvs_protectors.h>
 #include <mvs_types.h>
 
-APIResult api_request_check_status(GravesRequest *req);
+typedef union GravesRequestResult GravesRequestResult;
 
-APIResult api_request_get_response(GravesRequest *req, APIRequestResponse *res); 
+union GravesRequestResult {
+   struct {
+       msize_t NOTHING;
+   } spawn_entity;
+};
 
-APIResult api_request_create_SPAWN_ENTITY(EntityIdentityHdlr hdlr, mcond_t *cond, msize_t EID, mqword_t config, mqword_t properties, mqword_t in_conf, GravesRequest **req); 
+apiRes_t api_request_check_status(GravesRequest *req);
+
+apiRes_t api_request_get_response(GravesRequest *req, APIRequestResponse *res); 
+
+apiRes_t api_request_get_result(GravesRequest *req, GravesRequestResult *res);
+
+apiRes_t api_request_create_SPAWN_ENTITY(EntityIdentityHdlr hdlr, mcond_t *cond, msize_t EID, mqword_t config, mqword_t properties, mqword_t in_conf, GravesRequest **req); 
 
 #endif

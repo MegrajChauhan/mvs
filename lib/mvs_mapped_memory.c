@@ -165,7 +165,7 @@ mResult_t mvs_mapped_memory_mapf(MVSMappedMemory *map, mstr_t file_path,
     }
     original_file_len = file_len;
     if (align) {
-      if (map->mapped_mem.align_param) {
+      if (!map->mapped_mem.align_param) {
       	mvs_file_destroy(map->mapped_mem.backing);
       	return MRES_INVALID_ARGS;      	
       }

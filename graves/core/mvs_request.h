@@ -7,6 +7,7 @@
 #include <mvs_request_types.h>
 #include <mvs_types.h>
 #include <api_request_response.h>
+#include <api_request.h>
 #include <stdatomic.h>
 #include <stdlib.h>
 
@@ -19,6 +20,7 @@ struct MVSGravesRequest {
   atm_mbool_t request_served;
   atm_mbool_t queued;
   APIRequestResponse response;
+  GravesRequestResult result;
   union {
     struct {
       msize_t ID;

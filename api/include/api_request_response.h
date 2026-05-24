@@ -3,9 +3,9 @@
 
 #include <api_results.h>
 
-#define _API_MAKE_REQUEST_RESPONSE_(status, src, resp) (APIRequestResponse){.request_fulfilled=(status), .source=(src), .response=(resp)}
-#define _API_REQ_RESPONSE_GOOD_() _API_MAKE_REQUEST_RESPONSE_(mtrue, API_SRC_NONE, API_REQ_RESPONSE_NONE)
-#define _API_REQ_RESPONSE_BAD_(src, resp) _API_MAKE_REQUEST_RESPONSE_(mfalse, src, resp)
+#define _API_MAKE_REQUEST_RESPONSE_(status, src) (APIRequestResponse){.request_fulfilled=(status), .response=(resp)}
+#define _API_REQ_RESPONSE_GOOD_() _API_MAKE_REQUEST_RESPONSE_(mtrue, API_REQ_RESPONSE_NONE)
+#define _API_REQ_RESPONSE_BAD_(resp) _API_MAKE_REQUEST_RESPONSE_(mfalse, resp)
 
 typedef struct APIRequestResponse APIRequestResponse;
 typedef enum apiReqResponse_t apiReqResponse_t;
@@ -19,16 +19,19 @@ enum apiReqResponse_t {
 		API_REQ_RESPONSE_UNREGISTERED_EID, // The EID given is valid but unregistered
 		API_REQ_RESPONSE_INVALID_CONFIG,  // The configuration provided is invalid
 		API_REQ_RESPONSE_INVALID_PROPERTY, // The property provided is invalid
+		API_REQ_RESPONSE_INVALID_SETUP, // The provided setup for the entity launch is invalid
 		API_REQ_RESPONSE_ENTITY_LAUNCH_FAILED, // The launch of an entity failed
+		API_REQ_RESPONSE_ENTITY_INIT_FAILED,   // The entity failed to initialize
+		API_REQ_RESPONSE_INVALID_DATA, // The data provided for some request was invalid
+		API_REQ_RESPONSE_RESOURCE_EXHAUSTED, // The resource used by the request has been exhausted
+		API_REQ_RESPONSE_RESOURCE_INVALID_STATE, // The resource used by the request is in an invalid state such that either any operation is impossible or just this operation is impossible
+        API_REQ_RESPONSE_RETRY,  // Retry with the request later
+		API_REQ_RESPONSE_HOST_FAILURE, // The host failed us not MVS
 };
 
 struct APIRequestResponse {
 		mbool_t request_fulfilled; // Was the request successfully fulfilled?
-        apiSrc_t source;           // If !request_fulfilled, what was the source of error?
-		union {
-				apiReqResponse_t response;
-				msize_t code;
-        };
+		apiReqResponse_t response;
 };
 
 #endif

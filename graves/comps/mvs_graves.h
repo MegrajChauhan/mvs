@@ -28,6 +28,7 @@ struct MVSGraves {
 
   mcond_t graves_cond;
   mmutex_t graves_lock;
+  atm_mbool_t graves_all_entities_launched; // did all entities successfully launched at startup?
 
   MVSArgParseResult *cmd_opts; // Command-line arguments provided
   MVSDynamicListLinear

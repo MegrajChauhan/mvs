@@ -13,9 +13,9 @@ typedef struct GravesAPI GravesAPI;
  * The request may be synchronous or asynchronous based on if a wakeup condition is provided or not.
  * See the request API for more information.
  * If the request is synchronous, the call will not return until the request has been served else, it will return immediately.
- * If pushing the request fails, then also the call will return immediately. The status of the API call will be returned as APIResult
+ * If pushing the request fails, then also the call will return immediately. The status of the API call will be returned as apiRes_t
  * */
-typedef APIResult (*gravesmr_t)(EntityIdentityHdlr, GravesRequest **);
+typedef apiRes_t (*gravesmr_t)(EntityIdentityHdlr, GravesRequest **);
 
 struct GravesAPI {
     gravesmr_t make_request;
@@ -24,6 +24,8 @@ struct GravesAPI {
 struct EntityContext {
 		EntityIdentityHdlr self;
 		GravesAPI API;
+		mstr_t* argv; 
+		msize_t argc;
 };
 
 #endif

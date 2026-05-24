@@ -26,7 +26,7 @@ typedef enum mLogLvl_t mLogLvl_t;
 typedef struct MVSLogger MVSLogger;
 typedef struct MVSLogEntry MVSLogEntry;
 
-enum mLogLvl_t { MLOG_NOTE, MLOG_WARN, MLOG_ERR, MLOG_DBG };
+enum mLogLvl_t { MLOG_NOTE, MLOG_WARN, MLOG_ERR, MLOG_DBG, MLOG_EXT};
 
 struct MVSLogEntry {
   mLogLvl_t lvl; // level of the log message
@@ -52,8 +52,8 @@ struct MVSLogger {
  * caller or the system
  */
 
-mResult_t mvs_logger_init(mLogLvl_t allowed);
-mResult_t mvs_logger_destroy();
+mbool_t mvs_logger_init(mLogLvl_t allowed);
+mbool_t mvs_logger_destroy();
 mthreadRet_t mvs_logger_run(mptr_t _l);
 void mvs_logger_wakeup(mbool_t flag);
 void mvs_logger_wait_to_launch();
@@ -64,5 +64,7 @@ void mvs_log_note(mstr_t fmt, ...);
 void mvs_log_warn(mstr_t fmt, ...);
 void mvs_log_err(mstr_t fmt, ...);
 void mvs_log_dbg(mstr_t fmt, ...);
+
+void mvs_vlog(mstr_t fmt, ...);
 
 #endif

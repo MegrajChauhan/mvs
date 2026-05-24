@@ -7,11 +7,12 @@ _MVS_ATTR_INTERNAL_ mstr_t HELP_MSG = "Usage: mvs [options]....\n"
                   "-h, --help                Display this help message\n"
                   "-v, --version             Display MVS version\n"
                   "-log=[info/warn/err/dbg]  Set Log Level\n"
+				  "-es                       Ensure that all launch commands are successfully executed else terminate\n"
 				  "-spawn=<N> EID <-=K>[...] Make a request to spawn 'N' instances of entity with entity ID 'EID'\n"
 				  "                          Optionally provide arguments to be passed to the entity. The arguments are\n"
 				  "                          are provided after '-=K' where 'K' is the number of arguments to be passed\n"
 				  "-slist [command_file]     Provide a command file containing the spawn commands instead of providing them\n"
-				  "                          through the terminal. Using a command file allows the user to provide flags and set config\n"
+				  "                          through arguments. Using a command file allows the user to provide flags and set config\n"
 				  "                          unlike -spawn where the default config and properties are set\n"
                   ;
 _MVS_ATTR_INTERNAL_ mstr_t VERSION_MSG = "MVS: v0.0.0\n";
@@ -19,6 +20,7 @@ _MVS_ATTR_INTERNAL_ mstr_t VERSION_MSG = "MVS: v0.0.0\n";
 void mvs_graves_arg_parse_set_default(MVSArgParseResult* res) {
 	res->log_lvl = 2;
 	res->spawn_commands = NULL;
+	res->entities_to_spawn = 0;
 }
 
 mbool_t mvs_HELP_MSG(MVSArgParse *parser, MVSArgParseResult* res) {
@@ -28,6 +30,11 @@ mbool_t mvs_HELP_MSG(MVSArgParse *parser, MVSArgParseResult* res) {
 
 mbool_t mvs_VERSION(MVSArgParse *parser, MVSArgParseResult* res) {
   fprintf(stdout, "<VERSION>:\n%s", VERSION_MSG);
+  return mtrue;
+}
+
+mbool_t mvs_ES(MVSArgParse *parser, MVSArgParseResult *res) {
+  res->ensure_success = mtrue;
   return mtrue;
 }
 
@@ -133,7 +140,10 @@ mbool_t mvs_SPAWN_ENTITY_COMMAND(MVSArgParse* parser, MVSArgParseResult *res) {
   command->nxt_command = res->spawn_commands;
   command->slist = mfalse;
   res->spawn_commands = command;
+  res->entities_to_spawn += INSTANCE_COUNT;
   return mtrue;
 }
 
-mbool_t mvs_SLIST(MVSArgParse *parser, MVSArgParseResult *res);
+mbool_t mvs_SLIST(MVSArgParse *parser, MVSArgParseResult *res) {
+   return mtrue;
+}
