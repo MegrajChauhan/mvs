@@ -48,7 +48,8 @@ _MVS_ATTR_ALWAYS_INLINE_ mResult_t mvs_static_list_size(MVSStaticList *lst,
   return MRES_SUCCESS;
 }
 
-_MVS_ATTR_ALWAYS_INLINE_ msize_t mvs_static_list_size_unsafe(MVSStaticList *lst) {
+_MVS_ATTR_ALWAYS_INLINE_ msize_t
+mvs_static_list_size_unsafe(MVSStaticList *lst) {
   return lst->curr_ind;
 }
 
@@ -61,7 +62,8 @@ _MVS_ATTR_ALWAYS_INLINE_ mResult_t mvs_static_list_ref_of(MVSStaticList *lst,
   return MRES_SUCCESS;
 }
 
-_MVS_ATTR_ALWAYS_INLINE_ mptr_t mvs_static_list_ref_of_unsafe(MVSStaticList *lst, msize_t ind) {
+_MVS_ATTR_ALWAYS_INLINE_ mptr_t
+mvs_static_list_ref_of_unsafe(MVSStaticList *lst, msize_t ind) {
   return (mptr_t)(lst->buf + ind * lst->elem_len);
 }
 
@@ -77,8 +79,8 @@ _MVS_ATTR_ALWAYS_INLINE_ mResult_t mvs_static_list_index_of(MVSStaticList *lst,
   return MRES_SUCCESS;
 }
 
-_MVS_ATTR_ALWAYS_INLINE_ msize_t mvs_static_list_index_of_unsafe(MVSStaticList *lst,
-                                                            mptr_t elem) {
+_MVS_ATTR_ALWAYS_INLINE_ msize_t
+mvs_static_list_index_of_unsafe(MVSStaticList *lst, mptr_t elem) {
   return (msize_t)(((mbptr_t)elem - lst->buf) / lst->elem_len);
 }
 
@@ -176,7 +178,7 @@ mvs_dynamic_listll_size(MVSDynamicListLinkedList *lst, msize_t *res) {
   return MRES_SUCCESS;
 }
 
-_MVS_ATTR_ALWAYS_INLINE_ msize_t 
+_MVS_ATTR_ALWAYS_INLINE_ msize_t
 mvs_dynamic_listll_size_unsafe(MVSDynamicListLinkedList *lst) {
   return lst->data_count;
 }

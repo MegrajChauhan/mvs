@@ -26,7 +26,7 @@ typedef enum mLogLvl_t mLogLvl_t;
 typedef struct MVSLogger MVSLogger;
 typedef struct MVSLogEntry MVSLogEntry;
 
-enum mLogLvl_t { MLOG_NOTE, MLOG_WARN, MLOG_ERR, MLOG_DBG, MLOG_EXT};
+enum mLogLvl_t { MLOG_NOTE, MLOG_WARN, MLOG_ERR, MLOG_DBG, MLOG_EXT };
 
 struct MVSLogEntry {
   mLogLvl_t lvl; // level of the log message

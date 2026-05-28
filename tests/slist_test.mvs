@@ -1,7 +1,9 @@
 ; This is a comment
 ; Defining an entity is generally done as
-; ID: {
-;    eid: 10,
+; metadata: {           ; A metadata is expected at the start
+;     count = 10,       ; The maximum number of entities defined in the file
+; }
+; ID: EID {
 ;    config: {
 ;       local_list = true|false,
 ;       ll_lim = 100,
@@ -11,18 +13,19 @@
 ;    },
 ;    setup: {
 ;       prop_1 = value,
-;       prop_2 = "abc",
+;       prop_2 = value, ; Values can be integers or boolean. Strings or characters are not allowed. only decimal integers are allowed
 ;       prop_3 = true,
 ;       prop_4 = 100
 ;    },
 ;    args: {
-;       "arg1",
-;       "arg2=11",
-;       "-arg3",
-;       "arg4=a,b,c",
+;       arg1\      ; each argument is separated by a '\'. If there are spaces, tabs, or even comments before '\', they are included as part of the argument
+;                  ; The preceeding spaces and tabs are not included though. From the first character till '\' is considered to be part of the argument
+;       arg2=11\
+;       -arg3\
+;       arg4=a,b,c\
 ;    },
 ;    add_to_ll: {
-;       2 = 0, ; The format is ID = LID where LID= local ID
+;       2 ; here, the entity of ID=2 is added to the local list at LID=0 automatically
 ;    }
 ; }
 ; If any other instance needs to copy the above
@@ -30,13 +33,15 @@
 ; Note that ID must start from 0 and incrementally grow. For eg, you cannot have 10 at the first
 ; Also, note that LID in add_to_ll must also grow incrementally
 ; example:
-0: {
-  eid: 100,
+metadata: {
+   count = 2
+}
+0: 100 {
   config: {
      local_list = true,
   },
   args: {
-     "-f=\"hello.txt\"",
+     -f="hello.txt"
   },
   setup: {
     io = true, 
@@ -46,5 +51,3 @@
   }
 }
 1: [0]
-
-

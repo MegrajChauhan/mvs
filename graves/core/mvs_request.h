@@ -1,13 +1,13 @@
 #ifndef _MVS_REQUEST_
 #define _MVS_REQUEST_
 
+#include <api_request.h>
+#include <api_request_response.h>
 #include <mvs_entity.h>
 #include <mvs_graves_constants.h>
 #include <mvs_protectors.h>
 #include <mvs_request_types.h>
 #include <mvs_types.h>
-#include <api_request_response.h>
-#include <api_request.h>
 #include <stdatomic.h>
 #include <stdlib.h>
 
@@ -26,7 +26,7 @@ struct MVSGravesRequest {
       msize_t ID;
       mqword_t config;
       mqword_t properties;
-	  mqword_t internal_conf; // 0 would imply 'default'
+      mqword_t internal_conf; // 0 would imply 'default'
     } spawn_entity;
   } args;
 };

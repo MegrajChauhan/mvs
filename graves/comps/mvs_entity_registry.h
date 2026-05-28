@@ -1,10 +1,10 @@
 #ifndef _MVS_ENTITY_REGISTRY_
 #define _MVS_ENTITY_REGISTRY_
 
+#include <api_entity_registration.h>
 #include <mvs_graves_constants.h>
 #include <mvs_tools.h>
 #include <mvs_types.h>
-#include <api_entity_registration.h>
 #include <stddef.h>
 
 typedef struct MVSEntityRegistry MVSEntityRegistry;

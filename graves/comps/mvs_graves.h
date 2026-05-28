@@ -1,9 +1,14 @@
 #ifndef _MVS_GRAVES_
 #define _MVS_GRAVES_
 
+#include <api_entity.h>
+#include <api_entity_registration.h>
+#include <api_exposed_graves_code.h>
+#include <api_results.h>
 #include <mvs_arg_parse.h>
 #include <mvs_entity.h>
 #include <mvs_entity_registry.h>
+#include <mvs_graves_arg_parse.h>
 #include <mvs_interface.h>
 #include <mvs_list.h>
 #include <mvs_logger.h>
@@ -11,11 +16,6 @@
 #include <mvs_request_queue_manager.h>
 #include <mvs_threads.h>
 #include <mvs_types.h>
-#include <mvs_graves_arg_parse.h>
-#include <api_entity.h>
-#include <api_entity_registration.h>
-#include <api_exposed_graves_code.h>
-#include <api_results.h>
 #include <stdlib.h>
 
 typedef struct MVSGraves MVSGraves;
@@ -28,7 +28,8 @@ struct MVSGraves {
 
   mcond_t graves_cond;
   mmutex_t graves_lock;
-  atm_mbool_t graves_all_entities_launched; // did all entities successfully launched at startup?
+  atm_mbool_t graves_all_entities_launched; // did all entities successfully
+                                            // launched at startup?
 
   MVSArgParseResult *cmd_opts; // Command-line arguments provided
   MVSDynamicListLinear
@@ -36,7 +37,7 @@ struct MVSGraves {
   MVSRequestQueueManager *req_queue;
 
   GravesAPI local_API; // For Local entities(I will need to define another
-                          // one for external entities)
+                       // one for external entities)
 };
 
 /*
@@ -50,6 +51,6 @@ void mvs_run(MVSArgParseResult *opts);
  */
 
 APIResult mvs_graves_API_make_request(MVSEntityIdentity *hdlr,
-                                    MVSGravesRequest **req);
+                                      MVSGravesRequest **req);
 
 #endif

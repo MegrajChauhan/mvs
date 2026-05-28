@@ -7,7 +7,8 @@ msize_t mvs_register_component(msize_t ID, EntityRegistryEntry *entry) {
     return 2;
   if (registry.entries[ID].registered)
     return 1;
-  if (!entry || !entry->create || !entry->destroy || !entry->exec)
+  if (!entry || !entry->create || !entry->destroy || !entry->exec ||
+      !entry->deduce_setup)
     return 2;
   registry.entries[ID].API = *entry;
   registry.entries[ID].registered = mtrue;

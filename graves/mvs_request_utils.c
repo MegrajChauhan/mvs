@@ -8,9 +8,9 @@ apiRes_t mvs_request_check_status(MVSGravesRequest *req) {
   return API_RES_REQ_SERVED;
 }
 
-apiRes_t mvs_request_get_response(MVSGravesRequest *req, APIRequestResponse *res) {
-  if (!req || !res ||
-      !atomic_load_explicit(&req->queued, memory_order_relaxed))
+apiRes_t mvs_request_get_response(MVSGravesRequest *req,
+                                  APIRequestResponse *res) {
+  if (!req || !res || !atomic_load_explicit(&req->queued, memory_order_relaxed))
     return API_RES_INVALID_ARGS;
   if (!atomic_load_explicit(&req->request_served, memory_order_relaxed))
     return API_RES_REQ_NOT_SERVED;
@@ -18,9 +18,9 @@ apiRes_t mvs_request_get_response(MVSGravesRequest *req, APIRequestResponse *res
   return API_RES_SUCCESS;
 }
 
-apiRes_t mvs_request_get_result(MVSGravesRequest *req, GravesRequestResult *res) {
-  if (!req || !res ||
-      !atomic_load_explicit(&req->queued, memory_order_relaxed))
+apiRes_t mvs_request_get_result(MVSGravesRequest *req,
+                                GravesRequestResult *res) {
+  if (!req || !res || !atomic_load_explicit(&req->queued, memory_order_relaxed))
     return API_RES_INVALID_ARGS;
   if (!atomic_load_explicit(&req->request_served, memory_order_relaxed))
     return API_RES_REQ_NOT_SERVED;
@@ -28,12 +28,10 @@ apiRes_t mvs_request_get_result(MVSGravesRequest *req, GravesRequestResult *res)
   return API_RES_SUCCESS;
 }
 
-apiRes_t mvs_create_req_SPAWN_ENTITY(MVSEntityIdentity *iden,
-                                              mcond_t *cond, msize_t ID,
-                                              mqword_t config,
-                                              mqword_t properties,
-											  mqword_t in_conf,
-											  MVSGravesRequest **req) {
+apiRes_t mvs_create_req_SPAWN_ENTITY(MVSEntityIdentity *iden, mcond_t *cond,
+                                     msize_t ID, mqword_t config,
+                                     mqword_t properties, mqword_t in_conf,
+                                     MVSGravesRequest **req) {
   if (!iden || !req)
     return API_RES_INVALID_ARGS;
   mvs_log_dbg("Request Create: SPAWN_ENTITY, entity[ID=%zu, UID=%zu]", iden->ID,

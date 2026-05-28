@@ -25,7 +25,8 @@ mResult_t mvs_mapped_memory_create(MVSMappedMemory **map, mqword_t conf) {
   return MRES_SUCCESS;
 }
 
-mResult_t mvs_mapped_memory_add_align_param(MVSMappedMemory *map, msize_t align_param) {
+mResult_t mvs_mapped_memory_add_align_param(MVSMappedMemory *map,
+                                            msize_t align_param) {
   if (!map || !align_param)
     return MRES_INVALID_ARGS;
   if (map->interface != MINTERFACE_TYPE_MAPPED_MEMORY)
@@ -122,7 +123,7 @@ mResult_t mvs_mapped_memory_mapf(MVSMappedMemory *map, mstr_t file_path,
     syn = mtrue;
   }
   if (flags & MVS_MMAPPED_FLAG_ALIGN) {
-  	align = mtrue;
+    align = mtrue;
   }
   if (!host_mode) {
     host_mode = PROT_READ | PROT_WRITE;
@@ -166,24 +167,25 @@ mResult_t mvs_mapped_memory_mapf(MVSMappedMemory *map, mstr_t file_path,
     original_file_len = file_len;
     if (align) {
       if (!map->mapped_mem.align_param) {
-      	mvs_file_destroy(map->mapped_mem.backing);
-      	return MRES_INVALID_ARGS;      	
+        mvs_file_destroy(map->mapped_mem.backing);
+        return MRES_INVALID_ARGS;
       }
-      file_len += (map->mapped_mem.align_param - (file_len % map->mapped_mem.align_param));	
+      file_len += (map->mapped_mem.align_param -
+                   (file_len % map->mapped_mem.align_param));
     }
     if (map->mapped_mem.addr_space)
-    	mvs_mapped_memory_unmap(map);
+      mvs_mapped_memory_unmap(map);
     if ((res = mvs_mapped_memory_map(map, file_len)) != MRES_SUCCESS) {
-      	mvs_file_destroy(map->mapped_mem.backing);
-      	return res;      	    	
+      mvs_file_destroy(map->mapped_mem.backing);
+      return res;
     }
   }
 
 #ifdef _USE_LINUX_
   if (file_path) {
-    if ((map->mapped_mem.addr_space =
-             mmap(map->mapped_mem.addr_space, original_file_len, host_mode, host_flag,
-                  map->mapped_mem.backing->file.fd, offset)) == NULL) {
+    if ((map->mapped_mem.addr_space = mmap(
+             map->mapped_mem.addr_space, original_file_len, host_mode,
+             host_flag, map->mapped_mem.backing->file.fd, offset)) == NULL) {
       mvs_file_destroy(map->mapped_mem.backing);
       map->mapped_mem.backing = NULL;
       return MRES_SYS_FAILURE;
@@ -224,7 +226,8 @@ mResult_t mvs_mapped_memory_obtain_ptr(MVSMappedMemory *map, mbptr_t *ptr,
   return MRES_SUCCESS;
 }
 
-mResult_t mvs_mapped_memory_obtain_map_size(MVSMappedMemory *map, msize_t *len) {
+mResult_t mvs_mapped_memory_obtain_map_size(MVSMappedMemory *map,
+                                            msize_t *len) {
   if (!map || !len)
     return MRES_INVALID_ARGS;
   if (map->interface != MINTERFACE_TYPE_MAPPED_MEMORY)

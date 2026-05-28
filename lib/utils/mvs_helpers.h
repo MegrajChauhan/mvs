@@ -8,17 +8,17 @@
 #include <mvs_types.h>
 #include <string.h>
 
-#define _MVS_MFUNC_SIGN_EXTEND8_(val)                                                  \
+#define _MVS_MFUNC_SIGN_EXTEND8_(val)                                          \
   do {                                                                         \
     if ((val >> 7) == 1)                                                       \
       val |= 0xFFFFFFFFFFFFFF00;                                               \
   } while (0)
-#define _MVS_MFUNC_SIGN_EXTEND16_(val)                                                 \
+#define _MVS_MFUNC_SIGN_EXTEND16_(val)                                         \
   do {                                                                         \
     if ((val >> 15) == 1)                                                      \
       val |= 0xFFFFFFFFFFFF0000;                                               \
   } while (0)
-#define _MVS_MFUNC_SIGN_EXTEND32_(val)                                                 \
+#define _MVS_MFUNC_SIGN_EXTEND32_(val)                                         \
   do {                                                                         \
     if ((val >> 31) == 1)                                                      \
       val |= 0xFFFFFFFFFF000000;                                               \
@@ -108,8 +108,8 @@ union MVSDoubleToQword {
 };
 
 struct MVSStrSlice {
-		mstr_t ptr;
-		msize_t len;
+  mstr_t ptr;
+  msize_t len;
 };
 
 // void MVS_LITTLE_ENDIAN_to_BIG_ENDIAN(MVSHostMemLayout *le);

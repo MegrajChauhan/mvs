@@ -2,7 +2,8 @@
 
 _MVS_ATTR_INTERNAL_ MVSLogger *_logger; // Lets keep a local copy instead of
                                         // passing it as argument each time
-_MVS_ATTR_INTERNAL_ mstr_t msg_type[] = {"Note", "Warning", "Error", "Debug", "Entity"};
+_MVS_ATTR_INTERNAL_ mstr_t msg_type[] = {"Note", "Warning", "Error", "Debug",
+                                         "Entity"};
 
 _MVS_ATTR_INTERNAL_ void mvs_logger_log_all() {
   MVSLogEntry entry;
@@ -162,11 +163,11 @@ void mvs_logger_wakeup(mbool_t flag) {
 
 void mvs_logger_wait_to_launch() {
   while (atomic_load_explicit(&_logger->dead, memory_order_relaxed)) {
-  }	
+  }
 }
 
 void mvs_logger_wait_for_termination() {
   while (!atomic_load_explicit(&_logger->dead, memory_order_relaxed)) {
-  	mvs_cond_signal(&_logger->cond);
+    mvs_cond_signal(&_logger->cond);
   }
 }

@@ -5,6 +5,6 @@ struct MVSEntityIdentity;
 struct MVSGravesRequest;
 
 typedef struct MVSGravesRequest GravesRequest;
-typedef struct MVSEntityIdentity* EntityIdentityHdlr;
+typedef struct MVSEntityIdentity *EntityIdentityHdlr;
 
 #endif
