@@ -102,6 +102,10 @@ MVSSlistToken mvs_slist_lexer_next_token(MVSSlistLexer *l) {
     mvs_slist_reader_consume(l->reader);
     tok = (MVSSlistToken){
         .type = MVS_SLIST_TOK_CLOSE_BRAC, .line = line, .col = col};
+  } else if (curr == '\\') {
+    mvs_slist_reader_consume(l->reader);
+    tok = (MVSSlistToken){
+        .type = MVS_SLIST_TOK_SEPARATOR, .line = line, .col = col}; 
   } else {
     mvs_log_err(
         "In file=%s:l=%zu:c=%zu: Couldn't build a token out of this '%c'.",
@@ -120,35 +124,38 @@ MVSSlistToken mvs_slist_lexer_peek_token(MVSSlistLexer *l) {
   return tok;
 }
 
-MVSSlistToken mvs_slist_lexer_get_slice(MVSSlistLexer *l) {
+mstr_t mvs_slist_lexer_get_block(MVSSlistLexer *l, char block_borders) {
   char curr = mvs_slist_reader_curr(l->reader);
-  while ((!_MVS_MFUNC_ISALNUM_(curr) || curr != '_') && curr != '\0') {
-    mvs_slist_reader_consume(l->reader);
-    curr = mvs_slist_reader_curr(l->reader);
-  }
-  mstr_t st = mvs_slist_reader_iter(l->reader);
-  msize_t line = mvs_slist_reader_line(l->reader);
-  msize_t col = mvs_slist_reader_col(l->reader);
+  MVSSlistReaderState s1, s2;
+  mvs_slist_reader_make_backup(l->reader);
+  s1 = mvs_slist_reader_get_backup(l->reader);
   msize_t len = 0;
-  while (curr != '\\' && curr != '\0') {
-    mvs_slist_reader_consume(l->reader);
-    curr = mvs_slist_reader_curr(l->reader);
-    len++;
+  while (curr != block_borders) {
+     if (curr == '\0') {
+		mvs_log_err(
+		    "In file=%s:l=%zu:c=%zu: Reached EOF before reaching the end of block",
+			l->file_path, mvs_slist_reader_line(l->reader),
+			mvs_slist_reader_col(l->reader));
+		return NULL;
+	 }
+	 mvs_slist_reader_consume(l->reader);
+	 curr = mvs_slist_reader_curr(l->reader);
+     len++;
   }
-  if (len == 0) {
-    if (curr == '\0')
-      return (MVSSlistToken){.type = MVS_SLIST_TOK_EOF};
-    else
-      return (MVSSlistToken){.type = MVS_SLIST_TOK_ERR}; // what???
+  mvs_slist_reader_make_backup(l->reader);
+  s2 = mvs_slist_reader_get_backup(l->reader);
+  mvs_slist_reader_restore_from(l->reader, s1);
+  mstr_t block = (mstr_t)malloc(len+1);
+  if (!block) {
+		mvs_log_err(
+		    "In file=%s:l=%zu:c=%zu: Failed to allocate memory for the block",
+			l->file_path, mvs_slist_reader_line(l->reader),
+			mvs_slist_reader_col(l->reader));
+		return NULL;
   }
-  if (curr != '\\') {
-    mvs_log_err("In file=%s:l=%zu:c=%zu: Reached EOF before '\\'", l->file_path,
-                mvs_slist_reader_line(l->reader),
-                mvs_slist_reader_col(l->reader));
-    return (MVSSlistToken){.type = MVS_SLIST_TOK_ERR};
-  }
+  memcpy(block, mvs_slist_reader_iter(l->reader), len);
+  block[len] = 0;
   mvs_slist_reader_consume(l->reader);
-  return (MVSSlistToken) {
-    .type = MVS_SLIST_TOK_IDEN, .line = line, .col = col,
-    .iden = (MVSStrSlice){.ptr = st, .len = len};
-  }
+  mvs_slist_reader_restore_from(s2);
+  return block;
+}

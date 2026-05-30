@@ -20,6 +20,7 @@ typedef struct MVSSlistParser MVSSlistParser;
 struct MVSSlistParser {
   mstr_t file_path;
   mbool_t metadata_read;
+  mbool_t footer_read;
   msize_t max_entity_count;
   msize_t curr_id_count;
   MVSSlistLexer *lexer;
@@ -30,6 +31,8 @@ struct MVSSlistParser {
 MVSSlistParser *mvs_slist_parser_create(MVSArgParseResult *cmd);
 
 void mvs_slist_parser_destroy(MVSSlistParser *p);
+
+void mvs_slist_parser_destroy_command(MVSSlistCommand *c);
 
 mbool_t mvs_slist_parser_init(MVSSlistParser *p, mstr_t file_path);
 

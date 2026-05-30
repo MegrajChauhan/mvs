@@ -20,6 +20,7 @@ enum mSlistToken_t {
   MVS_SLIST_TOK_IDEN, // commands are also identifiers for the lexer
   MVS_SLIST_TOK_NUM,
   MVS_SLIST_TOK_EQUALS,
+  MVS_SLIST_TOK_SEPARATOR
 };
 
 struct MVSSlistToken {

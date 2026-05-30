@@ -8,6 +8,12 @@
 #include <string.h>
 
 typedef struct MVSSlistReader MVSSlistReader;
+typedef struct MVSSlistReaderState MVSSlistReaderState;
+
+struct MVSSlistReaderState {
+  msize_t line, col;
+  mstr_t curr;
+};
 
 struct MVSSlistReader {
   MVSMappedMemory *file; // for quicker IO
@@ -16,9 +22,8 @@ struct MVSSlistReader {
   mstr_t end;
   msize_t line;
   msize_t col;
-
-  msize_t backup_line, backup_col;
-  mstr_t backup_curr;
+  
+  MVSSlistReaderState backup;
 };
 
 MVSSlistReader *mvs_slist_reader_create();
@@ -28,15 +33,24 @@ void mvs_slist_reader_destroy(MVSSlistReader *r);
 mbool_t mvs_slist_reader_init(MVSSlistReader *r, mstr_t file_path);
 
 _MVS_ATTR_ALWAYS_INLINE_ void mvs_slist_reader_make_backup(MVSSlistReader *r) {
-  r->backup_col = r->col;
-  r->backup_curr = r->curr;
-  r->backup_line = r->line;
+  r->backup.col = r->col;
+  r->backup.curr = r->curr;
+  r->backup.line = r->line;
 }
 
 _MVS_ATTR_ALWAYS_INLINE_ void mvs_slist_reader_restore(MVSSlistReader *r) {
-  r->col = r->backup_col;
-  r->line = r->line;
-  r->curr = r->backup_curr;
+  r->col = r->backup.col;
+  r->line = r->backup.line;
+  r->curr = r->backup.urr;
+}
+
+_MVS_ATTR_ALWAYS_INLINE_ MVSSlistReaderState mvs_slist_reader_get_backup(MVSSlistReader *r) {
+  return r->backup;	
+}
+
+_MVS_ATTR_ALWAYS_INLINE_ void mvs_slist_reader_restore_from(MVSSlistReader *r, MVSSlistReaderState s) {
+  r->backup = s;
+  mvs_slist_reader_restore_from(r);
 }
 
 _MVS_ATTR_ALWAYS_INLINE_ msize_t mvs_slist_reader_line(MVSSlistReader *r) {

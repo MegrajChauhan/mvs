@@ -14,8 +14,22 @@ MVSSlistParser *mvs_slist_parser_create(MVSArgParseResult *cmd) {
 void mvs_slist_parser_destroy(MVSSlistParser *p) {
   if (p->lexer)
     mvs_slist_lexer_destroy(p->lexer);
+  for (msize_t i = 0; i < p->curr_id_count;i++) {
+		MVSSlistCommand *c = mvs_dynamic_listl_ref_of_unsafe(p->command_list, i);
+		mvs_slist_parser_destroy_command(c);
+  }
   mvs_dynamic_listl_destroy(p->command_list);
   free(p);
+}
+
+void mvs_slist_parser_destroy_command(MVSSlistCommand *c) {
+  if (!c->copy) {
+     if (c->args)
+		free(c->args);
+	 if (c->local_list)
+		mvs_dynamic_listl_destroy(c->local_list);
+  }
+  free(c);
 }
 
 mbool_t mvs_slist_parser_init(MVSSlistParser *p, mstr_t file_path) {
@@ -34,6 +48,7 @@ mbool_t mvs_slist_parser_init(MVSSlistParser *p, mstr_t file_path) {
   }
   p->file_path = file_path;
   p->metadata_read = mfalse;
+  p->footer_read = mfalse;
   p->max_entity_count = 0;
   p->curr_id_count = (msize_t)(-1);
   mvs_log_dbg("Prepared SLIST parser for file=%s", file_path);
@@ -118,8 +133,8 @@ _MVS_ATTR_INTERNAL_ mbool_t mvs_slist_parser_deal_with_metadata_field(
 _MVS_ATTR_INTERNAL_ mbool_t
 mvs_slist_parser_deal_with_metadata(MVSSlistParser *p) {
   if (p->metadata_read) {
-    mvs_log_err("In file=%s:l=%zu:c=%zu: Metadata already provided.",
-                p->file_path, tok.line, tok.col);
+    mvs_log_err("In file=%s: Metadata already provided.",
+                p->file_path);
     return mfalse;
   }
   mvs_log_dbg("Dealing with metadata: file=%s", p->file_path);
@@ -164,6 +179,46 @@ mvs_slist_parser_deal_with_metadata(MVSSlistParser *p) {
   p->metadata_read = mtrue;
   mvs_log_dbg("Done dealing with metadata: file=%s", p->file_path);
   return mtrue;
+}
+
+_MVS_ATTR_INTERNAL_ mbool_t mvs_slist_parser_deal_with_local_list(MVSSlistParser *p) {
+  if (!p->metadata_read) {
+    mvs_log_err("In file=%s: Metadata expected first.",
+                p->file_path);
+    return mfalse;
+  }
+  if (p->footer_read) {
+    mvs_log_err("In file=%s: 'local_list' already provided.",
+                p->file_path);
+    return mfalse;
+  }
+  mvs_log_dbg("Dealing with local_list: file=%s", p->file_path);
+  if (!mvs_slist_parser_check_colon(p, "local_list"))
+    return mfalse;
+  if (!mvs_slist_parser_check_block_open(p, "local_list"))
+    return mfalse;
+  MVSSlistToken tok = mvs_slist_lexer_next_token(p->lexer);
+  while (tok.type != MVS_SLIST_TOK_CLOSE_CURLY) {
+    switch (tok.type) {
+    case MVS_SLIST_TOK_EOF:
+      mvs_log_err(
+          "In file=%s:l=%zu:c=%zu: Unexpected EOF while expecting entries.",
+          p->file_path, tok.line, tok.col);
+      return mfalse;
+    case MVS_SLIST_TOK_NUM: {
+      // TODO: Continue from here and finish the following function
+      if (!mvs_slist_parser_deal_with_local_list_entry(p, &tok))
+        return mfalse;
+      break;
+    }
+    default:
+      mvs_log_err("In file=%s:l=%zu:c=%zu: Expected a proper local list entry.",
+                  p->file_path, tok.line, tok.col);
+      return mfalse;
+    }
+    tok = mvs_slist_lexer_next_token(p->lexer);
+  }
+  p->footer_read = mtrue;
 }
 
 _MVS_ATTR_INTERNAL_ mbool_t mvs_slist_parser_deal_with_config_field_local_list(
@@ -384,11 +439,21 @@ mbool_t mvs_slist_parser_deal_with_setup(MVSSlistParser *p, MVSSlistCommand *c) 
 
 _MVS_ATTR_INTERNAL_ mbool_t
 mvs_slist_parser_deal_with_args(MVSSlistParser *p, MVSSlistCommand *c) {
-  return mtrue;
-}
-
-_MVS_ATTR_INTERNAL_ mbool_t
-mvs_slist_parser_deal_with_add_to_ll(MVSSlistParser *p, MVSSlistCommand *c) {
+  if (!mvs_slist_parser_check_colon(p, "args"))
+    return mfalse;
+  if (!mvs_slist_parser_check_block_open(p, "args"))
+    return mfalse;
+  mstr_t block = mvs_slist_lexer_get_block(p->lexer, '}');
+  if (!block)
+    return mfalse;
+  if (c->args) {
+    mvs_log_note(
+       "In file=%s:l=%zu:c=%zu: Args already provided before.",
+        p->file_path, tok->line, tok->col);
+	free(block);
+	return mtrue;
+  }
+  p->args = block;
   return mtrue;
 }
 
@@ -397,10 +462,13 @@ _MVS_ATTR_INTERNAL_ mbool_t mvs_slist_parser_select_path(MVSSlistParser *p,
   if (!p->metadata_read) {
     mvs_log_err(
         "In file=%s:l=%zu:c=%zu: Expected metadata at the start of the file.",
-        p->file_path, tok->line, tok->col) return mfalse;
+        p->file_path, tok->line, tok->col);
+	return mfalse;
   }
   if (strncmp(tok->iden.st, "metadata", tok->iden.len) == 0) {
     return mvs_slist_parser_deal_with_metadata(p);
+  } else if (strncmp(tok->iden.st, "local_list", tok->iden.len) == 0) {
+    return mvs_slist_parser_deal_with_local_list(p);
   }
   char iden[tok->iden.len + 1];
   memcpy(iden, tok->iden.st, tok->iden.len);
@@ -421,8 +489,6 @@ _MVS_ATTR_INTERNAL_ mbool_t mvs_slist_parser_build_entity(MVSSlistParser *p,
     return mvs_slist_parser_deal_with_setup(p, c);
   } else if (strncmp(tok->iden.st, "args", tok->iden.len) == 0) {
     return mvs_slist_parser_deal_with_config(p, c);
-  } else if (strncmp(tok->iden.st, "add_to_ll", tok->iden.len) == 0) {
-    return mvs_slist_parser_deal_with_add_to_ll(p, c);
   }
   char iden[tok->iden.len + 1];
   memcpy(iden, tok->iden.st, tok->iden.len);
@@ -534,10 +600,13 @@ _MVS_ATTR_INTERNAL_ mbool_t mvs_slist_parser_deal_with_id(MVSSlistParser *p,
       mvs_log_err("In file=%s:l=%zu:c=%zu: Unexpected EOF while expecting "
                   "entity fields.",
                   p->file_path, tok.line, tok.col);
+	  mvs_slist_parser_destroy_command(c);
       return mfalse;
     case MVS_SLIST_TOK_IDEN: {
-      if (!mvs_slist_parser_build_entity(p, &tok, c))
-        return mfalse;
+      if (!mvs_slist_parser_build_entity(p, &tok, c)) {
+        mvs_slist_parser_destroy_command(c);
+		return mfalse;
+	  }
       tok = mvs_slist_lexer_peek_token(p->lexer);
       if (tok.type == MVS_SLIST_TOK_COMMA)
         mvs_slist_lexer_next_token(p->lexer);
@@ -546,14 +615,16 @@ _MVS_ATTR_INTERNAL_ mbool_t mvs_slist_parser_deal_with_id(MVSSlistParser *p,
       else {
         mvs_log_err("In file=%s:l=%zu:c=%zu: Expected a ',' or '}'",
                     p->file_path, tok.line, tok.col);
-        return mfalse;
+        mvs_slist_parser_destroy_command(c);
+		return mfalse;
       }
       break;
     }
     default:
       mvs_log_err("In file=%s:l=%zu:c=%zu: Expected a proper entity field.",
                   p->file_path, tok.line, tok.col);
-      return mfalse;
+      mvs_slist_parser_destroy_command(c);
+	  return mfalse;
     }
     tok = mvs_slist_lexer_next_token(p->lexer);
   }
@@ -562,7 +633,7 @@ _MVS_ATTR_INTERNAL_ mbool_t mvs_slist_parser_deal_with_id(MVSSlistParser *p,
     mvs_log_err(
         "In file=%s:l=%zu:c=%zu: Failed to add command for entity ID=%zu.",
         p->file_path, tok.line, tok.col, ID);
-    free(c);
+	free(c);
     return mfalse;
   }
   return mtrue;

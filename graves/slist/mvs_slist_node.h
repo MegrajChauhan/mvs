@@ -12,7 +12,7 @@ struct MVSSlistCommand {
   msize_t config;
   msize_t properties;
   msize_t setup;
-  MVSDynamicListLinear *args;
+  mstr_t args;
   MVSDynamicListLinear *local_list;
   struct {
     msize_t local_list_lim;

@@ -7,31 +7,32 @@
 ;    config: {
 ;       local_list = true|false,
 ;       ll_lim = 100,
-;    },
+;    }
 ;    properties: {
 ;       ....
-;    },
+;    }
 ;    setup: {
 ;       prop_1 = value,
 ;       prop_2 = value, ; Values can be integers or boolean. Strings or characters are not allowed. only decimal integers are allowed
 ;       prop_3 = true,
 ;       prop_4 = 100
-;    },
-;    args: {
-;       arg1\      ; each argument is separated by a '\'. If there are spaces, tabs, or even comments before '\', they are included as part of the argument
-;                  ; The preceeding spaces and tabs are not included though. From the first character till '\' is considered to be part of the argument
-;       arg2=11\
-;       -arg3\
-;       arg4=a,b,c\
-;    },
-;    add_to_ll: {
-;       2 ; here, the entity of ID=2 is added to the local list at LID=0 automatically
+;    }
+;    args: { 
+;       ; anything and everything inside the args block is taken as a single argument string. The entity is given the string and it should parse the string itself.
+;       ; everything inside the block, including comments, is passed as is.     
+;       arg1      
+;       arg2=11
+;       -arg3
+;       arg4=a,b,c
 ;    }
 ; }
 ; If any other instance needs to copy the above
 ; ID2: [ID]
 ; Note that ID must start from 0 and incrementally grow. For eg, you cannot have 10 at the first
-; Also, note that LID in add_to_ll must also grow incrementally
+; local_list: {
+;    0: len [ID2 IDN ...]  ; This describes the local list for every entity. Every ID provided must be valid and exist. This section is kept at the end of the file. 
+;    1: len [ID IDX ...]
+; }
 ; example:
 metadata: {
    count = 2
@@ -39,13 +40,13 @@ metadata: {
 0: 100 {
   config: {
      local_list = true,
-  },
+  }
   args: {
      -f="hello.txt"
-  },
+  }
   setup: {
     io = true, 
-  },
+  }
   add_to_ll: {
      1 = 0
   }
