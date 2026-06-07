@@ -8,7 +8,6 @@
  * 3. Dynamic list(linear and linked list)
  * */
 
-#include <mvs_logger.h>
 #include <mvs_results.h>
 #include <mvs_tools.h>
 #include <mvs_types.h>

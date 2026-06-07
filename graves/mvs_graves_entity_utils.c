@@ -37,11 +37,7 @@ mbool_t mvs_graves_entity_utils_init_entity(MVSEntity *ent, EntityContext *ctx,
                                             msize_t conf, msize_t props,
                                             mqword_t in_conf,
                                             APIRequestResponse *resp) {
-  if (EID >= _MVS_CONSTANT_ENTITY_COUNT_) {
-    *resp = _API_REQ_RESPONSE_BAD_(API_REQ_RESPONSE_INVALID_EID);
-    return mfalse;
-  }
-  EntityRegistryEntry *entry = mvs_registry_get_entry(EID);
+ EntityRegistryEntry *entry = mvs_registry_get_entry(EID);
   if (!entry) {
     *resp = _API_REQ_RESPONSE_BAD_(API_REQ_RESPONSE_UNREGISTERED_EID);
     return mfalse;
@@ -70,7 +66,7 @@ mbool_t mvs_graves_entity_utils_init_entity(MVSEntity *ent, EntityContext *ctx,
   // This is basic initialization only
   ent->type = type;
   ent->EID = EID;
-  atomic_init(&ent->state.state, MENTITY_INIT);
+  atomic_init(&ent->state, MENTITY_INIT);
   ent->config.config = conf;
   ent->properties.props = props;
   ent->entity_repr = repr;
@@ -79,6 +75,30 @@ mbool_t mvs_graves_entity_utils_init_entity(MVSEntity *ent, EntityContext *ctx,
   ent->entity_local_list_tracks = 0;
   ent->entity_local_list = NULL;
   *resp = _API_REQ_RESPONSE_GOOD_();
+  return mtrue;
+}
+
+mbool_t mvs_graves_entity_utils_init_entity_hotpath(MVSEntity *ent,
+                                                    EntityContext *ctx,
+                                                    msize_t EID, mEntity_t type,
+                                                    msize_t conf, msize_t props,
+                                                    mqword_t in_conf) {
+  EntityRegistryEntry *entry = mvs_registry_get_entry(EID);
+  mbptr_t repr;
+  if (entry->create(ctx, &repr, in_conf) != 0) {
+    return mfalse;
+  }
+
+  ent->type = type;
+  ent->EID = EID;
+  atomic_init(&ent->state, MENTITY_INIT);
+  ent->config.config = conf;
+  ent->properties.props = props;
+  ent->entity_repr = repr;
+
+  ent->entity_local_list_history = 0;
+  ent->entity_local_list_tracks = 0;
+  ent->entity_local_list = NULL;
   return mtrue;
 }
 
@@ -99,13 +119,39 @@ mvs_graves_entity_utils_prepare_entity(MVSEntity *ent, APIRequestResponse *resp,
   if (conf & MVS_CONF_ENTITY_LOCAL_ENTITY_LIST_ENABLE) {
     mResult_t res;
     if ((res = mvs_dynamic_listl_create(&ent->entity_local_list, lim,
-                                        sizeof(MVSEntity *))) != MRES_SUCCESS) {
+                                        sizeof(MVSLocalListEntry))) !=
+        MRES_SUCCESS) {
       *resp = _API_REQ_RESPONSE_BAD_(mvs_convert_result_to_req_response(res));
       return mfalse;
     }
     ent->entity_local_list_size_lim = lim;
   }
-  atomic_store_explicit(&ent->state.state, MENTITY_READY_TO_RUN);
+  atomic_store_explicit(&ent->state, MENTITY_READY_TO_RUN,
+                        memory_order_release);
   *resp = _API_REQ_RESPONSE_GOOD_();
+  return mtrue;
+}
+
+mbool_t mvs_graves_entity_utils_prepare_entity_hotpath(
+    MVSEntity *ent, msize_t local_ent_list_size_lim) {
+  mqword_t conf = ent->config.config;
+
+  msize_t lim = 20;
+  if (conf & MVS_CONF_ENTITY_ENTITY_TRACKING_LIM) {
+    if (!local_ent_list_size_lim) {
+      return mfalse;
+    }
+    lim = local_ent_list_size_lim;
+  }
+  if (conf & MVS_CONF_ENTITY_LOCAL_ENTITY_LIST_ENABLE) {
+    mResult_t res;
+    if ((res = mvs_dynamic_listl_create(&ent->entity_local_list, lim,
+                                        sizeof(MVSEntity *))) != MRES_SUCCESS) {
+      return mfalse;
+    }
+    ent->entity_local_list_size_lim = lim;
+  }
+  atomic_store_explicit(&ent->state, MENTITY_READY_TO_RUN,
+                        memory_order_release);
   return mtrue;
 }

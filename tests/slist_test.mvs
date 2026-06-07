@@ -7,16 +7,16 @@
 ;    config: {
 ;       local_list = true|false,
 ;       ll_lim = 100,
-;    }
+;    },
 ;    properties: {
 ;       ....
-;    }
+;    },
 ;    setup: {
 ;       prop_1 = value,
 ;       prop_2 = value, ; Values can be integers or boolean. Strings or characters are not allowed. only decimal integers are allowed
 ;       prop_3 = true,
 ;       prop_4 = 100
-;    }
+;    },
 ;    args: { 
 ;       ; anything and everything inside the args block is taken as a single argument string. The entity is given the string and it should parse the string itself.
 ;       ; everything inside the block, including comments, is passed as is.     
@@ -29,9 +29,9 @@
 ; If any other instance needs to copy the above
 ; ID2: [ID]
 ; Note that ID must start from 0 and incrementally grow. For eg, you cannot have 10 at the first
-; local_list: {
-;    0: len [ID2 IDN ...]  ; This describes the local list for every entity. Every ID provided must be valid and exist. This section is kept at the end of the file. 
-;    1: len [ID IDX ...]
+; local_list_entries: {
+;    0: len {ID2 IDN ...}  ; This describes the local list for every entity. Every ID provided must be valid and exist. This section is kept at the end of the file. 
+;    1: len {ID IDX ...}
 ; }
 ; example:
 metadata: {
@@ -40,15 +40,16 @@ metadata: {
 0: 100 {
   config: {
      local_list = true,
-  }
+	 ; ll_lim = 2 ; if the limit is set, the first entry for local_list_entries will throw an error as the limit is set to 2 but 4 entries are provided
+  },
   args: {
      -f="hello.txt"
-  }
+  },
   setup: {
-    io = true, 
-  }
-  add_to_ll: {
-     1 = 0
+    io = true,
   }
 }
 1: [0]
+local_list_entries: {
+   1: 4 {0 0 0 1} ; This implies that the entity of ID=2 wants a local list with 4 entries. The entries are 0,0,0, and itself. The concept of a local list will be cleared later on
+}

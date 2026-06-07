@@ -41,9 +41,8 @@ void mvs_request_queue_manager_destroy(MVSRequestQueueManager *req_manager) {
   mvs_log_dbg("Destroyed Request Queue Manager");
 }
 
-msize_t
-mvs_request_queue_manager_enqueue_request(MVSRequestQueueManager *req_manager,
-                                          MVSGravesRequest *req) {
+msize_t mvs_request_queue_manager_enqueue_request(
+    MVSRequestQueueManager *req_manager, MVSGravesRequest *req) {
   msize_t ret = 0;
   mvs_mutex_lock(&req_manager->lock);
   mResult_t res;
@@ -53,23 +52,7 @@ mvs_request_queue_manager_enqueue_request(MVSRequestQueueManager *req_manager,
   } else {
     atomic_store_explicit(&req->request_served, mfalse, memory_order_release);
     atomic_store_explicit(&req->queued, mtrue, memory_order_release);
-    mvs_cond_wait(req->wakeup_cond, &req_manager->lock);
   }
-  mvs_mutex_unlock(&req_manager->lock);
-  return ret;
-}
-
-msize_t mvs_request_queue_manager_enqueue_request_async(
-    MVSRequestQueueManager *req_manager, MVSGravesRequest *req) {
-  msize_t ret = 0;
-  mvs_mutex_lock(&req_manager->lock);
-  mResult_t res;
-  if ((res = mvs_dynamic_lqueue_enqueue(req_manager->request_queue, &req)) !=
-      MRES_SUCCESS) {
-    ret = 1;
-  }
-  atomic_store_explicit(&req->request_served, mfalse, memory_order_release);
-  atomic_store_explicit(&req->queued, mtrue, memory_order_release);
   mvs_mutex_unlock(&req_manager->lock);
   return ret;
 }
@@ -77,8 +60,10 @@ msize_t mvs_request_queue_manager_enqueue_request_async(
 MVSGravesRequest *
 mvs_request_queue_manager_dequeue_request(MVSRequestQueueManager *req_manager) {
   MVSGravesRequest *req;
+  mvs_mutex_lock(&req_manager->lock);
   if (mvs_dynamic_lqueue_dequeue(req_manager->request_queue, &req) !=
       MRES_SUCCESS)
-    return NULL;
+    req = NULL;
+  mvs_mutex_unlock(&req_manager->lock);
   return req;
 }

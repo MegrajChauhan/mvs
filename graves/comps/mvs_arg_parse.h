@@ -16,10 +16,6 @@ typedef mbool_t (*marghdlr_t)(MVSArgParse *, MVSArgParseResult *);
 struct MVSEntitySpawnCommand {
   msize_t EID;
   msize_t instances;
-  msize_t props;
-  msize_t confs;
-  msize_t in_setup;
-  mbool_t slist; // Was the command provided in the slist?
   msize_t argc;
   mstr_t *argv;
   MVSEntitySpawnCommand *nxt_command;
@@ -31,6 +27,7 @@ struct MVSArgParseResult {
                           // entirely
   msize_t entities_to_spawn;
   MVSEntitySpawnCommand *spawn_commands;
+  mstr_t slist;
 };
 
 struct MVSArgParse {

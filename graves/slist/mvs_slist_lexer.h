@@ -25,3 +25,5 @@ MVSSlistToken mvs_slist_lexer_next_token(MVSSlistLexer *l);
 MVSSlistToken mvs_slist_lexer_peek_token(MVSSlistLexer *l);
 
 mstr_t mvs_slist_lexer_get_block(MVSSlistLexer *l, char block_borders);
+
+#endif

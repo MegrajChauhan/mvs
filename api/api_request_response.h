@@ -3,7 +3,7 @@
 
 #include <api_results.h>
 
-#define _API_MAKE_REQUEST_RESPONSE_(status, src)                               \
+#define _API_MAKE_REQUEST_RESPONSE_(status, resp)                              \
   (APIRequestResponse) { .request_fulfilled = (status), .response = (resp) }
 #define _API_REQ_RESPONSE_GOOD_()                                              \
   _API_MAKE_REQUEST_RESPONSE_(mtrue, API_REQ_RESPONSE_NONE)

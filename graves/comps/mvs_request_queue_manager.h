@@ -2,6 +2,7 @@
 #define _MVS_REQUEST_QUEUE_MANAGER_
 
 #include <errno.h>
+#include <mvs_barrier.h>
 #include <mvs_graves_constants.h>
 #include <mvs_logger.h>
 #include <mvs_protectors.h>
@@ -31,8 +32,7 @@ void mvs_request_queue_manager_destroy(MVSRequestQueueManager *req_manager);
 msize_t
 mvs_request_queue_manager_enqueue_request(MVSRequestQueueManager *req_manager,
                                           MVSGravesRequest *req);
-msize_t mvs_request_queue_manager_enqueue_request_async(
-    MVSRequestQueueManager *req_manager, MVSGravesRequest *req);
+
 MVSGravesRequest *
 mvs_request_queue_manager_dequeue_request(MVSRequestQueueManager *req_manager);
 

@@ -1,7 +1,8 @@
-#ifndef _API_ENTITY_REGISTRATION_
-#define _API_ENTITY_REGISTRATION_
+#ifndef _API_ENTITY_
+#define _API_ENTITY_
 
-#include <api_entity.h>
+#include <api_types.h>
+#include <mvs_types.h>
 
 #define _API_MAKE_ENTITY_REGISTRY_ENTRY_(                                      \
     _create, _destroy, _exec, _getdefsetup, _checksetup, _deducesetup)         \
@@ -11,9 +12,11 @@
     .deduce_setup = (_deducesetup)                                             \
   }
 
+struct EntityContext;
 typedef struct EntityRegistryEntry EntityRegistryEntry;
+typedef union GravesRequestResult GravesRequestResult;
 
-typedef msize_t (*entcreate_t)(EntityContext *, mbptr_t *,
+typedef msize_t (*entcreate_t)(struct EntityContext *, mbptr_t *,
                                msize_t /*conf*/); // entity create
 
 /*
@@ -67,8 +70,9 @@ typedef mbool_t (*entchecksetup_t)(msize_t);
  * in the slist file is of the format KEY: VALUE, MVS will pass those as
  * parameters and expects a value in return for the specific key and its value.
  * MVS will OR the returned value to the already built setup flag.
+ * If the flag was invalid, the third argument may be used to indicate error
  * */
-typedef msize_t (*entdeducesetup_t)(mstr_t, mstr_t);
+typedef msize_t (*entdeducesetup_t)(mstr_t, mstr_t, mbool_t *);
 
 struct EntityRegistryEntry {
   entcreate_t create;
@@ -79,12 +83,10 @@ struct EntityRegistryEntry {
   entdeducesetup_t deduce_setup;
 };
 
-/*
- * Return:
- * 0 = Success
- * 1 = Already Registered
- * 2 = Invalid entry
- */
-msize_t api_register_component(msize_t ID, EntityRegistryEntry *entry);
+union GravesRequestResult {
+  struct {
+    msize_t NOTHING;
+  } spawn_entity;
+};
 
 #endif

@@ -22,7 +22,7 @@ struct MVSSlistReader {
   mstr_t end;
   msize_t line;
   msize_t col;
-  
+
   MVSSlistReaderState backup;
 };
 
@@ -41,16 +41,18 @@ _MVS_ATTR_ALWAYS_INLINE_ void mvs_slist_reader_make_backup(MVSSlistReader *r) {
 _MVS_ATTR_ALWAYS_INLINE_ void mvs_slist_reader_restore(MVSSlistReader *r) {
   r->col = r->backup.col;
   r->line = r->backup.line;
-  r->curr = r->backup.urr;
+  r->curr = r->backup.curr;
 }
 
-_MVS_ATTR_ALWAYS_INLINE_ MVSSlistReaderState mvs_slist_reader_get_backup(MVSSlistReader *r) {
-  return r->backup;	
+_MVS_ATTR_ALWAYS_INLINE_ MVSSlistReaderState
+mvs_slist_reader_get_backup(MVSSlistReader *r) {
+  return r->backup;
 }
 
-_MVS_ATTR_ALWAYS_INLINE_ void mvs_slist_reader_restore_from(MVSSlistReader *r, MVSSlistReaderState s) {
+_MVS_ATTR_ALWAYS_INLINE_ void
+mvs_slist_reader_restore_from(MVSSlistReader *r, MVSSlistReaderState s) {
   r->backup = s;
-  mvs_slist_reader_restore_from(r);
+  mvs_slist_reader_restore(r);
 }
 
 _MVS_ATTR_ALWAYS_INLINE_ msize_t mvs_slist_reader_line(MVSSlistReader *r) {

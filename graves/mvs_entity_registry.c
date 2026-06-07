@@ -2,8 +2,22 @@
 
 MVSEntityRegistry registry = {0};
 
+mbool_t mvs_registry_init(MVSSystemConfig *conf) {
+   registry.config = conf;
+   if ((registry.entries = (MVSEntityRegistryPackage*)malloc(sizeof(MVSEntityRegistryPackage)*conf->MAX_EID)) == NULL)
+		   return mfalse;
+   memset(registry.entries, 0, sizeof(MVSEntityRegistryPackage) * conf->MAX_EID);
+   return mtrue;
+}
+
+void mvs_registry_destroy() {
+   if (registry.entries)
+     free(registry.entries);
+}
+
+_MVS_ATTR_EXPORT_
 msize_t mvs_register_component(msize_t ID, EntityRegistryEntry *entry) {
-  if (ID >= _MVS_CONSTANT_ENTITY_COUNT_)
+  if (ID >= registry.config->MAX_EID)
     return 2;
   if (registry.entries[ID].registered)
     return 1;

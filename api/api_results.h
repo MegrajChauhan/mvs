@@ -14,7 +14,6 @@ typedef enum apiRes_t apiRes_t;
 enum apiRes_t {
   API_RES_SUCCESS,
   API_RES_FAILURE,
-  API_RES_INVALID_ARGS,
   API_RES_REQ_NOT_SERVED, // The request hasn't been served yet
   API_RES_REQ_SERVED,     // The request has been served
   API_RES_INVALID_ARGS,   // The request included invalid arguments

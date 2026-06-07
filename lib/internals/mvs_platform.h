@@ -9,6 +9,7 @@
 #include <fcntl.h>
 #include <liburing.h>
 #include <pthread.h>
+#include <semaphore.h>
 #include <sys/mman.h>
 #include <sys/stat.h>
 #include <unistd.h>
@@ -20,6 +21,7 @@ typedef int mdataline_t;
 typedef int mfd_t;
 typedef void *mmap_t;
 typedef mptr_t mdlentry_t;
+typedef sem_t mbarrier_t;
 
 #else
 // others....

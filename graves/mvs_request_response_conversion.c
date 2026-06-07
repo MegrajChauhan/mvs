@@ -11,7 +11,6 @@ apiReqResponse_t mvs_convert_result_to_req_response(mResult_t res) {
     return API_REQ_RESPONSE_RESOURCE_EXHAUSTED;
   case MRES_RESOURCE_STATE_INVALID:
   case MRES_RESOURCE_SHARED:
-  case MRES_RESOURCE_TYPE_INVALID:
   case MRES_RESOURCE_NOT_CONFIGURED:
     return API_REQ_RESPONSE_RESOURCE_INVALID_STATE;
   case MRES_SYS_FAILURE:

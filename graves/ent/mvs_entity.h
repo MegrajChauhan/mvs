@@ -8,17 +8,13 @@
 
 typedef struct MVSEntity MVSEntity;
 typedef struct MVSEntityIdentity MVSEntityIdentity;
-typedef struct MVSEntityState MVSEntityState;
+typedef MVSEntityIdentity MVSLocalListEntry;
 typedef union MVSEntityConfig MVSEntityConfig;
 typedef union MVSEntityProperties MVSEntityProperties;
 
 struct MVSEntityIdentity {
   mid_t ID;   // Entity specific ID
   muid_t UID; // System provided unique ID
-};
-
-struct MVSEntityState {
-  _Atomic mEntityState_t state;
 };
 
 union MVSEntityConfig {
@@ -56,9 +52,10 @@ struct MVSEntity {
   mEntity_t type;
   msize_t EID;
   MVSEntityIdentity identity;
-  MVSEntityState state;
+  _Atomic mEntityState_t state;
   MVSEntityConfig config;
   MVSEntityProperties properties;
+  mbool_t from_slist;
   mptr_t entity_repr;
 
   msize_t entity_local_list_size_lim;

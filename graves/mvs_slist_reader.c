@@ -32,7 +32,7 @@ mbool_t mvs_slist_reader_init(MVSSlistReader *r, mstr_t file_path) {
     return mfalse;
   }
   // Now, the ptr can be easily obtained
-  mvs_mapped_memory_obtain_ptr(r->file, &r->file_contents, 0);
+  mvs_mapped_memory_obtain_ptr(r->file, (mbptr_t *)(&r->file_contents), 0);
   msize_t len;
   mvs_mapped_memory_obtain_map_size(r->file, &len);
   r->curr = r->file_contents;

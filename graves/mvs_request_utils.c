@@ -1,5 +1,6 @@
 #include <mvs_request_utils.h>
 
+_MVS_ATTR_EXPORT_
 apiRes_t mvs_request_check_status(MVSGravesRequest *req) {
   if (!req || !atomic_load_explicit(&req->queued, memory_order_relaxed))
     return API_RES_INVALID_ARGS;
@@ -8,6 +9,7 @@ apiRes_t mvs_request_check_status(MVSGravesRequest *req) {
   return API_RES_REQ_SERVED;
 }
 
+_MVS_ATTR_EXPORT_
 apiRes_t mvs_request_get_response(MVSGravesRequest *req,
                                   APIRequestResponse *res) {
   if (!req || !res || !atomic_load_explicit(&req->queued, memory_order_relaxed))
@@ -18,6 +20,7 @@ apiRes_t mvs_request_get_response(MVSGravesRequest *req,
   return API_RES_SUCCESS;
 }
 
+_MVS_ATTR_EXPORT_
 apiRes_t mvs_request_get_result(MVSGravesRequest *req,
                                 GravesRequestResult *res) {
   if (!req || !res || !atomic_load_explicit(&req->queued, memory_order_relaxed))
@@ -28,6 +31,7 @@ apiRes_t mvs_request_get_result(MVSGravesRequest *req,
   return API_RES_SUCCESS;
 }
 
+_MVS_ATTR_EXPORT_
 apiRes_t mvs_create_req_SPAWN_ENTITY(MVSEntityIdentity *iden, mcond_t *cond,
                                      msize_t ID, mqword_t config,
                                      mqword_t properties, mqword_t in_conf,

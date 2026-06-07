@@ -1,7 +1,7 @@
 #include <mvs_slist_lexer.h>
 
 MVSSlistLexer *mvs_slist_lexer_create() {
-  MVSSlistLexer *l = (MVSSlistParser *)malloc(sizeof(MVSSlistParser));
+  MVSSlistLexer *l = (MVSSlistLexer *)malloc(sizeof(MVSSlistLexer));
   if (!l) {
     mvs_log_err("Failed to initialize SLIST Lexer");
     return NULL;
@@ -61,10 +61,12 @@ MVSSlistToken mvs_slist_lexer_next_token(MVSSlistLexer *l) {
     tok = (MVSSlistToken){.type = MVS_SLIST_TOK_NUM,
                           .line = line,
                           .col = col,
-                          .num = (MVSStrSlice){.ptr = st, .len = len}};
+                          .num = (MVSStrSlice){.st = st, .len = len}};
   } else if (_MVS_MFUNC_ISALPHA_(curr) || curr == '_') {
     mstr_t st = mvs_slist_reader_iter(l->reader);
-    while (_MVS_MFUNC_ISALPHA_(curr) || curr == '_' || _MVS_MFUNC_ISNUM_(curr)) {
+    msize_t col = mvs_slist_reader_col(l->reader);
+    while (_MVS_MFUNC_ISALPHA_(curr) || curr == '_' ||
+           _MVS_MFUNC_ISNUM_(curr)) {
       mvs_slist_reader_consume(l->reader);
       curr = mvs_slist_reader_curr(l->reader);
     }
@@ -73,39 +75,47 @@ MVSSlistToken mvs_slist_lexer_next_token(MVSSlistLexer *l) {
         (MVSSlistToken){.type = MVS_SLIST_TOK_IDEN,
                         .line = line,
                         .col = col,
-                        .iden = (MVSStrSlice){.ptr = st, .len = (ed - st + 1)}};
+                        .iden = (MVSStrSlice){.st = st, .len = (ed - st + 1)}};
   } else if (curr == '{') {
     mvs_slist_reader_consume(l->reader);
-    tok = (MVSSlistToken){
-        .type = MVS_SLIST_TOK_OPEN_CURLY, .line = line, .col = col};
+    tok = (MVSSlistToken){.type = MVS_SLIST_TOK_OPEN_CURLY,
+                          .line = line,
+                          .col = mvs_slist_reader_col(l->reader)};
   } else if (curr == '}') {
     mvs_slist_reader_consume(l->reader);
-    tok = (MVSSlistToken){
-        .type = MVS_SLIST_TOK_CLOSE_CURLY, .line = line, .col = col};
+    tok = (MVSSlistToken){.type = MVS_SLIST_TOK_CLOSE_CURLY,
+                          .line = line,
+                          .col = mvs_slist_reader_col(l->reader)};
   } else if (curr == ':') {
     mvs_slist_reader_consume(l->reader);
-    tok =
-        (MVSSlistToken){.type = MVS_SLIST_TOK_COLON, .line = line, .col = col};
+    tok = (MVSSlistToken){.type = MVS_SLIST_TOK_COLON,
+                          .line = line,
+                          .col = mvs_slist_reader_col(l->reader)};
   } else if (curr == '=') {
     mvs_slist_reader_consume(l->reader);
-    tok =
-        (MVSSlistToken){.type = MVS_SLIST_TOK_EQUALS, .line = line, .col = col};
+    tok = (MVSSlistToken){.type = MVS_SLIST_TOK_EQUALS,
+                          .line = line,
+                          .col = mvs_slist_reader_col(l->reader)};
   } else if (curr == ',') {
     mvs_slist_reader_consume(l->reader);
-    tok =
-        (MVSSlistToken){.type = MVS_SLIST_TOK_COMMA, .line = line, .col = col};
+    tok = (MVSSlistToken){.type = MVS_SLIST_TOK_COMMA,
+                          .line = line,
+                          .col = mvs_slist_reader_col(l->reader)};
   } else if (curr == '[') {
     mvs_slist_reader_consume(l->reader);
-    tok = (MVSSlistToken){
-        .type = MVS_SLIST_TOK_OPEN_BRAC, .line = line, .col = col};
+    tok = (MVSSlistToken){.type = MVS_SLIST_TOK_OPEN_BRAC,
+                          .line = line,
+                          .col = mvs_slist_reader_col(l->reader)};
   } else if (curr == ']') {
     mvs_slist_reader_consume(l->reader);
-    tok = (MVSSlistToken){
-        .type = MVS_SLIST_TOK_CLOSE_BRAC, .line = line, .col = col};
+    tok = (MVSSlistToken){.type = MVS_SLIST_TOK_CLOSE_BRAC,
+                          .line = line,
+                          .col = mvs_slist_reader_col(l->reader)};
   } else if (curr == '\\') {
     mvs_slist_reader_consume(l->reader);
-    tok = (MVSSlistToken){
-        .type = MVS_SLIST_TOK_SEPARATOR, .line = line, .col = col}; 
+    tok = (MVSSlistToken){.type = MVS_SLIST_TOK_SEPARATOR,
+                          .line = line,
+                          .col = mvs_slist_reader_col(l->reader)};
   } else {
     mvs_log_err(
         "In file=%s:l=%zu:c=%zu: Couldn't build a token out of this '%c'.",
@@ -131,31 +141,31 @@ mstr_t mvs_slist_lexer_get_block(MVSSlistLexer *l, char block_borders) {
   s1 = mvs_slist_reader_get_backup(l->reader);
   msize_t len = 0;
   while (curr != block_borders) {
-     if (curr == '\0') {
-		mvs_log_err(
-		    "In file=%s:l=%zu:c=%zu: Reached EOF before reaching the end of block",
-			l->file_path, mvs_slist_reader_line(l->reader),
-			mvs_slist_reader_col(l->reader));
-		return NULL;
-	 }
-	 mvs_slist_reader_consume(l->reader);
-	 curr = mvs_slist_reader_curr(l->reader);
-     len++;
+    if (curr == '\0') {
+      mvs_log_err("In file=%s:l=%zu:c=%zu: Reached EOF before reaching the end "
+                  "of block",
+                  l->file_path, mvs_slist_reader_line(l->reader),
+                  mvs_slist_reader_col(l->reader));
+      return NULL;
+    }
+    mvs_slist_reader_consume(l->reader);
+    curr = mvs_slist_reader_curr(l->reader);
+    len++;
   }
   mvs_slist_reader_make_backup(l->reader);
   s2 = mvs_slist_reader_get_backup(l->reader);
   mvs_slist_reader_restore_from(l->reader, s1);
-  mstr_t block = (mstr_t)malloc(len+1);
+  mstr_t block = (mstr_t)malloc(len + 1);
   if (!block) {
-		mvs_log_err(
-		    "In file=%s:l=%zu:c=%zu: Failed to allocate memory for the block",
-			l->file_path, mvs_slist_reader_line(l->reader),
-			mvs_slist_reader_col(l->reader));
-		return NULL;
+    mvs_log_err(
+        "In file=%s:l=%zu:c=%zu: Failed to allocate memory for the block",
+        l->file_path, mvs_slist_reader_line(l->reader),
+        mvs_slist_reader_col(l->reader));
+    return NULL;
   }
   memcpy(block, mvs_slist_reader_iter(l->reader), len);
   block[len] = 0;
   mvs_slist_reader_consume(l->reader);
-  mvs_slist_reader_restore_from(s2);
+  mvs_slist_reader_restore_from(l->reader, s2);
   return block;
 }

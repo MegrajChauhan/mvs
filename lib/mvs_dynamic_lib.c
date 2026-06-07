@@ -1,5 +1,10 @@
 #include <mvs_dynamic_lib.h>
 
+/*
+ * This implementation of the dynamically loading a library is limited. The entirety of the 'lib' needs more work. 
+ * For now, this will fulfill the requirements of MVS.
+ * */
+
 mResult_t mvs_dynamic_lib_create(MVSDynamicLib **lib) {
   if (!lib)
     return MRES_INVALID_ARGS;
@@ -26,7 +31,7 @@ mResult_t mvs_dynamic_lib_load_library(MVSDynamicLib *lib, mstr_t path) {
   if (lib->dynamic_lib.entry)
     return MRES_RESOURCE_STATE_INVALID; // already in use!
 #if defined(_USE_LINUX_)
-  lib->dynamic_lib.entry = dlopen(path, RTLD_LAZY | RTLD_GLOBAL);
+  lib->dynamic_lib.entry = dlopen(path, RTLD_LAZY);
   if (lib->dynamic_lib.entry == NULL) {
     return MRES_SYS_FAILURE;
   }

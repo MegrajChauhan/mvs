@@ -1,25 +1,34 @@
 #ifndef _MVS_ENTITY_REGISTRY_
 #define _MVS_ENTITY_REGISTRY_
 
-#include <api_entity_registration.h>
+#include <api_entity.h>
 #include <mvs_graves_constants.h>
+#include <mvs_system_config.h>
 #include <mvs_tools.h>
 #include <mvs_types.h>
 #include <stddef.h>
+#include <stdlib.h>
+#include <string.h>
 
 typedef struct MVSEntityRegistry MVSEntityRegistry;
+typedef struct MVSEntityRegistryPackage MVSEntityRegistryPackage; 
 
-// since constructors are executed sequentially, thus, there is no need to
-// synchronize
-struct MVSEntityRegistry {
-  msize_t entities_registered;
-  struct {
+struct MVSEntityRegistryPackage{
     mbool_t registered;
     EntityRegistryEntry API;
-  } entries[_MVS_CONSTANT_ENTITY_COUNT_];
+};
+
+struct MVSEntityRegistry {
+  msize_t entities_registered;
+  MVSSystemConfig *config;
+  MVSEntityRegistryPackage* entries;
 };
 
 _MVS_ATTR_EXTERNAL_ MVSEntityRegistry registry;
+
+mbool_t mvs_registry_init(MVSSystemConfig *conf);
+
+void mvs_registry_destroy();
 
 /*
  * Return:
@@ -27,7 +36,7 @@ _MVS_ATTR_EXTERNAL_ MVSEntityRegistry registry;
  * 1 = Already Registered
  * 2 = Invalid entry
  */
-msize_t mvs_register_component(msize_t ID, EntityRegistryEntry *entry);
+_MVS_ATTR_EXPORT_ msize_t mvs_register_component(msize_t ID, EntityRegistryEntry *entry);
 
 EntityRegistryEntry *mvs_registry_get_entry(msize_t ID);
 

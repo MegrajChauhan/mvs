@@ -108,7 +108,7 @@ union MVSDoubleToQword {
 };
 
 struct MVSStrSlice {
-  mstr_t ptr;
+  mstr_t st;
   msize_t len;
 };
 

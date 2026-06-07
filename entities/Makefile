@@ -1,2 +1,2 @@
 all:
-	echo Nothing
+	make -C mock

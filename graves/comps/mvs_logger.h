@@ -65,6 +65,6 @@ void mvs_log_warn(mstr_t fmt, ...);
 void mvs_log_err(mstr_t fmt, ...);
 void mvs_log_dbg(mstr_t fmt, ...);
 
-void mvs_vlog(mstr_t fmt, ...);
+void mvs_vlog(mstr_t fmt, va_list _l);
 
 #endif

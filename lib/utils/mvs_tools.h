@@ -1,6 +1,8 @@
 #ifndef _MVS_DEFS_
 #define _MVS_DEFS_
 
+#include <mvs_config.h>
+
 #ifndef surelyT
 #define surelyT(x)                                                             \
   __builtin_expect(                                                            \
@@ -24,6 +26,10 @@
 #define _MVS_ATTR_NO_NULL_ __attribute__((nonnull))
 #define _MVS_ATTR_ALIAS_(name) __attribute__((alias(#name)))
 #define _MVS_ATTR_CONSTRUCTOR_ __attribute__((constructor))
+
+#ifdef _USE_LINUX_
+#define _MVS_ATTR_EXPORT_ __attribute__((visiblility("default")))
+#endif
 
 #define _MVS_ATTR_INTERNAL_                                                    \
   static // for a variable or a function that is localized to a module only
