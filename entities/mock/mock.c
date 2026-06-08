@@ -38,7 +38,7 @@ msize_t mock_run(mptr_t repr) {
 		scanf("%d", &n);
 		api->LOG("[MOCK]: You entered %d", n);
 		count++;
-		if (count == 10)
+		if (count % 10 == 0)
 				return 0;
 		return 1;
 }

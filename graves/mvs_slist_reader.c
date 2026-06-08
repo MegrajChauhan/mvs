@@ -36,7 +36,7 @@ mbool_t mvs_slist_reader_init(MVSSlistReader *r, mstr_t file_path) {
   msize_t len;
   mvs_mapped_memory_obtain_map_size(r->file, &len);
   r->curr = r->file_contents;
-  r->end = r->curr + (len - 1);
+  r->end = r->curr + (len);
   r->line = 1;
   r->col = 0;
   mvs_log_dbg("Prepared SLIST reader for file=%s with length=%zu", file_path,

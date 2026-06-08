@@ -24,8 +24,6 @@ struct MVSEntityRegistry {
   MVSEntityRegistryPackage* entries;
 };
 
-_MVS_ATTR_EXTERNAL_ MVSEntityRegistry registry;
-
 mbool_t mvs_registry_init(MVSSystemConfig *conf);
 
 void mvs_registry_destroy();

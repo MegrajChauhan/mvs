@@ -1,1 +1,4 @@
 v0.1.0: Added slist or spawn list file.
+v0.1.1: Made improvements to Graves
+v0.1.2: Fixed some bugs
+v0.2.0: Added rlist or registry list

@@ -35,20 +35,20 @@ struct MVSGraves {
   MVSBarrier sync_barrier;
   mbool_t all_launch_success;
   MVSSlist slist;
-  MVSRlist *rlist;
-  MVSArgParseResult *cmd_opts; // Command-line arguments provided
+  MVSRlist rlist;
+  MVSArgParseResult cmd_opts; // Command-line arguments provided
   MVSGravesEntityList
       *entity_list; // all of the entities; active and non-active
   MVSRequestQueueManager *req_queue;
   GravesAPI local_API; // For Local entities(I will need to define another
                        // one for external entities)
-  MVSSystemConfig *config;
+  MVSSystemConfig config;
 };
 
 /*
  * Exposed API(This will not return and exit internally)
  */
-void mvs_run(MVSArgParseResult *opts, MVSRlist *rlist, MVSSystemConfig *conf);
+void mvs_run(mstr_t *argv, msize_t argc);
 
 /*
  * API functions

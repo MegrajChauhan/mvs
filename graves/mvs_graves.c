@@ -12,6 +12,20 @@ _MVS_ATTR_INTERNAL_ mgravesreqhdlr_t request_hdlrs[] = {
     mvs_request_handle_SPAWN_ENTITY,
 };
 
+#define _MVS_CONSTANT_PARSE_ARG_OPTION_COUNT_ 8
+
+// TODO: move this somewhere else
+_MVS_ATTR_INTERNAL_ MVSArgOption opts[_MVS_CONSTANT_PARSE_ARG_OPTION_COUNT_] = {
+   {"help message", "-h", 2, mtrue, mvs_HELP_MSG},
+   {"help message", "--help", 6, mtrue, mvs_HELP_MSG},
+   {"version information", "-v", 2, mtrue, mvs_VERSION},
+   {"version information", "--version", 9, mtrue, mvs_VERSION}, 
+   {"set log level", "-log", 4, mfalse, mvs_LOG_LVL},	
+   {"Provide entity spawn commands", "-spawn", 6, mfalse, mvs_SPAWN_ENTITY_COMMAND},
+   {"Provide spawn list", "-slist", 6, mtrue, mvs_SLIST},
+   {"Ensure all spawn commands are executed", "-es", 3, mtrue, mvs_ES}
+};
+
 /*
  * MVS starts as such:
  * Firstly, the command line options are parsed. Once all of the command line
@@ -29,6 +43,8 @@ _MVS_ATTR_INTERNAL_ mgravesreqhdlr_t request_hdlrs[] = {
 _MVS_ATTR_INTERNAL_ mbool_t mvs_graves_launch_logger();
 _MVS_ATTR_INTERNAL_ mbool_t mvs_graves_make_sense_of_cmd_opts();
 _MVS_ATTR_INTERNAL_ mbool_t mvs_graves_self_initialize();
+_MVS_ATTR_INTERNAL_ mbool_t mvs_graves_pre_init(mstr_t *argv, msize_t argc);
+_MVS_ATTR_INTERNAL_ void mvs_graves_init_system_config();
 _MVS_ATTR_INTERNAL_ MVSEntity *
 mvs_graves_make_command_entity(MVSEntitySpawnCommand *cmd);
 _MVS_ATTR_INTERNAL_ MVSEntity *mvs_graves_make_slist_entity(MVSSlistCommand *c);
@@ -43,7 +59,7 @@ _MVS_ATTR_INTERNAL_ void mvs_graves_run();
 
 /*----Initialization Functions----*/
 _MVS_ATTR_INTERNAL_ mbool_t mvs_graves_launch_logger() {
-  if (!mvs_logger_init(graves.cmd_opts->log_lvl)) {
+  if (!mvs_logger_init(graves.cmd_opts.log_lvl)) {
     fprintf(stderr, "<INIT>: Failed to initialize logger\n");
     return mfalse;
   }
@@ -62,23 +78,23 @@ _MVS_ATTR_INTERNAL_ mbool_t mvs_graves_make_sense_of_cmd_opts() {
   // Here, Graves will initialize various things based on the command line
   // options
   mvs_log_dbg("Making sense of command line options");
-  if (graves.cmd_opts->ensure_success) {
+  if (graves.cmd_opts.ensure_success) {
     mvs_log_dbg("ensure_success=true");
     if (mvs_barrier_init(&graves.wait_barrier) != MRES_SUCCESS) {
       mvs_log_err("Failed to setup wait-barrier");
       return mfalse;
     }
   }
-  if (graves.cmd_opts->slist) {
-    mvs_log_dbg("slist=%s", graves.cmd_opts->slist);
-    if (!mvs_slist_make_commands(&graves.slist, graves.cmd_opts->slist,
-                                 graves.cmd_opts, graves.config)) {
-      if (graves.cmd_opts->ensure_success) {
+  if (graves.cmd_opts.slist) {
+    mvs_log_dbg("slist=%s", graves.cmd_opts.slist);
+    if (!mvs_slist_make_commands(&graves.slist, graves.cmd_opts.slist,
+                                 &graves.cmd_opts, &graves.config)) {
+      if (graves.cmd_opts.ensure_success) {
         mvs_log_err("Failed to make commands from SLIST");
         return mfalse;
       } else {
         mvs_log_warn("Failed to make commands from SLIST");
-        graves.cmd_opts->slist = NULL;
+        graves.cmd_opts.slist = NULL;
       }
     }
   }
@@ -91,8 +107,8 @@ _MVS_ATTR_INTERNAL_ mbool_t mvs_graves_self_initialize() {
   mmutex_t lock;
   MVSBarrier sync_barrier;
   MVSGravesEntityList *elist = NULL;
-  msize_t total_ecount = graves.cmd_opts->entities_to_spawn;
-  if (graves.cmd_opts->slist)
+  msize_t total_ecount = graves.cmd_opts.entities_to_spawn;
+  if (graves.cmd_opts.slist)
     total_ecount += mvs_slist_get_command_count(&graves.slist);
   mvs_log_dbg("Total ecount=%zu", total_ecount);
   if (mvs_cond_init(&cond) != MRES_SUCCESS) {
@@ -131,7 +147,19 @@ _MVS_ATTR_INTERNAL_ mbool_t mvs_graves_self_initialize() {
   graves.entity_list = elist;
   graves.sync_barrier = sync_barrier;
   graves.entity_created = 0;
-  graves.local_API = (GravesAPI){ 
+
+  graves.return_val = 0;
+  return mtrue;
+}
+
+_MVS_ATTR_INTERNAL_ void mvs_graves_init_system_config() {
+   // This may involve reading configuration files
+   graves.config.MAX_EID = 0;
+}
+
+_MVS_ATTR_INTERNAL_ mbool_t mvs_graves_pre_init(mstr_t *argv, msize_t argc) {
+   mvs_graves_init_system_config();
+   graves.local_API = (GravesAPI){ 
 		  .make_request = mvs_graves_make_request,
 		  .register_component = mvs_register_component,
 		  .LOG = mvs_log_dbg,
@@ -140,9 +168,31 @@ _MVS_ATTR_INTERNAL_ mbool_t mvs_graves_self_initialize() {
 		  .get_request_response = mvs_request_get_response,
 		  .get_request_result = mvs_request_get_result,
 		  .make_request_SPAWN_ENTITY = mvs_create_req_SPAWN_ENTITY,
-  };
-  graves.return_val = 0;
-  return mtrue;
+   };
+   if (!mvs_rlist_init(&graves.rlist))
+		   return mfalse;
+   if (!mvs_rlist_read(&graves.rlist)) {
+	       mvs_rlist_destroy(&graves.rlist);
+		   return mfalse;
+   }
+   graves.config.MAX_EID = mvs_rlist_get_count(&graves.rlist);
+   if (!mvs_registry_init(&graves.config)) {
+     mvs_rlist_destroy(&graves.rlist);
+	 return mfalse;
+   }
+   if (!mvs_rlist_register_entities(&graves.rlist, &graves.local_API)) {
+		mvs_rlist_destroy(&graves.rlist);
+		mvs_registry_destroy();
+		return mfalse;
+   }
+   MVSArgParse parser = _MVS_MFUNC_ARG_PARSE_INIT_(argc, argv, _MVS_CONSTANT_PARSE_ARG_OPTION_COUNT_);
+   mvs_graves_arg_parse_set_default(&graves.cmd_opts);
+   if (!mvs_parse_all_arg(&parser, opts, &graves.cmd_opts, mvs_HELP_MSG)) {
+   	fprintf(stderr, "Terminating...\n");
+    mvs_rlist_destroy(&graves.rlist);
+   	return mfalse;
+   }
+   return mtrue;
 }
 
 _MVS_ATTR_INTERNAL_ MVSEntity *
@@ -207,7 +257,7 @@ mvs_graves_make_slist_entity(MVSSlistCommand *c) {
 
 _MVS_ATTR_INTERNAL_ MVSEntity *
 mvs_graves_make_command_entity(MVSEntitySpawnCommand *cmd) {
-  if (cmd->EID >= graves.config->MAX_EID) {
+  if (cmd->EID >= graves.config.MAX_EID) {
     mvs_log_err("<INIT>: EID=%zu provided for launch command is not valid",
                 cmd->EID);
     return NULL;
@@ -253,10 +303,10 @@ _MVS_ATTR_INTERNAL_ mbool_t mvs_graves_launch_entities() {
   // One is provided from command line
   // Other is from slist if provided
   mvs_log_dbg("launching entities");
-  mbool_t must_succeed = graves.cmd_opts->ensure_success;
+  mbool_t must_succeed = graves.cmd_opts.ensure_success;
   MVSDynamicListLinear *commands = NULL;
   msize_t slist_len;
-  if (graves.cmd_opts->slist) {
+  if (graves.cmd_opts.slist) {
     // SLIST was provided
 	mvs_log_dbg("SLIST entities:");
     commands = mvs_slist_get_commands(&graves.slist);
@@ -281,7 +331,7 @@ _MVS_ATTR_INTERNAL_ mbool_t mvs_graves_launch_entities() {
     }
   }
   mvs_log_dbg("SPAWN COMMAND entities:");
-  MVSEntitySpawnCommand *cmd = graves.cmd_opts->spawn_commands;
+  MVSEntitySpawnCommand *cmd = graves.cmd_opts.spawn_commands;
   while (cmd) {
     MVSEntitySpawnCommand *nxt = cmd->nxt_command;
     for (msize_t i = 0; i < cmd->instances; i++) {
@@ -297,6 +347,8 @@ _MVS_ATTR_INTERNAL_ mbool_t mvs_graves_launch_entities() {
       mvs_log_dbg("SP_COM entity[%zu]= successfully initialized", i);
       graves.entity_created++;
     }
+	free(cmd);
+	cmd = nxt;
   }
   // Now launch all of the entities
   mvs_log_dbg("Initialized %zu entities", graves.entity_created);
@@ -343,6 +395,7 @@ _MVS_ATTR_INTERNAL_ mbool_t mvs_graves_launch_entities() {
       c->skip = mtrue; // done with this one
       c->ID_after_launch = i;
     }
+    mvs_graves_entity_list_register_active_entity(graves.entity_list);
   }
   // Now there is the task of populating the local list.
   // After the local list is populated, the entities can be released
@@ -385,9 +438,11 @@ _MVS_ATTR_INTERNAL_ mbool_t mvs_graves_launch_entities() {
   }
   graves.all_launch_success = mtrue;
   // Now gotta release all of the workers
-  mvs_log_dbg("Releasing all entities...");
-  for (msize_t i = 0; i < graves.entity_created; i++) {
-    mvs_barrier_signal(&graves.wait_barrier);
+  if (must_succeed) {
+    mvs_log_dbg("Releasing all entities...");
+    for (msize_t i = 0; i < graves.entity_created; i++) {
+      mvs_barrier_signal(&graves.wait_barrier);
+    }
   }
   mvs_log_dbg("Active entities: %zu", mvs_graves_entity_list_get_active_entity_count(graves.entity_list));
   return mtrue;
@@ -402,9 +457,9 @@ _MVS_ATTR_INTERNAL_ void mvs_graves_stop_logger() {
 }
 
 _MVS_ATTR_INTERNAL_ void mvs_graves_clean_cmd_initializations() {
-  if (graves.cmd_opts->ensure_success)
+  if (graves.cmd_opts.ensure_success)
     mvs_barrier_destroy(&graves.wait_barrier);
-  if (graves.cmd_opts->slist)
+  if (graves.cmd_opts.slist)
     mvs_slist_destroy(&graves.slist);
 }
 
@@ -447,7 +502,6 @@ _MVS_ATTR_INTERNAL_ mthreadRet_t mvs_graves_entity_launcher_nowait(mptr_t e) {
   mvs_log_dbg("ENTITY[%zu:%zu]: running", ent->identity.ID, ent->identity.UID);
   EntityRegistryEntry *entry = mvs_registry_get_entry(ent->EID);
   atomic_store_explicit(&ent->state, MENTITY_RUNNING, memory_order_release);
-  mvs_graves_entity_list_register_active_entity(graves.entity_list);
   while (mtrue) {
     switch (entry->exec(ent->entity_repr)) {
     case 0:
@@ -467,6 +521,8 @@ __mvs_graves_entity_launcher_nowait_terminate:
   ent->entity_repr = NULL;
   mvs_graves_entity_list_unregister_active_entity(graves.entity_list);
   atomic_store_explicit(&ent->state, MENTITY_STOPPED, memory_order_release);
+  if (mvs_graves_entity_list_get_active_entity_count(graves.entity_list) == 0)
+    mvs_barrier_signal(&graves.sync_barrier);
   return NULL;
 }
 
@@ -476,20 +532,16 @@ void mvs_done() {
   mvs_graves_self_destroy();
   mvs_graves_clean_cmd_initializations();
   mvs_graves_stop_logger();
-  mvs_rlist_destroy(graves.rlist);
+  mvs_rlist_destroy(&graves.rlist);
   mvs_registry_destroy();
 }
 
-void mvs_run(MVSArgParseResult *opts, MVSRlist *rlist, MVSSystemConfig *conf) {
-  graves.cmd_opts = opts;
-  graves.rlist = rlist;
-  graves.config = conf;
-  if (!mvs_registry_init(conf)) {
-    mvs_rlist_destroy(rlist);
-	exit(-1);
-  }
+void mvs_run(mstr_t *argv, msize_t argc) {
+  if (!mvs_graves_pre_init(argv, argc))
+    exit(-1);
+
   if (!mvs_graves_launch_logger()) {
-    mvs_rlist_destroy(rlist);
+    mvs_rlist_destroy(&graves.rlist);
 	mvs_registry_destroy();
     exit(-1);
   }
@@ -497,19 +549,19 @@ void mvs_run(MVSArgParseResult *opts, MVSRlist *rlist, MVSSystemConfig *conf) {
   mvs_log_dbg("checkpoint: pre-initialization");
   if (!mvs_graves_make_sense_of_cmd_opts()) {
     mvs_log_dbg("failed pre-initialization");
-    mvs_rlist_destroy(rlist);
+    mvs_rlist_destroy(&graves.rlist);
 	mvs_registry_destroy();
     exit(-1);
   }
   mvs_log_dbg("checkpoint: initialization");
   if (!mvs_graves_self_initialize()) {
     mvs_log_dbg("failed initialization");
-    mvs_rlist_destroy(rlist);
+    mvs_rlist_destroy(&graves.rlist);
 	mvs_registry_destroy();
     exit(-1);
   }
   mvs_log_dbg("checkpoint: entity launch");
-  if (graves.cmd_opts->entities_to_spawn > 0 || graves.cmd_opts->slist) {
+  if (graves.cmd_opts.entities_to_spawn > 0 || graves.cmd_opts.slist) {
     if (!mvs_graves_launch_entities()) {
       mvs_log_dbg("failed entity launch");
       goto __mvs_run_exit;
@@ -530,6 +582,8 @@ _MVS_ATTR_INTERNAL_ void mvs_graves_run() {
   MVSGravesRequest *req = NULL;
   while (mvs_graves_entity_list_non_empty(graves.entity_list)) {
     mvs_barrier_wait(&graves.sync_barrier);
+    if (!mvs_graves_entity_list_non_empty(graves.entity_list))
+		break;
     req = mvs_request_queue_manager_dequeue_request(graves.req_queue);
     mvs_log_dbg("Graves: Obtained new request");
 	mvs_mutex_lock(&graves.graves_lock);

@@ -25,7 +25,7 @@ void mvs_rlist_destroy(MVSRlist *rlist) {
   }
 }
 
-mbool_t mvs_rlist_read(MVSRlist *rlist, GravesAPI *API) {
+mbool_t mvs_rlist_read(MVSRlist *rlist) {
    // At first, a number is expected to indicate how many entities are to be loaded
    // There are no comments to ignore, no whitespaces to ignore, only commas and newlines.
    while (mvs_rlist_reader_curr(rlist->reader) == '\n') 
@@ -111,20 +111,6 @@ mbool_t mvs_rlist_read(MVSRlist *rlist, GravesAPI *API) {
 		mvs_dynamic_lib_destroy(lib);
 		return mfalse;
 	   }
-	   // Now each entity must provide the same function named "entity_register"
-       mentityRegister_t func;
-	   if (mvs_dynamic_lib_get_symbol(lib, "entity_register", (mptr_t)&func) != MRES_SUCCESS) {
-		fprintf(stderr, "[RLIST]: Couldn't find 'entity_register' in %s\n", name);
-		mvs_dynamic_lib_destroy(lib);
-		return mfalse;
-	   }
-	   /*
-		* Once the entity registers itself, there is really no need to access the library.
-		* The needed functions are registered and MVS concerns itself with only those.
-		* Those functions might call other functions internally and that will load the 
-		* symbols automatically as requested(since we are lazy loading).
-		* */
-	   func(iter, API); // this should register the entity(iter is the EID)
        rlist->entity_libs[iter] = lib;
 	   iter++;
    }
@@ -133,5 +119,23 @@ mbool_t mvs_rlist_read(MVSRlist *rlist, GravesAPI *API) {
 		return mfalse;
    }
    rlist->count = len;
+   return mtrue;
+}
+
+mbool_t mvs_rlist_register_entities(MVSRlist *rlist, GravesAPI *API) {
+   for (msize_t i = 0; i < rlist->count; i++) {
+       mentityRegister_t func;
+	   if (mvs_dynamic_lib_get_symbol(rlist->entity_libs[i], "entity_register", (mptr_t)&func) != MRES_SUCCESS) {
+		fprintf(stderr, "[RLIST]: Couldn't load 'entity_register'\n");
+		return mfalse; // This only fails if the host fails since built-in entities are trusted
+	   }
+	   /*
+		* Once the entity registers itself, there is really no need to access the library.
+		* The needed functions are registered and MVS concerns itself with only those.
+		* Those functions might call other functions internally and that will load the 
+		* symbols automatically as requested(since we are lazy loading).
+		* */
+	   func(i, API); // this should register the entity(iter is the EID)
+   }
    return mtrue;
 }

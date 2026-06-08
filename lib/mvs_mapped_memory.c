@@ -82,7 +82,7 @@ mResult_t mvs_mapped_memory_mapf(MVSMappedMemory *map, mstr_t file_path,
     return MRES_INVALID_ARGS;
   if (map->interface != MINTERFACE_TYPE_MAPPED_MEMORY)
     return MRES_RESOURCE_TYPE_INVALID;
-  if (!map->mapped_mem.addr_space || map->mapped_mem.backing)
+  if (map->mapped_mem.backing)
     return MRES_RESOURCE_STATE_INVALID;
   if (!file_path && offset > map->mapped_mem.addr_space_len)
     return MRES_RESOURCE_SIZE_LIMITED;
@@ -160,7 +160,7 @@ mResult_t mvs_mapped_memory_mapf(MVSMappedMemory *map, mstr_t file_path,
       return res;
     }
     if ((res = mvs_file_seek(map->mapped_mem.backing, 0, SEEK_SET,
-                             &file_len)) != MRES_SUCCESS) {
+                             NULL)) != MRES_SUCCESS) {
       mvs_file_destroy(map->mapped_mem.backing);
       return res;
     }

@@ -29,6 +29,12 @@ mbool_t mvs_rlist_init(MVSRlist *rlist);
 
 void mvs_rlist_destroy(MVSRlist *rlist);
 
-mbool_t mvs_rlist_read(MVSRlist *rlist, GravesAPI *API);
+mbool_t mvs_rlist_read(MVSRlist *rlist);
+
+mbool_t mvs_rlist_register_entities(MVSRlist *rlist, GravesAPI *API);
+
+_MVS_ATTR_ALWAYS_INLINE_ msize_t mvs_rlist_get_count(MVSRlist *rlist) {
+		return rlist->count;
+}
 
 #endif

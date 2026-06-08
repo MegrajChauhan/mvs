@@ -24,7 +24,7 @@ _MVS_ATTR_INTERNAL_ mstr_t HELP_MSG =
     "                          unlike -spawn where the default config and "
     "properties are set\n";
 
-_MVS_ATTR_INTERNAL_ mstr_t VERSION_MSG = "MVS: v0.1.0\n";
+_MVS_ATTR_INTERNAL_ mstr_t VERSION_MSG = "MVS: v0.2.0\n";
 
 void mvs_graves_arg_parse_set_default(MVSArgParseResult *res) {
   res->log_lvl = 2;
@@ -83,7 +83,7 @@ mbool_t mvs_SPAWN_ENTITY_COMMAND(MVSArgParse *parser, MVSArgParseResult *res) {
   mstr_t arg = mvs_arg_parse_get_arg(parser);
   msize_t len = strlen(arg);
   mstr_t instance_count = arg + 6;
-  mstr_t tmp;
+  mstr_t tmp = NULL;
   if (mvs_args_left_to_parse(parser) < 2) {
     fprintf(stderr,
             "<ArgParse>: SPAWN ENTITY commands require the EID as well\n");
@@ -95,7 +95,7 @@ mbool_t mvs_SPAWN_ENTITY_COMMAND(MVSArgParse *parser, MVSArgParseResult *res) {
       // There is an instance number provided
       instance_count++;
       INSTANCE_COUNT = strtoull(instance_count, &tmp, 10);
-      if (tmp) {
+      if (tmp && *tmp != '\0') {
         fprintf(stderr,
                 "<ArgParse>: Invalid value provided for INSTANCE COUNT '%s'\n",
                 instance_count);
@@ -114,7 +114,7 @@ mbool_t mvs_SPAWN_ENTITY_COMMAND(MVSArgParse *parser, MVSArgParseResult *res) {
   arg = mvs_arg_parse_get_arg(parser);
   tmp = NULL;
   EID = strtoull(arg, &tmp, 10);
-  if (tmp) {
+  if (tmp && *tmp != '\0') {
     fprintf(stderr, "<ArgParse>: Invalid EID '%s' provided\n", arg);
     return mfalse;
   }
@@ -127,7 +127,7 @@ mbool_t mvs_SPAWN_ENTITY_COMMAND(MVSArgParse *parser, MVSArgParseResult *res) {
       any_args += 2;
       tmp = NULL;
       ARG_COUNT = strtoull(any_args, &tmp, 10);
-      if (tmp) {
+      if (tmp && *tmp != '\0') {
         fprintf(stderr,
                 "<ArgParse>: Arg count for spawn command[EID=%zu, "
                 "INSTANCE_COUNT=%zu] is invalid '%s'\n",
@@ -154,7 +154,7 @@ mbool_t mvs_SPAWN_ENTITY_COMMAND(MVSArgParse *parser, MVSArgParseResult *res) {
   }
   MVSEntitySpawnCommand *command =
       (MVSEntitySpawnCommand *)malloc(sizeof(MVSEntitySpawnCommand));
-  if (command) {
+  if (!command) {
     fprintf(stderr, "<ArgParse>: Registering ENTITY SPAWN command "
                     "failed[Memory allocation failure]\n");
     return mfalse;

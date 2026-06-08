@@ -1,0 +1,9 @@
+; This test uses the 'mock' entity only
+; Create one entity
+
+metadata: {
+  count = 1 ; just one for now
+}
+0: 0 {
+ ; nothing to really give here
+}

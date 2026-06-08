@@ -1,6 +1,6 @@
 #include <mvs_entity_registry.h>
 
-MVSEntityRegistry registry = {0};
+_MVS_ATTR_INTERNAL_ MVSEntityRegistry registry = {0};
 
 mbool_t mvs_registry_init(MVSSystemConfig *conf) {
    registry.config = conf;

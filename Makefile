@@ -27,7 +27,7 @@ DEPS=${patsubst %.c, ${OUTPUT_DEPS}%.d, ${FILES_TO_COMPILE}}
 all: directories ${OUTPUT_FILES_NAME}
 	make -C lib
 	make -C entities
-	${CC} ${FLAGS} ${OUTPUT_FILES_NAME} mvs.c -Lbuild -lmvs -Wl,-rpath,'$ORIGIN/build/' ${INC_DIRS} -o ${OUTPUT_DIR}mvs
+	${CC} ${FLAGS} ${OUTPUT_FILES_NAME} mvs.c -Lbuild -lmvs -Wl,-rpath,build ${INC_DIRS} -o ${OUTPUT_DIR}mvs
 
 WATCH_PROJECT: directories ${OUTPUT_FILES_NAME}
 

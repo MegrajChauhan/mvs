@@ -9,18 +9,23 @@ MVSSlistParser *mvs_slist_parser_create(MVSArgParseResult *cmd, MVSSystemConfig 
   p->lexer = NULL;
   p->cmd = cmd;
   p->config = config;
+  p->command_list = NULL;
   return p;
 }
 
 void mvs_slist_parser_destroy(MVSSlistParser *p) {
   if (p->lexer)
     mvs_slist_lexer_destroy(p->lexer);
-  for (msize_t i = 0; i < p->curr_id_count; i++) {
-    MVSSlistCommand *c = *(MVSSlistCommand **)mvs_dynamic_listl_ref_of_unsafe(
-        p->command_list, i);
-    mvs_slist_parser_destroy_command(c);
+  if (p->command_list) {
+    if (p->curr_id_count != (mqword_t)(-1)) {
+      for (msize_t i = 0; i < p->curr_id_count; i++) {
+        MVSSlistCommand *c = *(MVSSlistCommand **)mvs_dynamic_listl_ref_of_unsafe(
+            p->command_list, i);
+        mvs_slist_parser_destroy_command(c);
+      }
+	}
+    mvs_dynamic_listl_destroy(p->command_list);
   }
-  mvs_dynamic_listl_destroy(p->command_list);
   free(p);
 }
 
@@ -567,12 +572,6 @@ _MVS_ATTR_INTERNAL_ mbool_t mvs_slist_parser_deal_with_args(
 
 _MVS_ATTR_INTERNAL_ mbool_t mvs_slist_parser_select_path(MVSSlistParser *p,
                                                          MVSSlistToken *tok) {
-  if (!p->metadata_read) {
-    mvs_log_err(
-        "In file=%s:l=%zu:c=%zu: Expected metadata at the start of the file.",
-        p->file_path, tok->line, tok->col);
-    return mfalse;
-  }
   if (strncmp(tok->iden.st, "metadata", tok->iden.len) == 0) {
     return mvs_slist_parser_deal_with_metadata(p);
   } else if (strncmp(tok->iden.st, "local_list_entries", tok->iden.len) == 0) {
@@ -753,6 +752,7 @@ _MVS_ATTR_INTERNAL_ mbool_t mvs_slist_parser_deal_with_id(MVSSlistParser *p,
 }
 
 mbool_t mvs_slist_parser_build(MVSSlistParser *p) {
+		// TODO: finish testing this shit
   mvs_log_dbg("Building from file=%s", p->file_path);
   MVSSlistToken tok = mvs_slist_lexer_next_token(p->lexer);
   while (mtrue) {
