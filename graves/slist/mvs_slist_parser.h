@@ -9,7 +9,7 @@
 #include <api_entity.h>
 #include <mvs_entity_defs.h>
 #include <mvs_entity_registry.h>
-#include <mvs_graves_arg_parse.h>
+#include <mvs_arg_parse.h>
 #include <mvs_graves_constants.h>
 #include <mvs_list.h>
 #include <mvs_logger.h>
@@ -46,7 +46,7 @@ mbool_t mvs_slist_parser_build(MVSSlistParser *p);
 
 _MVS_ATTR_ALWAYS_INLINE_ msize_t
 mvs_slist_parser_get_command_count(MVSSlistParser *p) {
-  return p->curr_id_count;
+  return p->curr_id_count+1;
 }
 
 _MVS_ATTR_ALWAYS_INLINE_ MVSDynamicListLinear *

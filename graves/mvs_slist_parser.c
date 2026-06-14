@@ -644,6 +644,7 @@ mvs_slist_parser_deal_with_id_copy(MVSSlistParser *p, msize_t ID) {
     free(n);
     return mfalse;
   }
+  p->curr_id_count++;
   return mtrue;
 }
 
@@ -699,12 +700,14 @@ _MVS_ATTR_INTERNAL_ mbool_t mvs_slist_parser_deal_with_id(MVSSlistParser *p,
     return mfalse;
   }
   c->copy = mfalse;
+  c->EID = EID;
   c->setup = 0;
   c->config = 0;
   c->properties = 0;
   c->config_provided = mfalse;
   c->properties_provided = mfalse;
   c->setup_provided = mfalse;
+  c->local_list = NULL;
   tok = mvs_slist_lexer_next_token(p->lexer);
   while (tok.type != MVS_SLIST_TOK_CLOSE_CURLY) {
     switch (tok.type) {
@@ -752,7 +755,6 @@ _MVS_ATTR_INTERNAL_ mbool_t mvs_slist_parser_deal_with_id(MVSSlistParser *p,
 }
 
 mbool_t mvs_slist_parser_build(MVSSlistParser *p) {
-		// TODO: finish testing this shit
   mvs_log_dbg("Building from file=%s", p->file_path);
   MVSSlistToken tok = mvs_slist_lexer_next_token(p->lexer);
   while (mtrue) {

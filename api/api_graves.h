@@ -42,7 +42,7 @@ typedef apiRes_t (*gravesreqGR_t)(GravesRequest *, APIRequestResponse *);
 
 typedef apiRes_t (*gravesreqGRes_t)(GravesRequest *, GravesRequestResult *);
 
-typedef apiRes_t (*gravesreqTypeSE_t)(EntityIdentityHdlr, mcond_t *,
+typedef apiRes_t (*gravesreqTypeSE_t)(EntityIdentityHdlr,
                                          msize_t, mqword_t,
                                          mqword_t, mqword_t,
                                          GravesRequest **);

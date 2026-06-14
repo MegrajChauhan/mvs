@@ -32,7 +32,7 @@ apiRes_t mvs_request_get_result(MVSGravesRequest *req,
 }
 
 _MVS_ATTR_EXPORT_
-apiRes_t mvs_create_req_SPAWN_ENTITY(MVSEntityIdentity *iden, mcond_t *cond,
+apiRes_t mvs_create_req_SPAWN_ENTITY(MVSEntityIdentity *iden,
                                      msize_t ID, mqword_t config,
                                      mqword_t properties, mqword_t in_conf,
                                      MVSGravesRequest **req) {
@@ -51,7 +51,6 @@ apiRes_t mvs_create_req_SPAWN_ENTITY(MVSEntityIdentity *iden, mcond_t *cond,
   }
   r->type = MREQ_SPAWN_ENTITY;
   r->iden = iden;
-  r->wakeup_cond = cond;
   atomic_init(&r->queued, mfalse);
   r->args.spawn_entity.ID = ID;
   r->args.spawn_entity.config = config;

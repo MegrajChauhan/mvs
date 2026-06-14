@@ -1,6 +1,6 @@
 #include <mvs_request_queue_manager.h>
 
-MVSRequestQueueManager *mvs_request_queue_manager_create() {
+MVSRequestQueueManager *mvs_request_queue_manager_create(MVSSystemConfig *conf) {
   mvs_log_dbg("Initializing Request Queue Manager...");
   MVSRequestQueueManager *rman =
       (MVSRequestQueueManager *)malloc(sizeof(MVSRequestQueueManager));
@@ -29,6 +29,7 @@ MVSRequestQueueManager *mvs_request_queue_manager_create() {
     free(rman);
     return NULL;
   }
+  rman->conf = conf;
   mvs_log_dbg("Successfully Initialized Request Queue Manager");
   return rman;
 }

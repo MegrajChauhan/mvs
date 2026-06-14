@@ -9,6 +9,7 @@
 #include <mvs_queue.h>
 #include <mvs_request.h>
 #include <mvs_request_types.h>
+#include <mvs_system_config.h>
 #include <mvs_types.h>
 #include <stdatomic.h>
 #include <stdlib.h>
@@ -18,10 +19,11 @@ typedef struct MVSRequestQueueManager MVSRequestQueueManager;
 
 struct MVSRequestQueueManager {
   MVSDynamicQueueLinear *request_queue;
+  MVSSystemConfig *conf;
   mmutex_t lock;
 };
 
-MVSRequestQueueManager *mvs_request_queue_manager_create();
+MVSRequestQueueManager *mvs_request_queue_manager_create(MVSSystemConfig *conf);
 void mvs_request_queue_manager_destroy(MVSRequestQueueManager *req_manager);
 
 /*

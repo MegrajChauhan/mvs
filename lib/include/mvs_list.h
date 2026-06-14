@@ -121,9 +121,22 @@ mvs_dynamic_listl_size(MVSDynamicListLinear *lst, msize_t *res) {
   return MRES_SUCCESS;
 }
 
+_MVS_ATTR_ALWAYS_INLINE_ mResult_t
+mvs_dynamic_listl_cap(MVSDynamicListLinear *lst, msize_t *res) {
+  if (!lst || !res)
+    return MRES_INVALID_ARGS;
+  *res = lst->cap;
+  return MRES_SUCCESS;
+}
+
 _MVS_ATTR_ALWAYS_INLINE_ msize_t
 mvs_dynamic_listl_size_unsafe(MVSDynamicListLinear *lst) {
   return lst->curr_ind;
+}
+
+_MVS_ATTR_ALWAYS_INLINE_ msize_t
+mvs_dynamic_listl_cap_unsafe(MVSDynamicListLinear *lst) {
+  return lst->cap;
 }
 
 _MVS_ATTR_ALWAYS_INLINE_ mResult_t
@@ -144,6 +157,14 @@ mvs_dynamic_listl_at(MVSDynamicListLinear *lst, mptr_t elem, msize_t ind) {
   if (!lst || !elem || (ind >= lst->cap))
     return MRES_INVALID_ARGS;
   memcpy(elem, (mptr_t)(lst->buf + (ind * lst->elem_len)), lst->elem_len);
+  return MRES_SUCCESS;
+}
+
+_MVS_ATTR_ALWAYS_INLINE_ mResult_t
+mvs_dynamic_listl_clear(MVSDynamicListLinear *lst) {
+  if (!lst)
+    return MRES_INVALID_ARGS;
+  lst->curr_ind = 0;
   return MRES_SUCCESS;
 }
 

@@ -1,43 +1,41 @@
 #include <mvs_rlist.h>
 
-typedef void (*mentityRegister_t)(msize_t, GravesAPI *);
-
 mbool_t mvs_rlist_init(MVSRlist *rlist) {
-  MVSRlistReader *r = mvs_rlist_reader_create();
-  if (!r)
-    return mfalse;
-  if (!mvs_rlist_reader_init(r, "./entities.l")) {
-    mvs_rlist_reader_destroy(r);
-	return mfalse;
-  }
+  if (mvs_dynamic_listl_create(&rlist->entity_libs, 10, sizeof(MVSDynamicLib*)) != MRES_SUCCESS)
+		  return mfalse;
   rlist->count = 0;
-  rlist->reader = r;
   return mtrue;
 }
 
 void mvs_rlist_destroy(MVSRlist *rlist) {
-  mvs_rlist_reader_destroy(rlist->reader);
-  if (rlist->entity_libs) {
+  if (rlist->count) {
     for (msize_t i = 0; i < rlist->count; i++) {
-		mvs_dynamic_lib_destroy(rlist->entity_libs[i]);
+		mvs_dynamic_lib_destroy(*(MVSDynamicLib**)mvs_dynamic_listl_ref_of_unsafe(rlist->entity_libs, i));
 	}
-	free(rlist->entity_libs);
   }
+  mvs_dynamic_listl_destroy(rlist->entity_libs);
 }
 
-mbool_t mvs_rlist_read(MVSRlist *rlist) {
+mbool_t mvs_rlist_load_from_list_file(MVSRlist *rlist, mstr_t file_path) {
    // At first, a number is expected to indicate how many entities are to be loaded
    // There are no comments to ignore, no whitespaces to ignore, only commas and newlines.
-   while (mvs_rlist_reader_curr(rlist->reader) == '\n') 
-		   mvs_rlist_reader_consume(rlist->reader);
-   if (!_MVS_MFUNC_ISNUM_(mvs_rlist_reader_curr(rlist->reader))) {
+   MVSRlistReader *r = mvs_rlist_reader_create();
+   if (!r)
+     return mfalse;
+   if (!mvs_rlist_reader_init(r, file_path)) {
+     mvs_rlist_reader_destroy(r);
+	 return mfalse;
+   }  
+   while (mvs_rlist_reader_curr(r) == '\n') 
+      mvs_rlist_reader_consume(r);
+   if (!_MVS_MFUNC_ISNUM_(mvs_rlist_reader_curr(r))) {
      fprintf(stderr, "[RLIST]: Expected the list length\n");
 	 return mfalse;
    }
-   mstr_t st = mvs_rlist_reader_iter(rlist->reader);
-   while (_MVS_MFUNC_ISNUM_(mvs_rlist_reader_curr(rlist->reader))) 
-		   mvs_rlist_reader_consume(rlist->reader);
-   mstr_t ed = mvs_rlist_reader_iter(rlist->reader);
+   mstr_t st = mvs_rlist_reader_iter(r);
+   while (_MVS_MFUNC_ISNUM_(mvs_rlist_reader_curr(r))) 
+		   mvs_rlist_reader_consume(r);
+   mstr_t ed = mvs_rlist_reader_iter(r);
    if (*ed != '\n') {
       fprintf(stderr, "[RLIST]: List length and the list must be separated by a newline\n");
 	  return mfalse;
@@ -51,28 +49,23 @@ mbool_t mvs_rlist_read(MVSRlist *rlist) {
      fprintf(stderr, "[RLIST]: List length cannot be zero\n");
 	 return mfalse;
    }
-   rlist->entity_libs = (MVSDynamicLib**)malloc(sizeof(MVSDynamicLib*) * len);
-   if (!rlist->entity_libs) {
-		fprintf(stderr, "[RLIST]: Failed to allocate memory for entity list\n");
-		return mfalse;
-   }
-   mvs_rlist_reader_consume(rlist->reader);
+   mvs_rlist_reader_consume(r);
    msize_t iter = 0; // now this is going to act as the counter for how many entities were read
-   while (mvs_rlist_reader_peek(rlist->reader) != '\0') {
-	   while (mvs_rlist_reader_curr(rlist->reader) == '\n') 
-		   mvs_rlist_reader_consume(rlist->reader);
-	   char curr = mvs_rlist_reader_curr(rlist->reader);
+   while (mvs_rlist_reader_peek(r) != '\0') {
+	   while (mvs_rlist_reader_curr(r) == '\n') 
+		   mvs_rlist_reader_consume(r);
+	   char curr = mvs_rlist_reader_curr(r);
  	   if (!_MVS_MFUNC_ISALPHA_(curr) && curr != '_') {
 		 fprintf(stderr, "[RLIST]: The list should only contain names\n");
 		 return mfalse;
 	   }
-	   st = mvs_rlist_reader_iter(rlist->reader);
+	   st = mvs_rlist_reader_iter(r);
 	   while (_MVS_MFUNC_ISALNUM_(curr) || curr == '_') {
-		 mvs_rlist_reader_consume(rlist->reader);
-		 curr = mvs_rlist_reader_curr(rlist->reader);
+		 mvs_rlist_reader_consume(r);
+		 curr = mvs_rlist_reader_curr(r);
 	   }
-	   ed = mvs_rlist_reader_iter(rlist->reader);
-	   if (!mvs_rlist_reader_eof(rlist->reader) && *ed != ',') {
+	   ed = mvs_rlist_reader_iter(r);
+	   if (!mvs_rlist_reader_eof(r) && *ed != ',') {
 		 fprintf(stderr, "[RLIST]: Expected a separator ','\n");
 		 return mfalse;
 	   }
@@ -111,7 +104,11 @@ mbool_t mvs_rlist_read(MVSRlist *rlist) {
 		mvs_dynamic_lib_destroy(lib);
 		return mfalse;
 	   }
-       rlist->entity_libs[iter] = lib;
+       if (mvs_dynamic_listl_push(rlist->entity_libs, &lib) != MRES_SUCCESS) {
+		 fprintf(stderr, "[RLIST]: Failed to register an entity\n");
+		 mvs_dynamic_lib_destroy(lib);
+		 return mfalse;
+	   } 
 	   iter++;
    }
    if (iter != len) {
@@ -119,23 +116,38 @@ mbool_t mvs_rlist_read(MVSRlist *rlist) {
 		return mfalse;
    }
    rlist->count = len;
+   mvs_rlist_reader_destroy(r);
    return mtrue;
 }
 
-mbool_t mvs_rlist_register_entities(MVSRlist *rlist, GravesAPI *API) {
-   for (msize_t i = 0; i < rlist->count; i++) {
-       mentityRegister_t func;
-	   if (mvs_dynamic_lib_get_symbol(rlist->entity_libs[i], "entity_register", (mptr_t)&func) != MRES_SUCCESS) {
-		fprintf(stderr, "[RLIST]: Couldn't load 'entity_register'\n");
-		return mfalse; // This only fails if the host fails since built-in entities are trusted
-	   }
-	   /*
-		* Once the entity registers itself, there is really no need to access the library.
-		* The needed functions are registered and MVS concerns itself with only those.
-		* Those functions might call other functions internally and that will load the 
-		* symbols automatically as requested(since we are lazy loading).
-		* */
-	   func(i, API); // this should register the entity(iter is the EID)
-   }
-   return mtrue;
+mbool_t mvs_rlist_load_from_path(MVSRlist *rlist, mstr_t path) {
+  MVSDynamicLib *lib;
+  if (mvs_dynamic_lib_create(&lib) != MRES_SUCCESS) {
+    mvs_log_err("[RLIST]: Failed to allocate memory for the entity\n");
+	return mfalse;
+  }
+  if (mvs_dynamic_lib_load_library(lib, path) != MRES_SUCCESS) {
+	mvs_log_err("[RLIST]: Couldn't load the entity '%s'\n", path);
+	mvs_dynamic_lib_destroy(lib);
+	return mfalse;
+  }
+  if (mvs_dynamic_listl_push(rlist->entity_libs, &lib) != MRES_SUCCESS) {
+    mvs_log_err("[RLIST]: Failed to register an entity\n");
+    mvs_dynamic_lib_destroy(lib);
+    return mfalse;
+  }
+  rlist->count++;
+  return mtrue;
+}
+
+mentityRegister_t mvs_rlist_get_registrar(MVSRlist *rlist, msize_t EID, mbool_t *sys) {
+  *sys = mfalse;
+  if (EID >= rlist->count)
+    return NULL;
+  mentityRegister_t func;
+  if (mvs_dynamic_lib_get_symbol(*(MVSDynamicLib**)mvs_dynamic_listl_ref_of_unsafe(rlist->entity_libs, EID), "entity_register", (mptr_t)&func) != MRES_SUCCESS) {
+	*sys = mtrue;
+	return NULL; // This only fails if the host fails since built-in entities are trusted
+  }
+  return func;
 }

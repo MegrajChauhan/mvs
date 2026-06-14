@@ -8,7 +8,6 @@
 #include <mvs_barrier.h>
 #include <mvs_entity.h>
 #include <mvs_entity_registry.h>
-#include <mvs_graves_arg_parse.h>
 #include <mvs_graves_entity_list.h>
 #include <mvs_graves_entity_utils.h>
 #include <mvs_interface.h>
@@ -25,24 +24,44 @@
 #include <stdlib.h>
 
 typedef struct MVSGraves MVSGraves;
+typedef struct MVSGravesAccounting MVSGravesAccounting;
+typedef struct MVSGravesSync MVSGravesSync;
+typedef struct MVSGravesComps MVSGravesComps;
+typedef struct MVSGravesState MVSGravesState;
+
+struct MVSGravesAccounting {
+   msize_t requests_served;
+   msize_t requests_success;
+};
+
+struct MVSGravesSync {
+   /*
+	* the following barrier is used to ensure all entities launch at startup
+	* */
+   MVSBarrier sleep_barrier; 
+};
+
+struct MVSGravesComps {
+   MVSRlist rlist;
+   MVSSlist slist;
+   MVSGravesEntityList *entity_list;
+   MVSRequestQueueManager *queue_manager;
+};
+
+struct MVSGravesState {
+   MVSArgParseResult cmd_opts;
+   MVSSystemConfig config;
+   mbool_t all_initial_entities_initialized;
+   mbool_t all_initial_entities_launched;
+};
 
 struct MVSGraves {
-  msize_t return_val;
-  msize_t entity_created;
-  mcond_t graves_cond;
-  mmutex_t graves_lock;
-  MVSBarrier wait_barrier;
-  MVSBarrier sync_barrier;
-  mbool_t all_launch_success;
-  MVSSlist slist;
-  MVSRlist rlist;
-  MVSArgParseResult cmd_opts; // Command-line arguments provided
-  MVSGravesEntityList
-      *entity_list; // all of the entities; active and non-active
-  MVSRequestQueueManager *req_queue;
+  MVSGravesAccounting accounting;
+  MVSGravesSync sync;
+  MVSGravesComps components;
+  MVSGravesState state;
   GravesAPI local_API; // For Local entities(I will need to define another
                        // one for external entities)
-  MVSSystemConfig config;
 };
 
 /*

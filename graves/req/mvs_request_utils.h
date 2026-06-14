@@ -22,7 +22,7 @@ apiRes_t mvs_request_get_result(MVSGravesRequest *req,
  * is automatically inferenced as an async request.
  */
 _MVS_ATTR_EXPORT_
-apiRes_t mvs_create_req_SPAWN_ENTITY(MVSEntityIdentity *iden, mcond_t *cond,
+apiRes_t mvs_create_req_SPAWN_ENTITY(MVSEntityIdentity *iden,
                                      msize_t ID, mqword_t config,
                                      mqword_t properties, mqword_t in_conf,
                                      MVSGravesRequest **req);

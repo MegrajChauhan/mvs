@@ -18,6 +18,7 @@
 #include <mvs_threads.h>
 #include <mvs_tools.h>
 #include <mvs_types.h>
+#include <mvs_system_config.h>
 #include <stdarg.h>
 #include <stdatomic.h>
 #include <stdio.h>
@@ -42,6 +43,8 @@ struct MVSLogger {
   mcond_t cond;
   atm_mbool_t stop;
   atm_mbool_t dead;
+  atm_msize_t msg_in_queue;
+  msize_t wake_logger_on;
 };
 
 /*
@@ -52,7 +55,7 @@ struct MVSLogger {
  * caller or the system
  */
 
-mbool_t mvs_logger_init(mLogLvl_t allowed);
+mbool_t mvs_logger_init(mLogLvl_t allowed, MVSSystemConfig *conf);
 mbool_t mvs_logger_destroy();
 mthreadRet_t mvs_logger_run(mptr_t _l);
 void mvs_logger_wakeup(mbool_t flag);
@@ -60,11 +63,15 @@ void mvs_logger_wait_to_launch();
 void mvs_logger_wait_for_termination();
 
 // Logging functions
+_MVS_ATTR_EXPORT_
 void mvs_log_note(mstr_t fmt, ...);
+_MVS_ATTR_EXPORT_
 void mvs_log_warn(mstr_t fmt, ...);
+_MVS_ATTR_EXPORT_
 void mvs_log_err(mstr_t fmt, ...);
+_MVS_ATTR_EXPORT_
 void mvs_log_dbg(mstr_t fmt, ...);
-
+_MVS_ATTR_EXPORT_
 void mvs_vlog(mstr_t fmt, va_list _l);
 
 #endif

@@ -11,6 +11,10 @@ DIRS = lib/arch/x86_64 \
       graves/ent \
 	  graves/slist \
 	  graves/rlist \
+	  graves/req \
+	  graves/reg \
+	  graves/defs \
+	  graves/utils \
       api/ 
 
 SRC_DIR = graves/

@@ -4,6 +4,8 @@
 #include <mvs_logger.h>
 #include <mvs_tools.h>
 #include <mvs_types.h>
+#include <mvs_arg_defs.h>
+#include <mvs_system_config.h>
 #include <stdio.h>
 #include <string.h>
 
@@ -23,8 +25,6 @@ struct MVSEntitySpawnCommand {
 
 struct MVSArgParseResult {
   msize_t log_lvl;
-  mbool_t ensure_success; // If at least one entity fails to launch, terminate
-                          // entirely
   msize_t entities_to_spawn;
   MVSEntitySpawnCommand *spawn_commands;
   mstr_t slist;
@@ -50,36 +50,8 @@ struct MVSArgOption {
   (MVSArgParse){                                                               \
       .argc = (_argc), .argv = (_argv), .opt_count = (_opt_count), .ptr = 1}
 
-mbool_t mvs_parse_all_arg(MVSArgParse *parser, MVSArgOption *opts,
-                          MVSArgParseResult *res, marghdlr_t hlp);
+mbool_t mvs_parse_all_arg(MVSArgParse *parser, MVSArgParseResult *res);
 
-_MVS_ATTR_ALWAYS_INLINE_ mbool_t mvs_has_arg(MVSArgParse *parser) {
-  return (parser->argc > parser->ptr);
-}
-
-_MVS_ATTR_ALWAYS_INLINE_ msize_t mvs_args_left_to_parse(MVSArgParse *parser) {
-  return (parser->argc - parser->ptr);
-}
-
-_MVS_ATTR_ALWAYS_INLINE_ void mvs_arg_parse_consume_arg(MVSArgParse *parser) {
-  parser->ptr++;
-}
-
-_MVS_ATTR_ALWAYS_INLINE_ mstr_t mvs_arg_parse_peek(MVSArgParse *parser) {
-  return (mvs_has_arg(parser)) ? parser->argv[parser->ptr + 1] : NULL;
-}
-
-_MVS_ATTR_ALWAYS_INLINE_ mstr_t mvs_arg_parse_get_arg(MVSArgParse *parser) {
-  return parser->argv[parser->ptr];
-}
-
-_MVS_ATTR_ALWAYS_INLINE_ void mvs_arg_parse_consume_args(MVSArgParse *parser,
-                                                         msize_t count) {
-  parser->ptr += count;
-}
-
-_MVS_ATTR_ALWAYS_INLINE_ mstr_t *mvs_arg_parse_arg_slice(MVSArgParse *parser) {
-  return &parser->argv[parser->ptr];
-}
+void mvs_arg_parse_populate_config(MVSArgParseResult *res, MVSSystemConfig *conf);
 
 #endif

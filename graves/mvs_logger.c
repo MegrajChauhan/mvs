@@ -19,14 +19,14 @@ _MVS_ATTR_INTERNAL_ void mvs_logger_log_all() {
   }
 }
 
-mbool_t mvs_logger_init(mLogLvl_t allowed) {
+mbool_t mvs_logger_init(mLogLvl_t allowed, MVSSystemConfig *conf) {
   if (_logger)
     return mfalse;
   _logger = (MVSLogger *)malloc(sizeof(MVSLogger));
   if (!_logger)
     return mfalse;
   mResult_t res = mvs_hybrid_concurrency_model_queue_create(
-      &_logger->queue, 100 /*100 logs for now*/, sizeof(MVSLogEntry));
+      &_logger->queue, conf->LOG_DEPTH, sizeof(MVSLogEntry));
   if (res != MRES_SUCCESS) {
     free(_logger);
     return mfalse;
@@ -44,6 +44,8 @@ mbool_t mvs_logger_init(mLogLvl_t allowed) {
   }
   atomic_init(&_logger->stop, mfalse);
   atomic_init(&_logger->dead, mtrue);
+  atomic_init(&_logger->msg_in_queue, 0);
+  _logger->wake_logger_on = conf->LOG_DEPTH * 0.1; // 10%
   _logger->allowed_lvl = allowed;
   return mtrue;
 }
@@ -83,6 +85,7 @@ mthreadRet_t mvs_logger_run(mptr_t _l) {
   return NULL;
 }
 
+_MVS_ATTR_EXPORT_
 void mvs_log_note(mstr_t fmt, ...) {
   if (!_logger)
     return;
@@ -96,9 +99,12 @@ void mvs_log_note(mstr_t fmt, ...) {
   va_end(args);
   // this may fail
   mvs_hybrid_concurrency_model_queue_enqueue(_logger->queue, &entry);
-  mvs_cond_signal(&_logger->cond);
+  msize_t count = atomic_fetch_add(&_logger->msg_in_queue, 1);
+  if ((count+1) % _logger->wake_logger_on == 0)
+    mvs_cond_signal(&_logger->cond); 
 }
 
+_MVS_ATTR_EXPORT_
 void mvs_log_warn(mstr_t fmt, ...) {
   if (!_logger)
     return;
@@ -111,9 +117,12 @@ void mvs_log_warn(mstr_t fmt, ...) {
   vsnprintf(entry.msg, 128, fmt, args);
   va_end(args);
   mvs_hybrid_concurrency_model_queue_enqueue(_logger->queue, &entry);
-  mvs_cond_signal(&_logger->cond);
+  msize_t count = atomic_fetch_add(&_logger->msg_in_queue, 1);
+  if ((count+1) % _logger->wake_logger_on == 0)
+    mvs_cond_signal(&_logger->cond);
 }
 
+_MVS_ATTR_EXPORT_
 void mvs_log_err(mstr_t fmt, ...) {
   if (!_logger)
     return;
@@ -126,9 +135,12 @@ void mvs_log_err(mstr_t fmt, ...) {
   vsnprintf(entry.msg, 128, fmt, args);
   va_end(args);
   mvs_hybrid_concurrency_model_queue_enqueue(_logger->queue, &entry);
-  mvs_cond_signal(&_logger->cond);
+   msize_t count = atomic_fetch_add(&_logger->msg_in_queue, 1);
+  if ((count+1) % _logger->wake_logger_on == 0)
+    mvs_cond_signal(&_logger->cond);
 }
 
+_MVS_ATTR_EXPORT_
 void mvs_log_dbg(mstr_t fmt, ...) {
   if (!_logger)
     return;
@@ -141,9 +153,12 @@ void mvs_log_dbg(mstr_t fmt, ...) {
   vsnprintf(entry.msg, 128, fmt, args);
   va_end(args);
   mvs_hybrid_concurrency_model_queue_enqueue(_logger->queue, &entry);
-  mvs_cond_signal(&_logger->cond);
+   msize_t count = atomic_fetch_add(&_logger->msg_in_queue, 1);
+  if ((count+1) % _logger->wake_logger_on == 0)
+    mvs_cond_signal(&_logger->cond);
 }
 
+_MVS_ATTR_EXPORT_
 void mvs_vlog(mstr_t fmt, va_list _l) {
   if (!_logger || !fmt || !_l)
     return;
@@ -151,7 +166,9 @@ void mvs_vlog(mstr_t fmt, va_list _l) {
   entry.lvl = MLOG_EXT;
   vsnprintf(entry.msg, 128, fmt, _l);
   mvs_hybrid_concurrency_model_queue_enqueue(_logger->queue, &entry);
-  mvs_cond_signal(&_logger->cond);
+   msize_t count = atomic_fetch_add(&_logger->msg_in_queue, 1);
+  if ((count+1) % _logger->wake_logger_on == 0)
+    mvs_cond_signal(&_logger->cond);
 }
 
 void mvs_logger_wakeup(mbool_t flag) {

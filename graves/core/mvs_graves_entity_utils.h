@@ -11,6 +11,8 @@
 #include <mvs_types.h>
 #include <stdlib.h>
 
+#define _MVS_MFUNC_ENTITY_CONTEXT_INIT_(iden, _argc, _argv, _slist) (EntityContext){.self=(iden),.argc=(_argc), .argv=(_argv), .slist=(_slist)}
+
 MVSEntity *mvs_graves_entity_utils_create_entity();
 
 void mvs_graves_entity_utils_destroy_entity(MVSEntity *ent);
@@ -38,5 +40,17 @@ mbool_t mvs_graves_entity_utils_prepare_entity(MVSEntity *ent,
 mbool_t
 mvs_graves_entity_utils_prepare_entity_hotpath(MVSEntity *ent,
                                                msize_t local_ent_list_size_lim);
+
+mbool_t mvs_graves_entity_utils_check_local_list_enable(MVSEntity *ent);
+
+mbool_t mvs_graves_entity_utils_check_local_list_limit_set(MVSEntity *ent);
+
+mbool_t mvs_graves_entity_utils_check_local_list_full(MVSEntity *ent);
+
+mbool_t mvs_graves_entity_utils_add_to_local_list(MVSEntity *ent, MVSEntity *to_add);
+
+mbool_t mvs_graves_entity_utils_clear_local_list(MVSEntity *ent);
+
+mbool_t mvs_graves_entity_utils_probe_local_list_position(MVSEntity *ent, MVSEntityIdentity *res, msize_t pos);
 
 #endif

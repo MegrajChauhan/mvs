@@ -11,6 +11,7 @@ typedef struct MVSEntityIdentity MVSEntityIdentity;
 typedef MVSEntityIdentity MVSLocalListEntry;
 typedef union MVSEntityConfig MVSEntityConfig;
 typedef union MVSEntityProperties MVSEntityProperties;
+typedef MVSEntityIdentity MVSEntityLocalListEntry;
 
 struct MVSEntityIdentity {
   mid_t ID;   // Entity specific ID
@@ -55,12 +56,11 @@ struct MVSEntity {
   _Atomic mEntityState_t state;
   MVSEntityConfig config;
   MVSEntityProperties properties;
-  mbool_t from_slist;
   mptr_t entity_repr;
 
-  msize_t entity_local_list_size_lim;
-  msize_t entity_local_list_tracks;
-  msize_t entity_local_list_history;
+  msize_t entity_local_list_size_lim; // If local list is limited, what is the limit?
+  msize_t entity_local_list_tracks;   // How many entities does local list contain?
+  msize_t entity_local_list_history;  // How many entities has the local list tracked so far?
   MVSDynamicListLinear *entity_local_list;
 };
 

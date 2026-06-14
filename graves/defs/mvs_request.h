@@ -16,7 +16,6 @@ typedef struct MVSGravesRequest MVSGravesRequest;
 struct MVSGravesRequest {
   MVSEntityIdentity *iden;
   mRequest_t type;
-  mcond_t *wakeup_cond;
   atm_mbool_t request_served;
   atm_mbool_t queued;
   APIRequestResponse response;
