@@ -34,24 +34,24 @@ MVSSlistToken mvs_slist_lexer_next_token(MVSSlistLexer *l) {
     return (MVSSlistToken){.type = MVS_SLIST_TOK_EOF};
   }
   while (mtrue) {
-		switch (curr) {
-		   case ';': {
-              while (curr != '\n' && curr != '\0') {
-                 mvs_slist_reader_consume(l->reader);
-                 curr = mvs_slist_reader_curr(l->reader);
-              }
-			  mvs_slist_reader_consume(l->reader); // consume the newline
-			  break;
-		   }
-		   case '\n':
-		   case ' ':
-		   case '\t':
-				mvs_slist_reader_consume(l->reader);
-				break;
-		   default:
-				goto __mvs_slist_lexer_next_token_start;
-		}
+    switch (curr) {
+    case ';': {
+      while (curr != '\n' && curr != '\0') {
+        mvs_slist_reader_consume(l->reader);
         curr = mvs_slist_reader_curr(l->reader);
+      }
+      mvs_slist_reader_consume(l->reader); // consume the newline
+      break;
+    }
+    case '\n':
+    case ' ':
+    case '\t':
+      mvs_slist_reader_consume(l->reader);
+      break;
+    default:
+      goto __mvs_slist_lexer_next_token_start;
+    }
+    curr = mvs_slist_reader_curr(l->reader);
   }
 __mvs_slist_lexer_next_token_start:
   if (curr == '\0') {
@@ -81,11 +81,10 @@ __mvs_slist_lexer_next_token_start:
       curr = mvs_slist_reader_curr(l->reader);
     }
     mstr_t ed = mvs_slist_reader_iter(l->reader);
-    tok =
-        (MVSSlistToken){.type = MVS_SLIST_TOK_IDEN,
-                        .line = line,
-                        .col = col,
-                        .iden = (MVSStrSlice){.st = st, .len = (ed - st)}};
+    tok = (MVSSlistToken){.type = MVS_SLIST_TOK_IDEN,
+                          .line = line,
+                          .col = col,
+                          .iden = (MVSStrSlice){.st = st, .len = (ed - st)}};
   } else if (curr == '{') {
     mvs_slist_reader_consume(l->reader);
     tok = (MVSSlistToken){.type = MVS_SLIST_TOK_OPEN_CURLY,

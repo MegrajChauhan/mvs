@@ -58,9 +58,12 @@ struct MVSEntity {
   MVSEntityProperties properties;
   mptr_t entity_repr;
 
-  msize_t entity_local_list_size_lim; // If local list is limited, what is the limit?
-  msize_t entity_local_list_tracks;   // How many entities does local list contain?
-  msize_t entity_local_list_history;  // How many entities has the local list tracked so far?
+  msize_t entity_local_list_size_lim; // If local list is limited, what is the
+                                      // limit?
+  msize_t
+      entity_local_list_tracks; // How many entities does local list contain?
+  msize_t entity_local_list_history; // How many entities has the local list
+                                     // tracked so far?
   MVSDynamicListLinear *entity_local_list;
 };
 

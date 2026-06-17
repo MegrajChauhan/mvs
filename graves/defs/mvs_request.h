@@ -1,9 +1,9 @@
 #ifndef _MVS_REQUEST_
 #define _MVS_REQUEST_
 
+#include <api_entity.h>
 #include <api_request_response.h>
 #include <mvs_entity.h>
-#include <api_entity.h>
 #include <mvs_graves_constants.h>
 #include <mvs_protectors.h>
 #include <mvs_request_types.h>

@@ -10,12 +10,12 @@ enum mEntity_t {
 };
 
 enum mEntityState_t {
-  MENTITY_INIT,     // Entity Just Initialized
+  MENTITY_INIT,         // Entity Just Initialized
   MENTITY_READY_TO_RUN, // Entity prepared to run
-  MENTITY_STOPPED,  // Entity finished its work
-  MENTITY_RUNNING, // Entity is running
-  MENTITY_BUSY, // Entity is busy
-  MENTITY_UNKNOWN, // Intermediate state used internally
+  MENTITY_STOPPED,      // Entity finished its work
+  MENTITY_RUNNING,      // Entity is running
+  MENTITY_BUSY,         // Entity is busy
+  MENTITY_UNKNOWN,      // Intermediate state used internally
 };
 
 #define MVS_CONF_ENTITY_CAN_SPAWN_ENTITY (1ULL << 0)

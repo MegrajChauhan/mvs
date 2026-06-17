@@ -1,6 +1,7 @@
 #include <mvs_slist_parser.h>
 
-MVSSlistParser *mvs_slist_parser_create(MVSArgParseResult *cmd, MVSSystemConfig *config) {
+MVSSlistParser *mvs_slist_parser_create(MVSArgParseResult *cmd,
+                                        MVSSystemConfig *config) {
   MVSSlistParser *p = (MVSSlistParser *)malloc(sizeof(MVSSlistParser));
   if (!p) {
     mvs_log_err("Failed to initialize SLIST Parser");
@@ -17,13 +18,14 @@ void mvs_slist_parser_destroy(MVSSlistParser *p) {
   if (p->lexer)
     mvs_slist_lexer_destroy(p->lexer);
   if (p->command_list) {
-    if (p->curr_id_count != (mqword_t)(-1)) {
-      for (msize_t i = 0; i < p->curr_id_count; i++) {
-        MVSSlistCommand *c = *(MVSSlistCommand **)mvs_dynamic_listl_ref_of_unsafe(
-            p->command_list, i);
+    if (p->curr_id_count != (0)) {
+      for (msize_t i = 0; i < (p->curr_id_count); i++) {
+        MVSSlistCommand *c =
+            *(MVSSlistCommand **)mvs_dynamic_listl_ref_of_unsafe(
+                p->command_list, i);
         mvs_slist_parser_destroy_command(c);
       }
-	}
+    }
     mvs_dynamic_listl_destroy(p->command_list);
   }
   free(p);
@@ -57,7 +59,7 @@ mbool_t mvs_slist_parser_init(MVSSlistParser *p, mstr_t file_path) {
   p->metadata_read = mfalse;
   p->footer_read = mfalse;
   p->max_entity_count = 0;
-  p->curr_id_count = (msize_t)(-1);
+  p->curr_id_count = 0;
   mvs_log_dbg("Prepared SLIST parser for file=%s", file_path);
   return mtrue;
 }
@@ -277,7 +279,7 @@ _MVS_ATTR_INTERNAL_ mbool_t mvs_slist_parser_deal_with_local_list_entries_entry(
      * */
     mvs_dynamic_listl_push(c->local_list, &id);
   }
-  if (mvs_slist_parser_check_block_close(p, "local_list_entries entry")) {
+  if (!mvs_slist_parser_check_block_close(p, "local_list_entries entry")) {
     mvs_dynamic_listl_destroy(c->local_list);
     return mfalse;
   }
@@ -339,9 +341,11 @@ _MVS_ATTR_INTERNAL_ mbool_t mvs_slist_parser_deal_with_config_field_local_list(
   memcpy(iden, tok.iden.st, tok.iden.len);
   iden[tok.iden.len] = 0;
   if (strncmp(iden, "true", tok.iden.len) == 0)
-    c->config |= MVS_CONF_ENTITY_LOCAL_ENTITY_LIST_ENABLE;
+    c->config |= (MVS_CONF_ENTITY_LOCAL_ENTITY_LIST_ENABLE |
+                  MVS_CONF_ENTITY_CAN_SPAWN_ENTITY);
   else if (strncmp(iden, "false", tok.iden.len) == 0)
-    c->config = c->config & ~(MVS_CONF_ENTITY_LOCAL_ENTITY_LIST_ENABLE);
+    c->config = c->config & (~(MVS_CONF_ENTITY_LOCAL_ENTITY_LIST_ENABLE) &
+                             ~(MVS_CONF_ENTITY_CAN_SPAWN_ENTITY));
   else {
     mvs_log_err("In file=%s:l=%zu:c=%zu: Expected a true or false for "
                 "local_list but got '%s'.",
@@ -663,7 +667,7 @@ _MVS_ATTR_INTERNAL_ mbool_t mvs_slist_parser_deal_with_id(MVSSlistParser *p,
         p->file_path, t->line, t->col, ID, p->max_entity_count);
     return mfalse;
   }
-  if (ID != (p->curr_id_count + 1)) {
+  if (ID != (p->curr_id_count)) {
     mvs_log_err("In file=%s:l=%zu:c=%zu: Invalid ID provided %zu", p->file_path,
                 t->line, t->col, ID);
     return mfalse;
@@ -690,7 +694,6 @@ _MVS_ATTR_INTERNAL_ mbool_t mvs_slist_parser_deal_with_id(MVSSlistParser *p,
                 p->file_path, tok.line, tok.col, EID);
     return mfalse;
   }
-  p->curr_id_count++;
   if (!mvs_slist_parser_check_block_open(p, "ENTITY"))
     return mfalse;
   MVSSlistCommand *c = (MVSSlistCommand *)malloc(sizeof(MVSSlistCommand));
@@ -701,6 +704,7 @@ _MVS_ATTR_INTERNAL_ mbool_t mvs_slist_parser_deal_with_id(MVSSlistParser *p,
   }
   c->copy = mfalse;
   c->EID = EID;
+  c->args = NULL;
   c->setup = 0;
   c->config = 0;
   c->properties = 0;
@@ -751,6 +755,7 @@ _MVS_ATTR_INTERNAL_ mbool_t mvs_slist_parser_deal_with_id(MVSSlistParser *p,
     free(c);
     return mfalse;
   }
+  p->curr_id_count++;
   return mtrue;
 }
 

@@ -1,11 +1,11 @@
 #ifndef _MVS_ARG_PARSE_
 #define _MVS_ARG_PARSE_
 
+#include <mvs_arg_defs.h>
 #include <mvs_logger.h>
+#include <mvs_system_config.h>
 #include <mvs_tools.h>
 #include <mvs_types.h>
-#include <mvs_arg_defs.h>
-#include <mvs_system_config.h>
 #include <stdio.h>
 #include <string.h>
 
@@ -52,6 +52,7 @@ struct MVSArgOption {
 
 mbool_t mvs_parse_all_arg(MVSArgParse *parser, MVSArgParseResult *res);
 
-void mvs_arg_parse_populate_config(MVSArgParseResult *res, MVSSystemConfig *conf);
+void mvs_arg_parse_populate_config(MVSArgParseResult *res,
+                                   MVSSystemConfig *conf);
 
 #endif

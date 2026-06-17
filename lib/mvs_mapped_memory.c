@@ -159,8 +159,8 @@ mResult_t mvs_mapped_memory_mapf(MVSMappedMemory *map, mstr_t file_path,
       mvs_file_destroy(map->mapped_mem.backing);
       return res;
     }
-    if ((res = mvs_file_seek(map->mapped_mem.backing, 0, SEEK_SET,
-                             NULL)) != MRES_SUCCESS) {
+    if ((res = mvs_file_seek(map->mapped_mem.backing, 0, SEEK_SET, NULL)) !=
+        MRES_SUCCESS) {
       mvs_file_destroy(map->mapped_mem.backing);
       return res;
     }

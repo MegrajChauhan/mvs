@@ -7,6 +7,9 @@ MVSEntity *mvs_graves_entity_utils_create_entity() {
     return NULL;
   }
   ent->entity_repr = NULL;
+  ent->config.config = 0;
+  ent->properties.props = 0;
+  ent->entity_local_list = NULL;
   return ent;
 }
 
@@ -37,7 +40,7 @@ mbool_t mvs_graves_entity_utils_init_entity(MVSEntity *ent, EntityContext *ctx,
                                             msize_t conf, msize_t props,
                                             mqword_t in_conf,
                                             APIRequestResponse *resp) {
- EntityRegistryEntry *entry = mvs_registry_get_entry(EID);
+  EntityRegistryEntry *entry = mvs_registry_get_entry(EID);
   if (!entry) {
     *resp = _API_REQ_RESPONSE_BAD_(API_REQ_RESPONSE_UNREGISTERED_EID);
     return mfalse;
@@ -157,53 +160,62 @@ mbool_t mvs_graves_entity_utils_prepare_entity_hotpath(
 }
 
 mbool_t mvs_graves_entity_utils_check_local_list_enable(MVSEntity *ent) {
-   return (ent->config.config & MVS_CONF_ENTITY_LOCAL_ENTITY_LIST_ENABLE)? mtrue:mfalse;
+  return (ent->config.config & MVS_CONF_ENTITY_LOCAL_ENTITY_LIST_ENABLE)
+             ? mtrue
+             : mfalse;
 }
 
 mbool_t mvs_graves_entity_utils_check_local_list_limit_set(MVSEntity *ent) {
-  return (ent->config.config & MVS_CONF_ENTITY_ENTITY_TRACKING_LIM)? mtrue:mfalse;
+  return (ent->config.config & MVS_CONF_ENTITY_ENTITY_TRACKING_LIM) ? mtrue
+                                                                    : mfalse;
 }
 
 mbool_t mvs_graves_entity_utils_check_local_list_full(MVSEntity *ent) {
-  return (ent->entity_local_list_tracks >= ent->entity_local_list_size_lim)? mtrue:mfalse;
+  return (ent->entity_local_list_tracks >= ent->entity_local_list_size_lim)
+             ? mtrue
+             : mfalse;
 }
 
-mbool_t mvs_graves_entity_utils_add_to_local_list(MVSEntity *ent, MVSEntity *to_add) {
-   /*
-	* It is to be noted that once anything is added to the local list, it cannot be
-	* removed unless the entity stops. 
-	* */
-   if (!mvs_graves_entity_utils_check_local_list_enable(ent))
-		return mfalse;
-   if (mvs_graves_entity_utils_check_local_list_limit_set(ent) && mvs_graves_entity_utils_check_local_list_full(ent))
-		return mfalse;
-   if (mvs_dynamic_listl_push(ent->entity_local_list, (mptr_t)&to_add->identity) != MRES_SUCCESS) {
-		return mfalse;
-   }
-   ent->entity_local_list_tracks++;
-   ent->entity_local_list_history++;
-   return mtrue;
+mbool_t mvs_graves_entity_utils_add_to_local_list(MVSEntity *ent,
+                                                  MVSEntity *to_add) {
+  /*
+   * It is to be noted that once anything is added to the local list, it cannot
+   * be removed unless the entity stops.
+   * */
+  if (!mvs_graves_entity_utils_check_local_list_enable(ent))
+    return mfalse;
+  if (mvs_graves_entity_utils_check_local_list_limit_set(ent) &&
+      mvs_graves_entity_utils_check_local_list_full(ent))
+    return mfalse;
+  if (mvs_dynamic_listl_push(ent->entity_local_list,
+                             (mptr_t)&to_add->identity) != MRES_SUCCESS) {
+    return mfalse;
+  }
+  ent->entity_local_list_tracks++;
+  ent->entity_local_list_history++;
+  return mtrue;
 }
 
 mbool_t mvs_graves_entity_utils_clear_local_list(MVSEntity *ent) {
-    if (!mvs_graves_entity_utils_check_local_list_enable(ent))
-		return mfalse;  
-	mvs_dynamic_listl_clear(ent->entity_local_list);
-    ent->entity_local_list_history = 0;
-	ent->entity_local_list_tracks = 0;
-	ent->entity_local_list_size_lim = 0;
-	return mtrue;
+  if (!mvs_graves_entity_utils_check_local_list_enable(ent))
+    return mfalse;
+  mvs_dynamic_listl_clear(ent->entity_local_list);
+  ent->entity_local_list_history = 0;
+  ent->entity_local_list_tracks = 0;
+  ent->entity_local_list_size_lim = 0;
+  return mtrue;
 }
 
-mbool_t mvs_graves_entity_utils_probe_local_list_position(MVSEntity *ent, MVSEntityIdentity *res, msize_t pos) {
-   // NOTE: Actually, Graves will perform the following checks properly by itself.
-   // Thus, it is absolutely fine to remove them if needed. For now, they just exist
-   if (!mvs_graves_entity_utils_check_local_list_enable(ent))
-		return mfalse;
-   if (ent->entity_local_list_tracks < pos)
-		return mfalse;
-   *res = *(MVSEntityIdentity*)mvs_dynamic_listl_ref_of_unsafe(ent->entity_local_list, pos);
-   return mtrue;
+mbool_t mvs_graves_entity_utils_probe_local_list_position(
+    MVSEntity *ent, MVSEntityIdentity *res, msize_t pos) {
+  // NOTE: Actually, Graves will perform the following checks properly by
+  // itself. Thus, it is absolutely fine to remove them if needed. For now, they
+  // just exist
+  if (!mvs_graves_entity_utils_check_local_list_enable(ent))
+    return mfalse;
+  if (ent->entity_local_list_tracks < pos)
+    return mfalse;
+  *res = *(MVSEntityIdentity *)mvs_dynamic_listl_ref_of_unsafe(
+      ent->entity_local_list, pos);
+  return mtrue;
 }
-
-

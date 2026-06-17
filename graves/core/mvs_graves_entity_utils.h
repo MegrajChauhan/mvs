@@ -1,9 +1,9 @@
 #ifndef _MVS_GRAVES_ENTITY_UTILS_
 #define _MVS_GRAVES_ENTITY_UTILS_
 
-#include <api_request_response.h>
 #include <api_entity.h>
 #include <api_graves.h>
+#include <api_request_response.h>
 #include <mvs_entity.h>
 #include <mvs_entity_registry.h>
 #include <mvs_logger.h>
@@ -11,7 +11,10 @@
 #include <mvs_types.h>
 #include <stdlib.h>
 
-#define _MVS_MFUNC_ENTITY_CONTEXT_INIT_(iden, _argc, _argv, _slist) (EntityContext){.self=(iden),.argc=(_argc), .argv=(_argv), .slist=(_slist)}
+#define _MVS_MFUNC_ENTITY_CONTEXT_INIT_(iden, _argc, _argv, _slist)            \
+  (EntityContext) {                                                            \
+    .self = (iden), .argc = (_argc), .argv = (_argv), .slist = (_slist)        \
+  }
 
 MVSEntity *mvs_graves_entity_utils_create_entity();
 
@@ -47,10 +50,12 @@ mbool_t mvs_graves_entity_utils_check_local_list_limit_set(MVSEntity *ent);
 
 mbool_t mvs_graves_entity_utils_check_local_list_full(MVSEntity *ent);
 
-mbool_t mvs_graves_entity_utils_add_to_local_list(MVSEntity *ent, MVSEntity *to_add);
+mbool_t mvs_graves_entity_utils_add_to_local_list(MVSEntity *ent,
+                                                  MVSEntity *to_add);
 
 mbool_t mvs_graves_entity_utils_clear_local_list(MVSEntity *ent);
 
-mbool_t mvs_graves_entity_utils_probe_local_list_position(MVSEntity *ent, MVSEntityIdentity *res, msize_t pos);
+mbool_t mvs_graves_entity_utils_probe_local_list_position(
+    MVSEntity *ent, MVSEntityIdentity *res, msize_t pos);
 
 #endif

@@ -1,6 +1,7 @@
 #include <mvs_request_queue_manager.h>
 
-MVSRequestQueueManager *mvs_request_queue_manager_create(MVSSystemConfig *conf) {
+MVSRequestQueueManager *
+mvs_request_queue_manager_create(MVSSystemConfig *conf) {
   mvs_log_dbg("Initializing Request Queue Manager...");
   MVSRequestQueueManager *rman =
       (MVSRequestQueueManager *)malloc(sizeof(MVSRequestQueueManager));
@@ -42,8 +43,9 @@ void mvs_request_queue_manager_destroy(MVSRequestQueueManager *req_manager) {
   mvs_log_dbg("Destroyed Request Queue Manager");
 }
 
-msize_t mvs_request_queue_manager_enqueue_request(
-    MVSRequestQueueManager *req_manager, MVSGravesRequest *req) {
+msize_t
+mvs_request_queue_manager_enqueue_request(MVSRequestQueueManager *req_manager,
+                                          MVSGravesRequest *req) {
   msize_t ret = 0;
   mvs_mutex_lock(&req_manager->lock);
   mResult_t res;

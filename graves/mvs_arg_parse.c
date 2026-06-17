@@ -1,21 +1,22 @@
 #include <mvs_arg_parse.h>
 
-_MVS_ATTR_INTERNAL_ 
+_MVS_ATTR_INTERNAL_
 mbool_t mvs_HELP_MSG(MVSArgParse *parser, MVSArgParseResult *res);
 
-_MVS_ATTR_INTERNAL_ 
+_MVS_ATTR_INTERNAL_
 mbool_t mvs_VERSION(MVSArgParse *parser, MVSArgParseResult *res);
 
-_MVS_ATTR_INTERNAL_ 
+_MVS_ATTR_INTERNAL_
 mbool_t mvs_LOG_LVL(MVSArgParse *parser, MVSArgParseResult *res);
 
-_MVS_ATTR_INTERNAL_ 
+_MVS_ATTR_INTERNAL_
 mbool_t mvs_SPAWN_ENTITY_COMMAND(MVSArgParse *parser, MVSArgParseResult *res);
 
-_MVS_ATTR_INTERNAL_ 
+_MVS_ATTR_INTERNAL_
 mbool_t mvs_SLIST(MVSArgParse *parser, MVSArgParseResult *res);
 
-_MVS_ATTR_INTERNAL_ void mvs_graves_arg_parse_set_default(MVSArgParseResult *res);
+_MVS_ATTR_INTERNAL_ void
+mvs_graves_arg_parse_set_default(MVSArgParseResult *res);
 
 _MVS_ATTR_INTERNAL_ mbool_t mvs_has_arg(MVSArgParse *parser);
 
@@ -25,10 +26,10 @@ _MVS_ATTR_INTERNAL_ void mvs_arg_parse_consume_arg(MVSArgParse *parser);
 
 _MVS_ATTR_INTERNAL_ mstr_t mvs_arg_parse_peek(MVSArgParse *parser);
 
-_MVS_ATTR_INTERNAL_ mstr_t mvs_arg_parse_get_arg(MVSArgParse *parser); 
+_MVS_ATTR_INTERNAL_ mstr_t mvs_arg_parse_get_arg(MVSArgParse *parser);
 
 _MVS_ATTR_INTERNAL_ void mvs_arg_parse_consume_args(MVSArgParse *parser,
-                                                         msize_t count); 
+                                                    msize_t count);
 
 _MVS_ATTR_INTERNAL_ mstr_t *mvs_arg_parse_arg_slice(MVSArgParse *parser);
 
@@ -53,14 +54,15 @@ _MVS_ATTR_INTERNAL_ MVSArgOption *mvs_find_option_hdlr(MVSArgParse *parser,
 mbool_t mvs_parse_all_arg(MVSArgParse *parser, MVSArgParseResult *res) {
   // NOTE: This will get horrible
   MVSArgOption opts[_MVS_CONSTANT_PARSE_ARG_OPTION_COUNT_] = {
-    {"help message", "-h", 2, mtrue, mvs_HELP_MSG},
-	{"help message", "--help", 6, mtrue, mvs_HELP_MSG},
-	{"version information", "-v", 2, mtrue, mvs_VERSION},
-	{"version information", "--version", 9, mtrue, mvs_VERSION}, 
-	{"set log level", "-log", 4, mfalse, mvs_LOG_LVL},	
-	{"Provide entity spawn commands", "-spawn", 6, mfalse, mvs_SPAWN_ENTITY_COMMAND},
-	{"Provide spawn list", "-slist", 6, mtrue, mvs_SLIST},
-  }; 
+      {"help message", "-h", 2, mtrue, mvs_HELP_MSG},
+      {"help message", "--help", 6, mtrue, mvs_HELP_MSG},
+      {"version information", "-v", 2, mtrue, mvs_VERSION},
+      {"version information", "--version", 9, mtrue, mvs_VERSION},
+      {"set log level", "-log", 4, mfalse, mvs_LOG_LVL},
+      {"Provide entity spawn commands", "-spawn", 6, mfalse,
+       mvs_SPAWN_ENTITY_COMMAND},
+      {"Provide spawn list", "-slist", 6, mtrue, mvs_SLIST},
+  };
   mvs_graves_arg_parse_set_default(res);
   while (parser->ptr < parser->argc) {
     MVSArgOption *opt = mvs_find_option_hdlr(parser, opts);
@@ -79,7 +81,8 @@ mbool_t mvs_parse_all_arg(MVSArgParse *parser, MVSArgParseResult *res) {
   return mtrue;
 }
 
-void mvs_arg_parse_populate_config(MVSArgParseResult *res, MVSSystemConfig *conf) {
+void mvs_arg_parse_populate_config(MVSArgParseResult *res,
+                                   MVSSystemConfig *conf) {
   return;
 }
 /*----Deal with the parser----*/
@@ -104,7 +107,7 @@ _MVS_ATTR_INTERNAL_ mstr_t mvs_arg_parse_get_arg(MVSArgParse *parser) {
 }
 
 _MVS_ATTR_INTERNAL_ void mvs_arg_parse_consume_args(MVSArgParse *parser,
-                                                         msize_t count) {
+                                                    msize_t count) {
   parser->ptr += count;
 }
 
@@ -113,24 +116,28 @@ _MVS_ATTR_INTERNAL_ mstr_t *mvs_arg_parse_arg_slice(MVSArgParse *parser) {
 }
 
 /*----The functions that deal with the options----*/
-_MVS_ATTR_INTERNAL_ void mvs_graves_arg_parse_set_default(MVSArgParseResult *res) {
+_MVS_ATTR_INTERNAL_ void
+mvs_graves_arg_parse_set_default(MVSArgParseResult *res) {
   res->log_lvl = 2;
   res->spawn_commands = NULL;
   res->entities_to_spawn = 0;
   res->slist = NULL;
 }
 
-_MVS_ATTR_INTERNAL_ mbool_t mvs_HELP_MSG(MVSArgParse *parser, MVSArgParseResult *res) {
+_MVS_ATTR_INTERNAL_ mbool_t mvs_HELP_MSG(MVSArgParse *parser,
+                                         MVSArgParseResult *res) {
   fprintf(stdout, "<HELP>:\n%s", _MVS_HELP_MSG_);
   return mtrue;
 }
 
-_MVS_ATTR_INTERNAL_ mbool_t mvs_VERSION(MVSArgParse *parser, MVSArgParseResult *res) {
+_MVS_ATTR_INTERNAL_ mbool_t mvs_VERSION(MVSArgParse *parser,
+                                        MVSArgParseResult *res) {
   fprintf(stdout, "<VERSION>:\n%s", _MVS_VERSION_MSG_);
   return mtrue;
 }
 
-_MVS_ATTR_INTERNAL_ mbool_t mvs_LOG_LVL(MVSArgParse *parser, MVSArgParseResult *r) {
+_MVS_ATTR_INTERNAL_ mbool_t mvs_LOG_LVL(MVSArgParse *parser,
+                                        MVSArgParseResult *r) {
   // The option is used as -log=[info/warn/err/dbg]
   mstr_t arg = mvs_arg_parse_get_arg(parser);
   msize_t len = strlen(arg);
@@ -157,7 +164,8 @@ _MVS_ATTR_INTERNAL_ mbool_t mvs_LOG_LVL(MVSArgParse *parser, MVSArgParseResult *
   return mtrue;
 }
 
-_MVS_ATTR_INTERNAL_ mbool_t mvs_SPAWN_ENTITY_COMMAND(MVSArgParse *parser, MVSArgParseResult *res) {
+_MVS_ATTR_INTERNAL_ mbool_t mvs_SPAWN_ENTITY_COMMAND(MVSArgParse *parser,
+                                                     MVSArgParseResult *res) {
   msize_t INSTANCE_COUNT;
   msize_t EID;
   mstr_t *args;
@@ -251,7 +259,8 @@ _MVS_ATTR_INTERNAL_ mbool_t mvs_SPAWN_ENTITY_COMMAND(MVSArgParse *parser, MVSArg
   return mtrue;
 }
 
-_MVS_ATTR_INTERNAL_ mbool_t mvs_SLIST(MVSArgParse *parser, MVSArgParseResult *res) {
+_MVS_ATTR_INTERNAL_ mbool_t mvs_SLIST(MVSArgParse *parser,
+                                      MVSArgParseResult *res) {
   if (res->slist) {
     fprintf(stderr, "<ArgParse>: SLIST file already provided %s\n", res->slist);
     return mfalse;

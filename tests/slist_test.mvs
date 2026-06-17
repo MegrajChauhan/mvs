@@ -5,7 +5,7 @@
 ; }
 ; ID: EID {
 ;    config: {
-;       local_list = true|false,
+;       local_list = true|false, ; setting local_list to false also sets can_spawn_entity to false which means that the entity cannot spawn entities
 ;       ll_lim = 100,
 ;    },
 ;    properties: {

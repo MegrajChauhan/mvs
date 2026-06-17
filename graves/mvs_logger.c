@@ -100,8 +100,8 @@ void mvs_log_note(mstr_t fmt, ...) {
   // this may fail
   mvs_hybrid_concurrency_model_queue_enqueue(_logger->queue, &entry);
   msize_t count = atomic_fetch_add(&_logger->msg_in_queue, 1);
-  if ((count+1) % _logger->wake_logger_on == 0)
-    mvs_cond_signal(&_logger->cond); 
+  if ((count + 1) % _logger->wake_logger_on == 0)
+    mvs_cond_signal(&_logger->cond);
 }
 
 _MVS_ATTR_EXPORT_
@@ -118,7 +118,7 @@ void mvs_log_warn(mstr_t fmt, ...) {
   va_end(args);
   mvs_hybrid_concurrency_model_queue_enqueue(_logger->queue, &entry);
   msize_t count = atomic_fetch_add(&_logger->msg_in_queue, 1);
-  if ((count+1) % _logger->wake_logger_on == 0)
+  if ((count + 1) % _logger->wake_logger_on == 0)
     mvs_cond_signal(&_logger->cond);
 }
 
@@ -135,8 +135,8 @@ void mvs_log_err(mstr_t fmt, ...) {
   vsnprintf(entry.msg, 128, fmt, args);
   va_end(args);
   mvs_hybrid_concurrency_model_queue_enqueue(_logger->queue, &entry);
-   msize_t count = atomic_fetch_add(&_logger->msg_in_queue, 1);
-  if ((count+1) % _logger->wake_logger_on == 0)
+  msize_t count = atomic_fetch_add(&_logger->msg_in_queue, 1);
+  if ((count + 1) % _logger->wake_logger_on == 0)
     mvs_cond_signal(&_logger->cond);
 }
 
@@ -153,8 +153,8 @@ void mvs_log_dbg(mstr_t fmt, ...) {
   vsnprintf(entry.msg, 128, fmt, args);
   va_end(args);
   mvs_hybrid_concurrency_model_queue_enqueue(_logger->queue, &entry);
-   msize_t count = atomic_fetch_add(&_logger->msg_in_queue, 1);
-  if ((count+1) % _logger->wake_logger_on == 0)
+  msize_t count = atomic_fetch_add(&_logger->msg_in_queue, 1);
+  if ((count + 1) % _logger->wake_logger_on == 0)
     mvs_cond_signal(&_logger->cond);
 }
 
@@ -166,8 +166,8 @@ void mvs_vlog(mstr_t fmt, va_list _l) {
   entry.lvl = MLOG_EXT;
   vsnprintf(entry.msg, 128, fmt, _l);
   mvs_hybrid_concurrency_model_queue_enqueue(_logger->queue, &entry);
-   msize_t count = atomic_fetch_add(&_logger->msg_in_queue, 1);
-  if ((count+1) % _logger->wake_logger_on == 0)
+  msize_t count = atomic_fetch_add(&_logger->msg_in_queue, 1);
+  if ((count + 1) % _logger->wake_logger_on == 0)
     mvs_cond_signal(&_logger->cond);
 }
 

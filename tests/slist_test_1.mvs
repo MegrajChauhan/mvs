@@ -4,6 +4,14 @@
 metadata: {
   count = 1 ; just one for now
 }
+
 0: 0 {
  ; nothing to really give here
+ config: {
+   local_list = true,
+ }
+}
+
+local_list_entries: {
+  0: 2 {0 0}
 }

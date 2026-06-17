@@ -11,17 +11,17 @@
 #include <string.h>
 
 typedef struct MVSEntityRegistry MVSEntityRegistry;
-typedef struct MVSEntityRegistryPackage MVSEntityRegistryPackage; 
+typedef struct MVSEntityRegistryPackage MVSEntityRegistryPackage;
 
-struct MVSEntityRegistryPackage{
-    mbool_t registered;
-    EntityRegistryEntry API;
+struct MVSEntityRegistryPackage {
+  mbool_t registered;
+  EntityRegistryEntry API;
 };
 
 struct MVSEntityRegistry {
   msize_t entities_registered;
   MVSSystemConfig *config;
-  MVSEntityRegistryPackage* entries;
+  MVSEntityRegistryPackage *entries;
 };
 
 mbool_t mvs_registry_init(MVSSystemConfig *conf);
@@ -34,7 +34,8 @@ void mvs_registry_destroy();
  * 1 = Already Registered
  * 2 = Invalid entry
  */
-_MVS_ATTR_EXPORT_ msize_t mvs_register_component(msize_t ID, EntityRegistryEntry *entry);
+_MVS_ATTR_EXPORT_ msize_t mvs_register_component(msize_t ID,
+                                                 EntityRegistryEntry *entry);
 
 EntityRegistryEntry *mvs_registry_get_entry(msize_t ID);
 

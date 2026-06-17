@@ -1,8 +1,9 @@
 #include <mvs_dynamic_lib.h>
 
 /*
- * This implementation of the dynamically loading a library is limited. The entirety of the 'lib' needs more work. 
- * For now, this will fulfill the requirements of MVS.
+ * This implementation of the dynamically loading a library is limited. The
+ * entirety of the 'lib' needs more work. For now, this will fulfill the
+ * requirements of MVS.
  * */
 
 mResult_t mvs_dynamic_lib_create(MVSDynamicLib **lib) {

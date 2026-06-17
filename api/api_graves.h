@@ -1,13 +1,13 @@
 #ifndef _API_GRAVES_
 #define _API_GRAVES_
 
+#include <api_entity.h>
+#include <api_request_response.h>
 #include <api_results.h>
 #include <api_types.h>
-#include <api_entity.h>
-#include <stdarg.h>
-#include <api_request_response.h>
 #include <mvs_protectors.h>
 #include <mvs_types.h>
+#include <stdarg.h>
 
 typedef struct EntityContext EntityContext;
 typedef struct GravesAPI GravesAPI;
@@ -42,10 +42,8 @@ typedef apiRes_t (*gravesreqGR_t)(GravesRequest *, APIRequestResponse *);
 
 typedef apiRes_t (*gravesreqGRes_t)(GravesRequest *, GravesRequestResult *);
 
-typedef apiRes_t (*gravesreqTypeSE_t)(EntityIdentityHdlr,
-                                         msize_t, mqword_t,
-                                         mqword_t, mqword_t,
-                                         GravesRequest **);
+typedef apiRes_t (*gravesreqTypeSE_t)(EntityIdentityHdlr, msize_t, mqword_t,
+                                      mqword_t, mqword_t, GravesRequest **);
 
 struct GravesAPI {
   gravesmr_t make_request;

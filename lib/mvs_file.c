@@ -29,20 +29,20 @@ mResult_t mvs_file_open(MVSFile *file, mstr_t file_path, mqword_t modes) {
     open_modes = O_APPEND;
   if (modes & MVS_FILE_MODE_READ)
     open_modes |= O_RDONLY;
-  if ((modes & MVS_FILE_MODE_WRITE)) { 
+  if ((modes & MVS_FILE_MODE_WRITE)) {
     if (modes & MVS_FILE_MODE_APPEND) {
       mvs_interface_free(file); // free the interface as stated
       return MRES_INVALID_ARGS;
-	}
-	open_modes |= O_WRONLY;
+    }
+    open_modes |= O_WRONLY;
   }
   if ((modes & MVS_FILE_MODE_READ_WRITE)) {
-      if (((modes & MVS_FILE_MODE_WRITE) || (modes & MVS_FILE_MODE_READ) ||
+    if (((modes & MVS_FILE_MODE_WRITE) || (modes & MVS_FILE_MODE_READ) ||
          (modes & MVS_FILE_MODE_APPEND))) {
-        mvs_interface_free(file); // free the interface as stated
-        return MRES_INVALID_ARGS;
-	  }
-      open_modes |= O_RDWR;
+      mvs_interface_free(file); // free the interface as stated
+      return MRES_INVALID_ARGS;
+    }
+    open_modes |= O_RDWR;
   }
   if (modes & MVS_FILE_MODE_CREATE)
     open_modes |= O_CREAT;

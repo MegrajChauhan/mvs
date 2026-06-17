@@ -2,11 +2,11 @@
 #define _MVS_RLIST_READER_
 
 #include <mvs_file.h>
-#include <mvs_types.h>
 #include <mvs_tools.h>
+#include <mvs_types.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <stdio.h>
 
 typedef struct MVSRlistReader MVSRlistReader;
 

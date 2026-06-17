@@ -15,12 +15,12 @@
 #include <mvs_logger.h>
 #include <mvs_protectors.h>
 #include <mvs_request_queue_manager.h>
+#include <mvs_request_utils.h>
+#include <mvs_rlist.h>
 #include <mvs_slist.h>
+#include <mvs_system_config.h>
 #include <mvs_threads.h>
 #include <mvs_types.h>
-#include <mvs_rlist.h>
-#include <mvs_system_config.h>
-#include <mvs_request_utils.h>
 #include <stdlib.h>
 
 typedef struct MVSGraves MVSGraves;
@@ -30,29 +30,30 @@ typedef struct MVSGravesComps MVSGravesComps;
 typedef struct MVSGravesState MVSGravesState;
 
 struct MVSGravesAccounting {
-   msize_t requests_served;
-   msize_t requests_success;
+  msize_t requests_served;
+  msize_t requests_success;
 };
 
 struct MVSGravesSync {
-   /*
-	* the following barrier is used to ensure all entities launch at startup
-	* */
-   MVSBarrier sleep_barrier; 
+  /*
+   * the following barrier is used to ensure all entities launch at startup
+   * */
+  MVSBarrier sleep_barrier;
+  MVSBarrier release_barrier;
 };
 
 struct MVSGravesComps {
-   MVSRlist rlist;
-   MVSSlist slist;
-   MVSGravesEntityList *entity_list;
-   MVSRequestQueueManager *queue_manager;
+  MVSRlist rlist;
+  MVSSlist slist;
+  MVSGravesEntityList *entity_list;
+  MVSRequestQueueManager *queue_manager;
 };
 
 struct MVSGravesState {
-   MVSArgParseResult cmd_opts;
-   MVSSystemConfig config;
-   mbool_t all_initial_entities_initialized;
-   mbool_t all_initial_entities_launched;
+  MVSArgParseResult cmd_opts;
+  MVSSystemConfig config;
+  mbool_t all_initial_entities_initialized;
+  mbool_t all_initial_entities_launched;
 };
 
 struct MVSGraves {

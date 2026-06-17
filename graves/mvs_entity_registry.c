@@ -3,16 +3,17 @@
 _MVS_ATTR_INTERNAL_ MVSEntityRegistry registry = {0};
 
 mbool_t mvs_registry_init(MVSSystemConfig *conf) {
-   registry.config = conf;
-   if ((registry.entries = (MVSEntityRegistryPackage*)malloc(sizeof(MVSEntityRegistryPackage)*conf->MAX_EID)) == NULL)
-		   return mfalse;
-   memset(registry.entries, 0, sizeof(MVSEntityRegistryPackage) * conf->MAX_EID);
-   return mtrue;
+  registry.config = conf;
+  if ((registry.entries = (MVSEntityRegistryPackage *)malloc(
+           sizeof(MVSEntityRegistryPackage) * conf->MAX_EID)) == NULL)
+    return mfalse;
+  memset(registry.entries, 0, sizeof(MVSEntityRegistryPackage) * conf->MAX_EID);
+  return mtrue;
 }
 
 void mvs_registry_destroy() {
-   if (registry.entries)
-     free(registry.entries);
+  if (registry.entries)
+    free(registry.entries);
 }
 
 _MVS_ATTR_EXPORT_
