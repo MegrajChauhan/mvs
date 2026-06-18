@@ -168,8 +168,8 @@ _MVS_ATTR_INTERNAL_ mbool_t mvs_SPAWN_ENTITY_COMMAND(MVSArgParse *parser,
                                                      MVSArgParseResult *res) {
   msize_t INSTANCE_COUNT;
   msize_t EID;
-  mstr_t *args;
-  msize_t ARG_COUNT;
+  mstr_t *args = NULL;
+  msize_t ARG_COUNT = 0;
   mstr_t arg = mvs_arg_parse_get_arg(parser);
   msize_t len = strlen(arg);
   mstr_t instance_count = arg + 6;
@@ -232,6 +232,7 @@ _MVS_ATTR_INTERNAL_ mbool_t mvs_SPAWN_ENTITY_COMMAND(MVSArgParse *parser,
                 EID, INSTANCE_COUNT, ARG_COUNT);
         return mfalse;
       }
+	  mvs_arg_parse_consume_arg(parser);
       args = mvs_arg_parse_arg_slice(parser);
       mvs_arg_parse_consume_args(
           parser,

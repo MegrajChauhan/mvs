@@ -174,7 +174,7 @@ mstr_t mvs_slist_lexer_get_block(MVSSlistLexer *l, char block_borders) {
   }
   memcpy(block, mvs_slist_reader_iter(l->reader), len);
   block[len] = 0;
-  mvs_slist_reader_consume(l->reader);
   mvs_slist_reader_restore_from(l->reader, s2);
+  mvs_slist_reader_consume(l->reader);
   return block;
 }

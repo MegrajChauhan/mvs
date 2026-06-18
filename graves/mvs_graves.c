@@ -146,7 +146,10 @@ _MVS_ATTR_INTERNAL_ mbool_t mvs_graves_pre_init(mstr_t *argv, msize_t argc) {
   graves.local_API = (GravesAPI){
       .make_request = mvs_graves_make_request,
       .register_component = mvs_register_component,
-      .LOG = mvs_log_dbg,
+      .LOG_DBG = mvs_log_dbg,
+	  .LOG_NOTE = mvs_log_note,
+	  .LOG_ERR = mvs_log_err,
+	  .LOG_WARN = mvs_log_warn,
       .VLOG = mvs_vlog,
       .check_request_status = mvs_request_check_status,
       .get_request_response = mvs_request_get_response,
@@ -458,9 +461,9 @@ _MVS_ATTR_INTERNAL_ mthreadRet_t mvs_graves_entity_launcher_wait(mptr_t e) {
     entry->destroy(ent->entity_repr);
     return NULL;
   }
-  mvs_barrier_signal(&graves.sync.release_barrier);
   mvs_graves_entity_list_register_active_entity(graves.components.entity_list,
                                                 (MVSEntity *)e);
+  mvs_barrier_signal(&graves.sync.release_barrier);
   return mvs_graves_entity_launcher_nowait(e);
 }
 
@@ -579,6 +582,8 @@ _MVS_ATTR_INTERNAL_ void mvs_graves_run() {
       break;
     req = mvs_request_queue_manager_dequeue_request(
         graves.components.queue_manager);
+	if (!req)
+      continue;
     mvs_log_dbg("Graves: Obtained new request");
     MVSEntity *entity;
     if (req->type >= MREQ_COUNT) {

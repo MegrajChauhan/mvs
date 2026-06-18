@@ -16,7 +16,7 @@ struct Mock {
 msize_t mock_create(EntityContext *ctx, mbptr_t *repr, msize_t conf) {
   Mock *m = (Mock *)malloc(sizeof(Mock));
   if (!m) {
-    api.LOG("Mock initialization failed");
+    api.LOG_ERR("Mock initialization failed");
     return 1;
   }
   m->ctx = *ctx; // the passed ctx is a temporary variable, thus, the entity
@@ -32,16 +32,28 @@ msize_t mock_destroy(mptr_t repr) {
 }
 
 msize_t mock_run(mptr_t repr) {
-  // temporarily, mock will just ask for input and print it
-  _MVS_ATTR_LOCAL_ msize_t count = 0;
-  int n;
-  api.LOG("[Mock]: Enter a number: ");
-  scanf("%d", &n);
-  api.LOG("[MOCK]: You entered %d", n);
-  count++;
-  if (count % 10 == 0)
-    return 0;
-  return 1;
+  /*
+   * Tests performed:
+   * */
+  Mock *mock = (Mock*)repr;
+  api.LOG_NOTE("MOCK is running");
+  if (mock->ctx.slist) {
+    api.LOG_NOTE("MOCK launched from a SLIST file");
+	if (mock->ctx.argv)
+		api.LOG_NOTE("Argument provided: %s", *(mock->ctx.argv));
+	else
+		api.LOG_NOTE("No arguments were provided");
+  } else {
+    api.LOG_NOTE("MOCK launched from command line");
+	if (mock->ctx.argv) {
+		api.LOG_NOTE("Provided %zu arguments", mock->ctx.argc);
+		for (msize_t i = 0; i < mock->ctx.argc; i++) {
+		  api.LOG_NOTE("Argument provided: %s", (mock->ctx.argv[i]));
+		}
+    } else
+		api.LOG_NOTE("No arguments were provided");
+  }
+  return 0;
 }
 
 msize_t mock_get_default_setup() { return 0; }
@@ -49,6 +61,7 @@ msize_t mock_get_default_setup() { return 0; }
 mbool_t mock_check_setup(msize_t setup) { return mtrue; }
 
 msize_t mock_deduce_setup(mstr_t key, mstr_t val, mbool_t *res) {
+  api.LOG_NOTE("DEDUCE SETUP: %s=%s", key, val);
   *res = mtrue;
   return 0;
 }

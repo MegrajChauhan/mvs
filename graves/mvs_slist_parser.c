@@ -494,7 +494,7 @@ _MVS_ATTR_INTERNAL_ mbool_t mvs_slist_parser_deal_with_setup_field(
   memcpy(field, t->iden.st, t->iden.len);
   field[t->iden.len] = 0;
   MVSSlistToken tok = mvs_slist_lexer_next_token(p->lexer);
-  if (tok.type != MVS_SLIST_TOK_IDEN || tok.type != MVS_SLIST_TOK_NUM) {
+  if (tok.type != MVS_SLIST_TOK_IDEN && tok.type != MVS_SLIST_TOK_NUM) {
     mvs_log_err("In file=%s:l=%zu:c=%zu: Expected an integer or some "
                 "identifier for setup.",
                 p->file_path, tok.line, tok.col);

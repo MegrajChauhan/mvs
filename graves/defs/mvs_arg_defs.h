@@ -1,7 +1,7 @@
 #ifndef _MVS_ARG_DEFS_
 #define _MVS_ARG_DEFS_
 
-#define _MVS_CONSTANT_PARSE_ARG_OPTION_COUNT_ 8
+#define _MVS_CONSTANT_PARSE_ARG_OPTION_COUNT_ 7
 
 #define _MVS_HELP_MSG_                                                         \
   "Usage: mvs [options]....\n"                                                 \
@@ -9,9 +9,6 @@
   "-h, --help                Display this help message\n"                      \
   "-v, --version             Display MVS version\n"                            \
   "-log=[info/warn/err/dbg]  Set Log Level\n"                                  \
-  "-es                       Ensure that all launch commands, including "      \
-  "slist, are "                                                                \
-  "successfully executed else terminate\n"                                     \
   "-spawn=<N> EID <-=K>[...] Make a request to spawn 'N' instances of entity " \
   "with entity ID 'EID'\n"                                                     \
   "                          Optionally provide arguments to be passed to "    \
@@ -25,6 +22,6 @@
   "                          unlike -spawn where the default config and "      \
   "properties are set\n"
 
-#define _MVS_VERSION_MSG_ "MVS: v0.3.2\n"
+#define _MVS_VERSION_MSG_ "MVS: v0.3.3\n"
 
 #endif

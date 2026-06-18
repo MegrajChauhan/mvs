@@ -1,0 +1,18 @@
+; This test uses the 'mock' entity only
+
+metadata: {
+  count = 1 ; just one
+}
+
+0: 0 {
+  setup: {
+     setup_1 = test_msg,
+	 setup_2 = Hello_World,
+	 setup_3 = 1001,
+  },
+  args: {
+     arg_1 = what_is_this
+	 arg_2 = this_is_a_test
+  }
+}
+

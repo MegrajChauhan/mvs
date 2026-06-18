@@ -48,8 +48,11 @@ typedef apiRes_t (*gravesreqTypeSE_t)(EntityIdentityHdlr, msize_t, mqword_t,
 struct GravesAPI {
   gravesmr_t make_request;
   gravesrc_t register_component;
-  graveslog_t LOG;
-  gravesvlog_t VLOG;
+  graveslog_t LOG_NOTE;
+  graveslog_t LOG_ERR;
+  graveslog_t LOG_WARN;
+  graveslog_t LOG_DBG;
+  gravesvlog_t VLOG; // entity log
   gravesreqCS_t check_request_status;
   gravesreqGR_t get_request_response;
   gravesreqGRes_t get_request_result;
