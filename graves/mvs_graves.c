@@ -151,6 +151,7 @@ _MVS_ATTR_INTERNAL_ mbool_t mvs_graves_pre_init(mstr_t *argv, msize_t argc) {
 	  .LOG_ERR = mvs_log_err,
 	  .LOG_WARN = mvs_log_warn,
       .VLOG = mvs_vlog,
+	  .LOG_CUSTOM = mvs_clog,
       .check_request_status = mvs_request_check_status,
       .get_request_response = mvs_request_get_response,
       .get_request_result = mvs_request_get_result,

@@ -32,9 +32,11 @@ typedef apiRes_t (*gravesmr_t)(EntityIdentityHdlr, GravesRequest **);
  */
 typedef msize_t (*gravesrc_t)(msize_t ID, EntityRegistryEntry *entry);
 
-typedef void (*graveslog_t)(mstr_t fmt, ...);
+typedef void (*graveslog_t)(mstr_t , ...);
 
-typedef void (*gravesvlog_t)(mstr_t fmt, va_list _l);
+typedef void (*gravesvlog_t)(mstr_t, va_list);
+
+typedef void (*gravesclog_t)(EntityIdentityHdlr, mstr_t, va_list);
 
 typedef apiRes_t (*gravesreqCS_t)(GravesRequest *);
 
@@ -52,6 +54,7 @@ struct GravesAPI {
   graveslog_t LOG_ERR;
   graveslog_t LOG_WARN;
   graveslog_t LOG_DBG;
+  gravesclog_t LOG_CUSTOM;
   gravesvlog_t VLOG; // entity log
   gravesreqCS_t check_request_status;
   gravesreqGR_t get_request_response;

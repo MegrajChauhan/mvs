@@ -14,7 +14,11 @@ _MVS_ATTR_INTERNAL_ void mvs_logger_log_all() {
       fprintf(stderr, "<Logger Error>: Error code=%u\n", res);
       // we don't terminate here yet
     } else {
-      fprintf(stdout, "<%s>: %s\n", msg_type[entry.lvl], entry.msg);
+      if (entry.lvl == MLOG_CUSTOM) {
+		fprintf(stdout, "Entity[%zu:%zu]:%s\n", entry.msg);
+	  } else {
+		fprintf(stdout, "<%s>: %s\n", msg_type[entry.lvl], entry.msg);
+	  }
     }
   }
 }
@@ -164,6 +168,20 @@ void mvs_vlog(mstr_t fmt, va_list _l) {
     return;
   MVSLogEntry entry;
   entry.lvl = MLOG_EXT;
+  vsnprintf(entry.msg, 128, fmt, _l);
+  mvs_hybrid_concurrency_model_queue_enqueue(_logger->queue, &entry);
+  msize_t count = atomic_fetch_add(&_logger->msg_in_queue, 1);
+  if ((count + 1) % _logger->wake_logger_on == 0)
+    mvs_cond_signal(&_logger->cond);
+}
+
+_MVS_ATTR_EXPORT_
+void mvs_clog(MVSEntityIdentity *iden, mstr_t fmt, va_list _l) {
+  if (!_logger || !fmt || !_l || !iden)
+    return;
+  MVSLogEntry entry;
+  entry.lvl = MLOG_CUSTOM;
+  entry.iden = iden;
   vsnprintf(entry.msg, 128, fmt, _l);
   mvs_hybrid_concurrency_model_queue_enqueue(_logger->queue, &entry);
   msize_t count = atomic_fetch_add(&_logger->msg_in_queue, 1);

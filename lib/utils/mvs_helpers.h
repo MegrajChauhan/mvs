@@ -118,6 +118,6 @@ struct MVSStrSlice {
 
 // mbool_t MVS_is_path_a_directory(mstr_t path);
 
-// msize_t MVS_align_value(msize_t val, msize_t align_to);
+msize_t mvs_align_value(msize_t val, msize_t align_to);
 
 #endif

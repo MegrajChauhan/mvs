@@ -27,9 +27,10 @@ typedef enum mLogLvl_t mLogLvl_t;
 typedef struct MVSLogger MVSLogger;
 typedef struct MVSLogEntry MVSLogEntry;
 
-enum mLogLvl_t { MLOG_NOTE, MLOG_WARN, MLOG_ERR, MLOG_DBG, MLOG_EXT };
+enum mLogLvl_t { MLOG_NOTE, MLOG_WARN, MLOG_ERR, MLOG_DBG, MLOG_EXT, MLOG_CUSTOM};
 
 struct MVSLogEntry {
+  MVSEntityIdentity *iden;
   mLogLvl_t lvl; // level of the log message
   char msg[128]; // allowed level of just 128 characters including the
                  // terminating byte
@@ -73,5 +74,7 @@ _MVS_ATTR_EXPORT_
 void mvs_log_dbg(mstr_t fmt, ...);
 _MVS_ATTR_EXPORT_
 void mvs_vlog(mstr_t fmt, va_list _l);
+_MVS_ATTR_EXPORT_
+void mvs_clog(MVSEntityIdentity *iden, mstr_t fmt, va_list _l);
 
 #endif

@@ -71,13 +71,23 @@ mResult_t mvs_file_close(MVSFile *file) {
   if (file->interface != MINTERFACE_TYPE_FILE) {
     return MRES_RESOURCE_TYPE_INVALID;
   }
+  mvs_interface_lock(file);
+  mresult_t res = mvs_interface_check_freeable(file);
+  if (res == MRES_SUCCESS) {
+    mvs_interface_unlock(file);
 #ifdef _USE_LINUX_
-  close(file->file.fd);
+    close(file->file.fd);
 #else
 // not yet
 #endif
-  mvs_interface_free(file); // to be used for something else
-  return MRES_SUCCESS;
+    mvs_interface_free(file); // to be used for something else
+  }
+  /*
+   * In case of freeing the resource(instead of destroying it), all owners must have destroyed
+   * their copies. Since the underlying resource is shared, all must let go first.
+   * */
+  mvs_interface_unlock(file);
+  return res;
 }
 
 mResult_t mvs_file_destroy(MVSFile *file) {
@@ -86,9 +96,19 @@ mResult_t mvs_file_destroy(MVSFile *file) {
   if (file->interface != MINTERFACE_TYPE_FILE) {
     return MRES_RESOURCE_TYPE_INVALID;
   }
-  mvs_file_close(file);
-  mvs_interface_destroy(file);
-  return MRES_SUCCESS;
+  mvs_interface_lock(file);
+  mresult_t res = mvs_interface_check_freeable(file);
+  if (res == MRES_RESOURCE_SHARED) {
+    mvs_interface_disown(file);
+	mvs_interface_unlock(file);
+	return MRES_SUCCESS;
+  } else if (res == MRES_SUCCESS) {
+    mvs_interface_unlock(file);
+    mvs_file_close(file);
+    mvs_interface_destroy(file);
+	return MRES_SUCCESS;
+  }
+  return res;
 }
 
 mResult_t mvs_file_seek(MVSFile *file, msqword_t off, msize_t whence,
