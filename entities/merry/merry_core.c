@@ -1,61 +1,46 @@
 #include <merry_core.h>
 #include <merry_core_instruction_list.h>
 
-/*
- * TODO: Here, the return value is literally useless. It does provide a response for graves
- * but if any other entity had requested to spawn this entity, that response is never
- * forwarded to the requester. Maybe that's fine? The failure are mainly caused by either
- * the host or the library. There is really nothing to be gained by knowing the cause of
- * the failure.
- * Also, logger might need to have a thread local state. Since each entity will have a 
- * different identity, the same logger state cannot be shared.
- * Anyway, continue working on the core below. Then finish the instruction handler.
- * */
 msize_t merry_core_create(EntityContext *ctx, mbptr_t *repr, msize_t conf) {
+  /*
+   * Parse the arguments passed here and read the input file
+   * */
   MerryCore *c = (MerryCore *)malloc(sizeof(MerryCore));
   if (!c) {
-    MERR("Failed to allocate memory for the core", NULL);
-    ret = MRES_SYS_FAILURE;
-    goto MERRY_CC_FAILED;
+    MERRY_ERR("Failed to allocate memory for the core");
+	return 1;
   }
-  if ((ret = merry_Interface_list_create(10, &c->interfaces)) != MRES_SUCCESS) {
-    MERR("Failed to allocate memory for a component", NULL);
+  if (mvs_mapped_memory_create(&c->st_page, 0) != MRES_SUCCESS) {
+    MERRY_ERR("Failed to initialize the stack");
     free(c);
-    goto MERRY_CC_FAILED;
+	return 1;
   }
-  if ((ret = merry_mapped_memory_create(&c->st)) != MRES_SUCCESS) {
-    MERR("Failed to initialize the stack", NULL);
-    merry_Interface_list_destroy(c->interfaces);
-    free(c);
-    goto MERRY_CC_FAILED;
-  }
-  if ((ret = merry_mapped_memory_map(c->st, _MERRY_CORE_STACK_LEN_)) !=
+  if (merry_mapped_memory_map(c->st_page, _MERRY_CORE_STACK_LEN_) !=
       MRES_SUCCESS) {
-    MERR("Failed to initialize the stack", NULL);
-    merry_Interface_list_destroy(c->interfaces);
-    merry_mapped_memory_destroy(c->st);
+    MERRY_ERR("Failed to initialize the stack");
+    mvs_mapped_memory_destroy(c->st_page);
     free(c);
-    goto MERRY_CC_FAILED;
+	return 1;
   }
-  merry_mapped_memory_obtain_ptr(c->st, (mbptr_t *)&c->stack);
-  if ((ret = merry_CoreProcFrame_stack_init(
-           &c->stack_frames, _MERRY_CORE_CALL_DEPTH_)) != MRES_SUCCESS) {
-    MERR("Failed to initialize the stack", NULL);
-    merry_Interface_list_destroy(c->interfaces);
-    merry_mapped_memory_unmap(c->st);
-    merry_mapped_memory_destroy(c->st);
+  mvs_mapped_memory_obtain_ptr(c->st, (mbptr_t *)&c->stack, 0);
+  if (mvs_stack_init(
+           &c->stack_frames, _MERRY_CORE_CALL_DEPTH_, sizeof(MerryCoreStackFrame)) != MRES_SUCCESS) {
+    MERRY_ERR("Failed to initialize the stack trace");
+    mvs_mapped_memory_destroy(c->st);
     free(c);
-    goto MERRY_CC_FAILED;
+	return 1;
   }
 
+  /*
+   * TODO: Add argument parsing for Merry and then read the input file to 
+   * populate rest of Merry
+   * */
   c->SP = 0;
   c->BP = 0;
-  c->PC = st_addr;
+  c->PC = 0;
   c->req_list = NULL;
-  *core = c;
-  return MRES_SUCCESS;
-MERRY_CC_FAILED:
-  return ret;
+  *repr = (mbptr_t)c;
+  return 0;
 }
 
 void merry_core_destroy(MerryCore *c) {
@@ -77,7 +62,7 @@ msize_t merry_core_run(MerryCore *c) {
   while (running) {
     if (surelyF(merry_core_memory_read_qword(
                     c->iram, c->PC, &c->IR.whole_word) != MRES_SUCCESS)) {
-      MERR("Page Fault: PC=%zu", c->PC);
+      MERRY_ERR("Page Fault: PC=%zu", c->PC);
       c->ret = 1;
       break;
     } else {

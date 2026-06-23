@@ -27,7 +27,7 @@ typedef enum mLogLvl_t mLogLvl_t;
 typedef struct MVSLogger MVSLogger;
 typedef struct MVSLogEntry MVSLogEntry;
 
-enum mLogLvl_t { MLOG_NOTE, MLOG_WARN, MLOG_ERR, MLOG_DBG, MLOG_EXT, MLOG_CUSTOM};
+enum mLogLvl_t { MLOG_NOTE, MLOG_WARN, MLOG_ERR, MLOG_DBG, MLOG_CUSTOM};
 
 struct MVSLogEntry {
   MVSEntityIdentity *iden;
@@ -57,6 +57,7 @@ struct MVSLogger {
  */
 
 mbool_t mvs_logger_init(mLogLvl_t allowed, MVSSystemConfig *conf);
+mbool_t mvs_logger_init_state(MVSEntityIdentity *iden);
 mbool_t mvs_logger_destroy();
 mthreadRet_t mvs_logger_run(mptr_t _l);
 void mvs_logger_wakeup(mbool_t flag);
@@ -64,17 +65,12 @@ void mvs_logger_wait_to_launch();
 void mvs_logger_wait_for_termination();
 
 // Logging functions
-_MVS_ATTR_EXPORT_
 void mvs_log_note(mstr_t fmt, ...);
-_MVS_ATTR_EXPORT_
 void mvs_log_warn(mstr_t fmt, ...);
-_MVS_ATTR_EXPORT_
 void mvs_log_err(mstr_t fmt, ...);
 _MVS_ATTR_EXPORT_
 void mvs_log_dbg(mstr_t fmt, ...);
 _MVS_ATTR_EXPORT_
-void mvs_vlog(mstr_t fmt, va_list _l);
-_MVS_ATTR_EXPORT_
-void mvs_clog(MVSEntityIdentity *iden, mstr_t fmt, va_list _l);
+void mvs_clog(mstr_t fmt, va_list _l);
 
 #endif

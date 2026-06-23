@@ -147,10 +147,6 @@ _MVS_ATTR_INTERNAL_ mbool_t mvs_graves_pre_init(mstr_t *argv, msize_t argc) {
       .make_request = mvs_graves_make_request,
       .register_component = mvs_register_component,
       .LOG_DBG = mvs_log_dbg,
-	  .LOG_NOTE = mvs_log_note,
-	  .LOG_ERR = mvs_log_err,
-	  .LOG_WARN = mvs_log_warn,
-      .VLOG = mvs_vlog,
 	  .LOG_CUSTOM = mvs_clog,
       .check_request_status = mvs_request_check_status,
       .get_request_response = mvs_request_get_response,
@@ -471,6 +467,7 @@ _MVS_ATTR_INTERNAL_ mthreadRet_t mvs_graves_entity_launcher_wait(mptr_t e) {
 _MVS_ATTR_INTERNAL_ mthreadRet_t mvs_graves_entity_launcher_nowait(mptr_t e) {
   MVSEntity *ent = (MVSEntity *)e;
   mvs_log_dbg("ENTITY[%zu:%zu]: running", ent->identity.ID, ent->identity.UID);
+  mvs_logger_init_state(&ent->identity);
   EntityRegistryEntry *entry = mvs_registry_get_entry(ent->EID);
   atomic_store_explicit(&ent->state, MENTITY_RUNNING, memory_order_release);
   while (mtrue) {

@@ -36,8 +36,6 @@ typedef void (*graveslog_t)(mstr_t , ...);
 
 typedef void (*gravesvlog_t)(mstr_t, va_list);
 
-typedef void (*gravesclog_t)(EntityIdentityHdlr, mstr_t, va_list);
-
 typedef apiRes_t (*gravesreqCS_t)(GravesRequest *);
 
 typedef apiRes_t (*gravesreqGR_t)(GravesRequest *, APIRequestResponse *);
@@ -50,12 +48,8 @@ typedef apiRes_t (*gravesreqTypeSE_t)(EntityIdentityHdlr, msize_t, mqword_t,
 struct GravesAPI {
   gravesmr_t make_request;
   gravesrc_t register_component;
-  graveslog_t LOG_NOTE;
-  graveslog_t LOG_ERR;
-  graveslog_t LOG_WARN;
   graveslog_t LOG_DBG;
-  gravesclog_t LOG_CUSTOM;
-  gravesvlog_t VLOG; // entity log
+  gravesvlog_t LOG_CUSTOM;
   gravesreqCS_t check_request_status;
   gravesreqGR_t get_request_response;
   gravesreqGRes_t get_request_result;

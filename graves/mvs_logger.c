@@ -2,8 +2,9 @@
 
 _MVS_ATTR_INTERNAL_ MVSLogger *_logger; // Lets keep a local copy instead of
                                         // passing it as argument each time
-_MVS_ATTR_INTERNAL_ mstr_t msg_type[] = {"Note", "Warning", "Error", "Debug",
-                                         "Entity"};
+_MVS_ATTR_INTERNAL_ mstr_t msg_type[] = {"Note", "Warning", "Error", "Debug"};
+_MVS_ATTR_THREAD_LOCAL_ MVSEntityIdentity identity;
+_MVS_ATTR_THREAD_LOCAL_ mbool_t set_iden = mfalse;
 
 _MVS_ATTR_INTERNAL_ void mvs_logger_log_all() {
   MVSLogEntry entry;
@@ -15,7 +16,10 @@ _MVS_ATTR_INTERNAL_ void mvs_logger_log_all() {
       // we don't terminate here yet
     } else {
       if (entry.lvl == MLOG_CUSTOM) {
-		fprintf(stdout, "Entity[%zu:%zu]:%s\n", entry.msg);
+		if (set_iden)
+		  fprintf(stdout, "Entity[%zu:%zu]:%s\n", identity.ID, identity.UID, entry.msg);
+	    else
+		  fprintf(stdout, "Entity: %s\n", entry.msg);
 	  } else {
 		fprintf(stdout, "<%s>: %s\n", msg_type[entry.lvl], entry.msg);
 	  }
@@ -54,6 +58,14 @@ mbool_t mvs_logger_init(mLogLvl_t allowed, MVSSystemConfig *conf) {
   return mtrue;
 }
 
+mbool_t mvs_logger_init_state(MVSEntityIdentity *iden) {
+  if (!iden)
+    return mfalse;
+  identity = *iden;
+  set_iden = mtrue;
+  return mtrue;
+}
+
 mbool_t mvs_logger_destroy() {
   /*
    * The logger is guaranteed to log all messages before being destroyed
@@ -89,7 +101,6 @@ mthreadRet_t mvs_logger_run(mptr_t _l) {
   return NULL;
 }
 
-_MVS_ATTR_EXPORT_
 void mvs_log_note(mstr_t fmt, ...) {
   if (!_logger)
     return;
@@ -108,7 +119,6 @@ void mvs_log_note(mstr_t fmt, ...) {
     mvs_cond_signal(&_logger->cond);
 }
 
-_MVS_ATTR_EXPORT_
 void mvs_log_warn(mstr_t fmt, ...) {
   if (!_logger)
     return;
@@ -126,7 +136,6 @@ void mvs_log_warn(mstr_t fmt, ...) {
     mvs_cond_signal(&_logger->cond);
 }
 
-_MVS_ATTR_EXPORT_
 void mvs_log_err(mstr_t fmt, ...) {
   if (!_logger)
     return;
@@ -163,25 +172,11 @@ void mvs_log_dbg(mstr_t fmt, ...) {
 }
 
 _MVS_ATTR_EXPORT_
-void mvs_vlog(mstr_t fmt, va_list _l) {
+void mvs_clog(mstr_t fmt, va_list _l) {
   if (!_logger || !fmt || !_l)
     return;
   MVSLogEntry entry;
-  entry.lvl = MLOG_EXT;
-  vsnprintf(entry.msg, 128, fmt, _l);
-  mvs_hybrid_concurrency_model_queue_enqueue(_logger->queue, &entry);
-  msize_t count = atomic_fetch_add(&_logger->msg_in_queue, 1);
-  if ((count + 1) % _logger->wake_logger_on == 0)
-    mvs_cond_signal(&_logger->cond);
-}
-
-_MVS_ATTR_EXPORT_
-void mvs_clog(MVSEntityIdentity *iden, mstr_t fmt, va_list _l) {
-  if (!_logger || !fmt || !_l || !iden)
-    return;
-  MVSLogEntry entry;
   entry.lvl = MLOG_CUSTOM;
-  entry.iden = iden;
   vsnprintf(entry.msg, 128, fmt, _l);
   mvs_hybrid_concurrency_model_queue_enqueue(_logger->queue, &entry);
   msize_t count = atomic_fetch_add(&_logger->msg_in_queue, 1);

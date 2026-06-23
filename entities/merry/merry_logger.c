@@ -1,11 +1,9 @@
 #include <merry_logger.h>
 
 _MVS_ATTR_INTERNAL_ GravesAPI API;
-_MVS_ATTR_INTERNAL_ EntityIdentityHdlr self;
 
-void merry_logger_init(GravesAPI api, EntityContext *ctx) {
+void merry_logger_init(GravesAPI api) {
   API = api;
-  self = ctx->self;
 }
 
 void MERRY_ERR(mstr_t fmt, ...) {
@@ -15,7 +13,7 @@ void MERRY_ERR(mstr_t fmt, ...) {
   strcpy(msg+7, fmt);
   va_list _l;
   va_start(_l, msg);
-  API.LOG_CUSTOM(self, msg, _l);
+  API.LOG_CUSTOM(msg, _l);
   va_end(_l);
 }
 
@@ -26,7 +24,7 @@ void MERRY_NOTE(mstr_t fmt, ...){
   strcpy(msg+7, fmt);
   va_list _l;
   va_start(_l, msg);
-  API.LOG_CUSTOM(self, msg, _l);
+  API.LOG_CUSTOM(msg, _l);
   va_end(_l);
 }
 
@@ -37,7 +35,7 @@ void MERRY_DBG(mstr_t fmt, ...){
   strcpy(msg+7, fmt);
   va_list _l;
   va_start(_l, msg);
-  API.LOG_CUSTOM(self, msg, _l);
+  API.LOG_DBG(msg, _l);
   va_end(_l);
 }
 
@@ -48,6 +46,6 @@ void MERRY_WARN(mstr_t fmt, ...){
   strcpy(msg+7, fmt);
   va_list _l;
   va_start(_l, msg);
-  API.LOG_CUSTOM(self, msg, _l);
+  API.LOG_CUSTOM(msg, _l);
   va_end(_l);
 }
