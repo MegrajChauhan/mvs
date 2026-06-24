@@ -2,9 +2,6 @@
 #include <merry_core_instruction_list.h>
 
 msize_t merry_core_create(EntityContext *ctx, mbptr_t *repr, msize_t conf) {
-  /*
-   * Parse the arguments passed here and read the input file
-   * */
   MerryCore *c = (MerryCore *)malloc(sizeof(MerryCore));
   if (!c) {
     MERRY_ERR("Failed to allocate memory for the core");
@@ -31,16 +28,34 @@ msize_t merry_core_create(EntityContext *ctx, mbptr_t *repr, msize_t conf) {
 	return 1;
   }
 
-  /*
-   * TODO: Add argument parsing for Merry and then read the input file to 
-   * populate rest of Merry
-   * */
+  merry_config_init_default(&c->conf);
+
   c->SP = 0;
   c->BP = 0;
   c->PC = 0;
+  c->ctx = *ctx;
   c->req_list = NULL;
+  c->iram = NULL;
+  c->dram = NULL;
   *repr = (mbptr_t)c;
   return 0;
+}
+
+msize_t merry_core_prepare(mptr_t repr) {
+   MerryCore *c = (MerryCore*)repr;
+
+   if (c->ctx.slist) {
+     // TODO: Continue from here 
+   }
+
+   MerryArgParser parser = _MERRY_ARG_PARSER_INIT_(
+       c->ctx.argc, c->ctx.argv, _MERRY_CMD_OPTION_COUNT_);
+   if (!merry_parse_all_arg(&parser, &c->args)) {
+      MERRY_ERR("Terminating...\n");
+      mvs_rlist_destroy(&graves.components.rlist);
+      return mfalse;
+    }
+    mvs_arg_parse_populate_config(&graves.state.cmd_opts, &graves.state.config);
 }
 
 void merry_core_destroy(MerryCore *c) {

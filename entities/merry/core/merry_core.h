@@ -11,11 +11,16 @@
 #include <mvs_mapped_memory.h>
 #include <mvs_protectors.h>
 #include <mvs_stack.h>
+#include <merry_arg_parse.h>
+#include <merry_config.h>
 #include <stdlib.h>
 
 typedef struct MerryCore MerryCore;
 
 struct MerryCore {
+  EntityContext ctx;
+  MerryConfig conf;
+  MerryArgParseResult args;
   MerryCoreRAM *iram, *dram;
   MVSStack *stack_frames;
   MVSMappedMemory *st_page;
@@ -30,6 +35,8 @@ struct MerryCore {
 };
 
 msize_t merry_core_create(EntityContext *ctx, mbptr_t *repr, msize_t conf);
+
+msize_t merry_core_prepare(mptr_t repr);
 
 msize_t merry_core_destroy(mptr_t c);
 

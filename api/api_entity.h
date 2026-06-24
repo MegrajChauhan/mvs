@@ -5,19 +5,33 @@
 #include <mvs_types.h>
 
 #define _API_MAKE_ENTITY_REGISTRY_ENTRY_(                                      \
-    _create, _destroy, _exec, _getdefsetup, _checksetup, _deducesetup)         \
+    _create, _destroy, _exec, _getdefsetup, _checksetup, _deducesetup, _prepare)         \
   (EntityRegistryEntry) {                                                      \
     .create = (_create), .destroy = (_destroy), .exec = (_exec),               \
     .get_default_setup = (_getdefsetup), .check_setup = (_checksetup),         \
-    .deduce_setup = (_deducesetup)                                             \
+    .deduce_setup = (_deducesetup), .prepare = (_prepare)                                             \
   }
 
 struct EntityContext;
 typedef struct EntityRegistryEntry EntityRegistryEntry;
 typedef union GravesRequestResult GravesRequestResult;
 
+/*
+ * The entity should only initialize essential stuff here.
+ * Returns:
+ * 0 for success
+ * */
 typedef msize_t (*entcreate_t)(struct EntityContext *, mbptr_t *,
                                msize_t /*conf*/); // entity create
+
+/*
+ * The entity should perform argument parsing and other configurations here.
+ * Based on those operations, it should initialize remaining of its components 
+ * and prepare for work
+ * Returns:
+ * 0 for success
+ * */
+typedef msize_t (*entprepare_t)(mptr_t);
 
 /*
  * Returns don't really matter here. The returns are printed out as debug info
@@ -81,6 +95,7 @@ struct EntityRegistryEntry {
   entgetdefsetup_t get_default_setup; // optional
   entchecksetup_t check_setup;        // optional
   entdeducesetup_t deduce_setup;
+  entprepare_t prepare;
 };
 
 union GravesRequestResult {
