@@ -9,7 +9,7 @@ mResult_t mvs_interface_create(MVSInterface **interface) {
   }
   if (mvs_mutex_init(&(*interface)->lock) != MRES_SUCCESS) {
     free(*interface);
-	return MRES_SYS_FAILURE;
+    return MRES_SYS_FAILURE;
   }
   (*interface)->configured = mfalse;
   (*interface)->config = 0;
@@ -35,10 +35,10 @@ mResult_t mvs_interface_lock(MVSInterface *interface) {
   /*
    * In the case of locking, there won't be any excessive checks.
    * */
-   if (!interface)
-     return MRES_INVALID_ARGS;
-   mvs_mutex_lock(&interface->lock);
-   return MRES_SUCCESS;
+  if (!interface)
+    return MRES_INVALID_ARGS;
+  mvs_mutex_lock(&interface->lock);
+  return MRES_SUCCESS;
 }
 
 mResult_t mvs_interface_unlock(MVSInterface *interface) {
@@ -103,13 +103,15 @@ mResult_t mvs_interface_share(MVSInterface **source, MVSInterface **dest) {
     return MRES_INVALID_ARGS;
   if (!(*source)->configured)
     return MRES_RESOURCE_NOT_CONFIGURED;
-  atm_mqword_t state = atomic_load_explicit(&(*source)->state, memory_order_relaxed);
+  atm_mqword_t state =
+      atomic_load_explicit(&(*source)->state, memory_order_relaxed);
   if (!(state & MVS_INTERFACE_STATE_INITIALIZED))
     return MRES_RESOURCE_STATE_INVALID;
   if (!((*source)->config & MVS_INTERFACE_CONF_SHAREABLE))
     return MRES_RESOURCE_STATE_INVALID;
   atomic_fetch_add(&(*source)->owner_count, 1);
-  atomic_store_explicit(&(*source)->state, state | MVS_INTERFACE_STATE_SHARED, memory_order_release);
+  atomic_store_explicit(&(*source)->state, state | MVS_INTERFACE_STATE_SHARED,
+                        memory_order_release);
   *dest = *source;
   return MRES_SUCCESS;
 }
@@ -119,14 +121,15 @@ mResult_t mvs_interface_disown(MVSInterface *interface) {
     return MRES_INVALID_ARGS;
   if (!interface->configured)
     return MRES_RESOURCE_NOT_CONFIGURED;
-  atm_mqword_t state = atomic_load_explicit(&interface->state, memory_order_relaxed);
+  atm_mqword_t state =
+      atomic_load_explicit(&interface->state, memory_order_relaxed);
   if (!(state & MVS_INTERFACE_STATE_INITIALIZED) ||
       !(interface->config & MVS_INTERFACE_CONF_SHAREABLE))
     return MRES_RESOURCE_STATE_INVALID;
   if (!(state & MVS_INTERFACE_STATE_SHARED))
     return MRES_RESOURCE_STATE_INVALID;
   if (atomic_load_explicit(&interface->owner_count, memory_order_relaxed))
-    atomic_fetch_sub(&interface->owner_count, 1, memory_order_release);
+    atomic_fetch_sub(&interface->owner_count, 1);
   return MRES_SUCCESS;
 }
 
@@ -135,7 +138,8 @@ mResult_t mvs_interface_check_freeable(MVSInterface *interface) {
     return MRES_INVALID_ARGS;
   if (!interface->configured)
     return MRES_RESOURCE_NOT_CONFIGURED;
-  atm_mqword_t state = atomic_load_explicit(&interface->state, memory_order_relaxed);
+  atm_mqword_t state =
+      atomic_load_explicit(&interface->state, memory_order_relaxed);
   if (!(state & MVS_INTERFACE_STATE_INITIALIZED))
     return MRES_RESOURCE_STATE_INVALID;
   if (!(interface->config & MVS_INTERFACE_CONF_SHAREABLE))
@@ -143,8 +147,8 @@ mResult_t mvs_interface_check_freeable(MVSInterface *interface) {
   if (!(state & MVS_INTERFACE_STATE_SHARED))
     return MRES_SUCCESS; // freeable
   /*
-   * The reason the condition checks for one owner is because the last owner is the one making
-   * the check.
+   * The reason the condition checks for one owner is because the last owner is
+   * the one making the check.
    * */
   if (atomic_load_explicit(&interface->owner_count, memory_order_relaxed) > 1)
     return MRES_RESOURCE_SHARED;

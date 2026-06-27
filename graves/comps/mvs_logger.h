@@ -11,7 +11,9 @@
  * terminate.
  */
 
+#include <api_graves.h>
 #include <mvs_config.h>
+#include <mvs_entity.h>
 #include <mvs_protectors.h>
 #include <mvs_queue.h>
 #include <mvs_results.h>
@@ -27,7 +29,7 @@ typedef enum mLogLvl_t mLogLvl_t;
 typedef struct MVSLogger MVSLogger;
 typedef struct MVSLogEntry MVSLogEntry;
 
-enum mLogLvl_t { MLOG_NOTE, MLOG_WARN, MLOG_ERR, MLOG_DBG, MLOG_CUSTOM};
+enum mLogLvl_t { MLOG_NOTE, MLOG_WARN, MLOG_ERR, MLOG_DBG, MLOG_CUSTOM };
 
 struct MVSLogEntry {
   MVSEntityIdentity *iden;
@@ -57,10 +59,10 @@ struct MVSLogger {
  */
 
 mbool_t mvs_logger_init(mLogLvl_t allowed, MVSSystemConfig *conf);
-mbool_t mvs_logger_init_state(MVSEntityIdentity *iden);
 mbool_t mvs_logger_destroy();
 mthreadRet_t mvs_logger_run(mptr_t _l);
 void mvs_logger_wakeup(mbool_t flag);
+void mvs_logger_flush();
 void mvs_logger_wait_to_launch();
 void mvs_logger_wait_for_termination();
 
@@ -68,9 +70,11 @@ void mvs_logger_wait_for_termination();
 void mvs_log_note(mstr_t fmt, ...);
 void mvs_log_warn(mstr_t fmt, ...);
 void mvs_log_err(mstr_t fmt, ...);
-_MVS_ATTR_EXPORT_
 void mvs_log_dbg(mstr_t fmt, ...);
+
 _MVS_ATTR_EXPORT_
-void mvs_clog(mstr_t fmt, va_list _l);
+void mvs_vlog(MVSEntityIdentity *self, mstr_t fmt, va_list _l);
+_MVS_ATTR_EXPORT_
+void mvs_log(MVSEntityIdentity *self, mstr_t fmt, ...);
 
 #endif

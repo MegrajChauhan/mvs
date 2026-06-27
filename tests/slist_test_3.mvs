@@ -1,0 +1,23 @@
+metadata: {
+		count = 2
+}
+
+; EID=0 -> Mock
+; EID=1 -> Merry
+
+0: 0 {
+  config: {
+     local_list = false 
+  }
+}
+
+1: 1 {
+  config: {
+     local_list = true
+  },
+  args: {
+    -f dumb_test.mbin
+  }
+}
+
+

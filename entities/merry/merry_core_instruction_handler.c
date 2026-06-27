@@ -24,35 +24,28 @@ void merry_core_compare_f64(double a, double b, MerryCoreFFlagsRegr *regr) {
   regr->uf = fabs(diff) < DBL_MIN && diff != 0.0;
 }
 
-merry_core_ihdlr(hlt) {
-	return mfalse;
-}
+merry_core_ihdlr(hlt) { return mfalse; }
 
 /*
- * NOT IMPLEMENTED 
+ * NOT IMPLEMENTED
  * */
-merry_core_ihdlr(sysint) {
-  return mtrue;
-}
+merry_core_ihdlr(sysint) { return mtrue; }
 
 /*
- * NOT IMPLEMENTED 
+ * NOT IMPLEMENTED
  * */
-merry_core_ihdlr(mint) {
-  return mtrue;
-}
+merry_core_ihdlr(mint) { return mtrue; }
 
 merry_core_ihdlr(add_imm) {
   register mbyte_t op1 = core->IR.whole_word & MERRY_CORE_R15;
   mqword_t op2;
   core->PC += 8;
-  if (merry_core_memory_read_qword(core->iram, core->PC, &op2) !=
-      mtrue) {
+  if (merry_core_memory_read_qword(core->iram, core->PC, &op2) != mtrue) {
     MERRY_ERR("INCOMPLETE INSTRUCTION at PC=%zu", core->PC);
     return mfalse;
   }
   core->REGISTER_FILE[op1] += op2;
-  core->flags.regr = merry_obtain_flags_regr();
+  core->flags.regr = mvs_obtain_flags_regr();
   return mtrue;
 }
 
@@ -60,7 +53,7 @@ merry_core_ihdlr(add_reg) {
   register mbyte_t op1 = (core->IR.whole_word >> 4) & MERRY_CORE_R15;
   register mbyte_t op2 = core->IR.whole_word & MERRY_CORE_R15;
   core->REGISTER_FILE[op1] += core->REGISTER_FILE[op2];
-  core->flags.regr = merry_obtain_flags_regr();
+  core->flags.regr = mvs_obtain_flags_regr();
   return mtrue;
 }
 
@@ -73,7 +66,7 @@ merry_core_ihdlr(sub_imm) {
     return mfalse;
   }
   core->REGISTER_FILE[op1] -= op2;
-  core->flags.regr = merry_obtain_flags_regr();
+  core->flags.regr = mvs_obtain_flags_regr();
   return mtrue;
 }
 
@@ -81,7 +74,7 @@ merry_core_ihdlr(sub_reg) {
   register mbyte_t op1 = (core->IR.whole_word >> 4) & MERRY_CORE_R15;
   register mbyte_t op2 = core->IR.whole_word & MERRY_CORE_R15;
   core->REGISTER_FILE[op1] -= core->REGISTER_FILE[op2];
-  core->flags.regr = merry_obtain_flags_regr();
+  core->flags.regr = mvs_obtain_flags_regr();
   return mtrue;
 }
 
@@ -94,7 +87,7 @@ merry_core_ihdlr(mul_imm) {
     return mfalse;
   }
   core->REGISTER_FILE[op1] *= op2;
-  core->flags.regr = merry_obtain_flags_regr();
+  core->flags.regr = mvs_obtain_flags_regr();
   return mtrue;
 }
 
@@ -102,7 +95,7 @@ merry_core_ihdlr(mul_reg) {
   register mbyte_t op1 = (core->IR.whole_word >> 4) & MERRY_CORE_R15;
   register mbyte_t op2 = core->IR.whole_word & MERRY_CORE_R15;
   core->REGISTER_FILE[op1] *= core->REGISTER_FILE[op2];
-  core->flags.regr = merry_obtain_flags_regr();
+  core->flags.regr = mvs_obtain_flags_regr();
   return mtrue;
 }
 
@@ -110,8 +103,7 @@ merry_core_ihdlr(div_imm) {
   register mbyte_t op1 = core->IR.whole_word & MERRY_CORE_R15;
   mqword_t op2;
   core->PC += 8;
-  if (merry_core_memory_read_qword(core->iram, core->PC, &op2) !=
-      mtrue) {
+  if (merry_core_memory_read_qword(core->iram, core->PC, &op2) != mtrue) {
     MERRY_ERR("INCOMPLETE INSTRUCTION at PC=%zu", core->PC);
     return mfalse;
   }
@@ -120,7 +112,7 @@ merry_core_ihdlr(div_imm) {
     return mfalse;
   }
   core->REGISTER_FILE[op1] /= op2;
-  core->flags.regr = merry_obtain_flags_regr();
+  core->flags.regr = mvs_obtain_flags_regr();
   return mtrue;
 }
 
@@ -132,7 +124,7 @@ merry_core_ihdlr(div_reg) {
     return mfalse;
   }
   core->REGISTER_FILE[op1] /= core->REGISTER_FILE[op2];
-  core->flags.regr = merry_obtain_flags_regr();
+  core->flags.regr = mvs_obtain_flags_regr();
   return mtrue;
 }
 
@@ -140,8 +132,7 @@ merry_core_ihdlr(mod_imm) {
   register mbyte_t op1 = core->IR.whole_word & MERRY_CORE_R15;
   mqword_t op2;
   core->PC += 8;
-  if (merry_core_memory_read_qword(core->iram, core->PC, &op2) !=
-      mtrue) {
+  if (merry_core_memory_read_qword(core->iram, core->PC, &op2) != mtrue) {
     MERRY_ERR("INCOMPLETE INSTRUCTION at PC=%zu", core->PC);
     return mfalse;
   }
@@ -150,7 +141,7 @@ merry_core_ihdlr(mod_imm) {
     return mfalse;
   }
   core->REGISTER_FILE[op1] %= op2;
-  core->flags.regr = merry_obtain_flags_regr();
+  core->flags.regr = mvs_obtain_flags_regr();
   return mtrue;
 }
 
@@ -162,15 +153,15 @@ merry_core_ihdlr(mod_reg) {
     return mfalse;
   }
   core->REGISTER_FILE[op1] %= core->REGISTER_FILE[op2];
-  core->flags.regr = merry_obtain_flags_regr();
+  core->flags.regr = mvs_obtain_flags_regr();
   return mtrue;
 }
 
 merry_core_ihdlr(fadd) {
   register mqword_t op1 = (core->IR.whole_word >> 4) & MERRY_CORE_R15;
   register mqword_t op2 = (core->IR.whole_word) & MERRY_CORE_R15;
-  register MerryDoubleToQword a;
-  register MerryDoubleToQword b;
+  register MVSDoubleToQword a;
+  register MVSDoubleToQword b;
   a.q_val = core->REGISTER_FILE[op1];
   b.q_val = core->REGISTER_FILE[op2];
   merry_core_compare_f64(a.d_val, b.d_val, &core->fflags);
@@ -182,8 +173,8 @@ merry_core_ihdlr(fadd) {
 merry_core_ihdlr(fsub) {
   register mqword_t op1 = (core->IR.whole_word >> 4) & MERRY_CORE_R15;
   register mqword_t op2 = (core->IR.whole_word) & MERRY_CORE_R15;
-  register MerryDoubleToQword a;
-  register MerryDoubleToQword b;
+  register MVSDoubleToQword a;
+  register MVSDoubleToQword b;
   a.q_val = core->REGISTER_FILE[op1];
   b.q_val = core->REGISTER_FILE[op2];
   merry_core_compare_f64(a.d_val, b.d_val, &core->fflags);
@@ -195,8 +186,8 @@ merry_core_ihdlr(fsub) {
 merry_core_ihdlr(fmul) {
   register mqword_t op1 = (core->IR.whole_word >> 4) & MERRY_CORE_R15;
   register mqword_t op2 = (core->IR.whole_word) & MERRY_CORE_R15;
-  register MerryDoubleToQword a;
-  register MerryDoubleToQword b;
+  register MVSDoubleToQword a;
+  register MVSDoubleToQword b;
   a.q_val = core->REGISTER_FILE[op1];
   b.q_val = core->REGISTER_FILE[op2];
   merry_core_compare_f64(a.d_val, b.d_val, &core->fflags);
@@ -208,8 +199,8 @@ merry_core_ihdlr(fmul) {
 merry_core_ihdlr(fdiv) {
   register mqword_t op1 = (core->IR.whole_word >> 4) & MERRY_CORE_R15;
   register mqword_t op2 = (core->IR.whole_word) & MERRY_CORE_R15;
-  register MerryDoubleToQword a;
-  register MerryDoubleToQword b;
+  register MVSDoubleToQword a;
+  register MVSDoubleToQword b;
   a.q_val = core->REGISTER_FILE[op1];
   b.q_val = core->REGISTER_FILE[op2];
   if (b.d_val == 0.0) {
@@ -225,8 +216,8 @@ merry_core_ihdlr(fdiv) {
 merry_core_ihdlr(fadd32) {
   register mqword_t op1 = (core->IR.whole_word >> 4) & MERRY_CORE_R15;
   register mqword_t op2 = (core->IR.whole_word) & MERRY_CORE_R15;
-  register MerryFloatToDword a;
-  register MerryFloatToDword b;
+  register MVSFloatToDword a;
+  register MVSFloatToDword b;
   a.d_val = core->REGISTER_FILE[op1];
   b.d_val = core->REGISTER_FILE[op2];
   merry_core_compare_f32(a.fl_val, b.fl_val, &core->fflags);
@@ -238,8 +229,8 @@ merry_core_ihdlr(fadd32) {
 merry_core_ihdlr(fsub32) {
   register mqword_t op1 = (core->IR.whole_word >> 4) & MERRY_CORE_R15;
   register mqword_t op2 = (core->IR.whole_word) & MERRY_CORE_R15;
-  register MerryFloatToDword a;
-  register MerryFloatToDword b;
+  register MVSFloatToDword a;
+  register MVSFloatToDword b;
   a.d_val = core->REGISTER_FILE[op1];
   b.d_val = core->REGISTER_FILE[op2];
   merry_core_compare_f32(a.fl_val, b.fl_val, &core->fflags);
@@ -251,8 +242,8 @@ merry_core_ihdlr(fsub32) {
 merry_core_ihdlr(fmul32) {
   register mqword_t op1 = (core->IR.whole_word >> 4) & MERRY_CORE_R15;
   register mqword_t op2 = (core->IR.whole_word) & MERRY_CORE_R15;
-  register MerryFloatToDword a;
-  register MerryFloatToDword b;
+  register MVSFloatToDword a;
+  register MVSFloatToDword b;
   a.d_val = core->REGISTER_FILE[op1];
   b.d_val = core->REGISTER_FILE[op2];
   merry_core_compare_f32(a.fl_val, b.fl_val, &core->fflags);
@@ -264,8 +255,8 @@ merry_core_ihdlr(fmul32) {
 merry_core_ihdlr(fdiv32) {
   register mqword_t op1 = (core->IR.whole_word >> 4) & MERRY_CORE_R15;
   register mqword_t op2 = (core->IR.whole_word) & MERRY_CORE_R15;
-  register MerryFloatToDword a;
-  register MerryFloatToDword b;
+  register MVSFloatToDword a;
+  register MVSFloatToDword b;
   a.d_val = core->REGISTER_FILE[op1];
   b.d_val = core->REGISTER_FILE[op2];
   if (b.d_val == 0.0) {
@@ -293,8 +284,7 @@ merry_core_ihdlr(mov_imm) {
   mqword_t val;
 
   core->PC += 8;
-  if (merry_core_memory_read_qword(core->iram, core->PC, &val) !=
-      mtrue) {
+  if (merry_core_memory_read_qword(core->iram, core->PC, &val) != mtrue) {
     MERRY_ERR("INCOMPLETE INTRUCTION at PC=%zu", core->PC);
     return mfalse;
   }
@@ -429,8 +419,7 @@ merry_core_ihdlr(jmp_off) {
 
 merry_core_ihdlr(jmp_addr) {
   core->PC += 8;
-  if (merry_core_memory_read_qword(core->iram, core->PC, &core->PC) !=
-      mtrue) {
+  if (merry_core_memory_read_qword(core->iram, core->PC, &core->PC) != mtrue) {
     MERRY_ERR("INCOMPLETE INTRUCTION at PC=%zu", core->PC);
     return mfalse;
   }
@@ -442,7 +431,7 @@ merry_core_ihdlr(jmp_reg) {
   return mtrue;
 }
 
-#ifdef _MERRY_HOST_CPU_x86_64_ARCH_
+#ifdef _MVS_HOST_ARCH_x86_
 merry_core_ihdlr(jnz) {
   if (core->flags.flags.zero == 0) {
     register mqword_t off = core->IR.half_words.w1;
@@ -650,12 +639,11 @@ merry_core_ihdlr(call_reg) {
   frame.FRAME_BP = core->SP;
   frame.JMP_TO = addr;
   frame.RET_ADDR = core->PC;
-  if (merry_is_stack_full(core->stack_frames)) {
-    MERRY_ERR("Call depth reached", NULL);
+  if (_MVS_MFUNC_STACK_CHECK_FULL_(core->stack_frames)) {
+    MERRY_ERR("Call depth reached");
     return mfalse;
   }
-  if (merry_CoreProcFrame_stack_push(core->stack_frames, &frame) !=
-      mtrue) {
+  if (mvs_stack_push(core->stack_frames, &frame) != MRES_SUCCESS) {
     MERRY_ERR("Failed to register stack frame:PROC=%zu", addr);
     return mfalse;
   }
@@ -667,8 +655,7 @@ merry_core_ihdlr(call_reg) {
 merry_core_ihdlr(call) {
   mqword_t addr;
   core->PC += 8;
-  if (merry_core_memory_read_qword(core->iram, core->PC, &addr) !=
-      mtrue) {
+  if (merry_core_memory_read_qword(core->iram, core->PC, &addr) != mtrue) {
     MERRY_ERR("INCOMPLETE INTRUCTION at PC=%zu", core->PC);
     return mfalse;
   }
@@ -676,12 +663,11 @@ merry_core_ihdlr(call) {
   frame.FRAME_BP = core->SP;
   frame.JMP_TO = addr;
   frame.RET_ADDR = core->PC;
-  if (merry_is_stack_full(core->stack_frames)) {
-    MERRY_ERR("Call depth reached", NULL);
+  if (_MVS_MFUNC_STACK_CHECK_FULL_(core->stack_frames)) {
+    MERRY_ERR("Call depth reached");
     return mfalse;
   }
-  if (merry_CoreProcFrame_stack_push(core->stack_frames, &frame) !=
-      mtrue) {
+  if (mvs_stack_push(core->stack_frames, &frame) != MRES_SUCCESS) {
     MERRY_ERR("Failed to register stack frame:PROC=%zu", addr);
     return mfalse;
   }
@@ -691,14 +677,13 @@ merry_core_ihdlr(call) {
 }
 
 merry_core_ihdlr(ret) {
-  if (merry_is_stack_empty(core->stack_frames)) {
+  if (_MVS_MFUNC_STACK_CHECK_EMPTY_(core->stack_frames)) {
     MERRY_ERR("Invalid RETURN: PC=%zu", core->PC);
     return mfalse;
   }
 
   MerryCoreStackFrame frame;
-  if ((merry_CoreProcFrame_stack_pop(core->stack_frames, &frame)) !=
-      mtrue) {
+  if ((mvs_stack_pop(core->stack_frames, &frame)) != MRES_SUCCESS) {
     MERRY_ERR("Failed to restore stack frame: PC=%zu", core->PC);
     return mfalse;
   }
@@ -708,7 +693,7 @@ merry_core_ihdlr(ret) {
   return mtrue;
 }
 
-#ifdef _MERRY_HOST_CPU_x86_64_ARCH_
+#ifdef _MVS_HOST_ARCH_x86_
 merry_core_ihdlr(retnz) {
   if (core->flags.flags.zero == 0)
     return merry_core_iret(core);
@@ -885,9 +870,9 @@ merry_core_ihdlr(loop) {
 }
 
 merry_core_ihdlr(push_imm64) {
-  MerryHostMemLayout imm;
+  MVSHostMemLayout imm;
   if (core->SP >= (_MERRY_CORE_STACK_LEN_ / 8)) {
-    MERRY_ERR("Stack Overflow", NULL);
+    MERRY_ERR("Stack Overflow");
     return mfalse;
   }
   core->PC += 8;
@@ -904,7 +889,7 @@ merry_core_ihdlr(push_imm64) {
 merry_core_ihdlr(push_reg) {
   mqword_t imm = core->REGISTER_FILE[core->IR.whole_word & MERRY_CORE_R15];
   if (core->SP >= (_MERRY_CORE_STACK_LEN_ / 8)) {
-    MERRY_ERR("Stack Overflow", NULL);
+    MERRY_ERR("Stack Overflow");
     return mfalse;
   }
   core->stack[core->SP] = imm;
@@ -914,7 +899,7 @@ merry_core_ihdlr(push_reg) {
 
 merry_core_ihdlr(pop64) {
   if (core->SP == 0) {
-    MERRY_ERR("Stack Underflow", NULL);
+    MERRY_ERR("Stack Underflow");
     return mfalse;
   }
   core->SP--;
@@ -925,7 +910,7 @@ merry_core_ihdlr(pop64) {
 
 merry_core_ihdlr(pusha) {
   if (core->SP >= (_MERRY_CORE_STACK_LEN_ / 8 - MERRY_CORE_REG_COUNT)) {
-    MERRY_ERR("Stack Overflow", NULL);
+    MERRY_ERR("Stack Overflow");
     return mfalse;
   }
   for (msize_t i = 0; i < MERRY_CORE_REG_COUNT; i++) {
@@ -937,7 +922,7 @@ merry_core_ihdlr(pusha) {
 
 merry_core_ihdlr(popa) {
   if (core->SP < MERRY_CORE_REG_COUNT) {
-    MERRY_ERR("Stack Underflow", NULL);
+    MERRY_ERR("Stack Underflow");
     return mfalse;
   }
   for (msize_t i = MERRY_CORE_R15; i >= 0; i--) {
@@ -1000,67 +985,64 @@ merry_core_ihdlr(storesq_reg) {
 merry_core_ihdlr(and_imm) {
   mqword_t imm;
   core->PC += 8;
-  if (merry_core_memory_read_qword(core->iram, core->PC, &imm) !=
-      mtrue) {
+  if (merry_core_memory_read_qword(core->iram, core->PC, &imm) != mtrue) {
     MERRY_ERR("INCOMPLETE INSTRUCTION at PC=%zu", core->PC);
     return mfalse;
   }
   core->REGISTER_FILE[core->IR.whole_word & MERRY_CORE_R15] &= imm;
-  core->flags.regr = merry_obtain_flags_regr();
+  core->flags.regr = mvs_obtain_flags_regr();
   return mtrue;
 }
 
 merry_core_ihdlr(and_reg) {
   core->REGISTER_FILE[(core->IR.whole_word >> 4) & MERRY_CORE_R15] &=
       core->REGISTER_FILE[core->IR.whole_word & MERRY_CORE_R15];
-  core->flags.regr = merry_obtain_flags_regr();
+  core->flags.regr = mvs_obtain_flags_regr();
   return mtrue;
 }
 
 merry_core_ihdlr(or_imm) {
   mqword_t imm;
   core->PC += 8;
-  if (merry_core_memory_read_qword(core->iram, core->PC, &imm) !=
-      mtrue) {
+  if (merry_core_memory_read_qword(core->iram, core->PC, &imm) != mtrue) {
     MERRY_ERR("INCOMPLETE INSTRUCTION at PC=%zu", core->PC);
     return mfalse;
   }
   core->REGISTER_FILE[core->IR.whole_word & MERRY_CORE_R15] |= imm;
-  core->flags.regr = merry_obtain_flags_regr();
+  core->flags.regr = mvs_obtain_flags_regr();
   return mtrue;
 }
 
 merry_core_ihdlr(or_reg) {
   core->REGISTER_FILE[(core->IR.whole_word >> 4) & MERRY_CORE_R15] |=
       core->REGISTER_FILE[core->IR.whole_word & MERRY_CORE_R15];
-  core->flags.regr = merry_obtain_flags_regr();
+  core->flags.regr = mvs_obtain_flags_regr();
   return mtrue;
 }
 
 merry_core_ihdlr(xor_imm) {
   mqword_t imm;
   core->PC += 8;
-  if (merry_core_memory_read_qword(core->iram, core->PC, &imm) !=
-      mtrue) {
+  if (merry_core_memory_read_qword(core->iram, core->PC, &imm) != mtrue) {
     MERRY_ERR("INCOMPLETE INSTRUCTION at PC=%zu", core->PC);
     return mfalse;
   }
   core->REGISTER_FILE[core->IR.whole_word & MERRY_CORE_R15] ^= imm;
-  core->flags.regr = merry_obtain_flags_regr();
+  core->flags.regr = mvs_obtain_flags_regr();
   return mtrue;
 }
 
 merry_core_ihdlr(xor_reg) {
   core->REGISTER_FILE[(core->IR.whole_word >> 4) & MERRY_CORE_R15] ^=
       core->REGISTER_FILE[core->IR.whole_word & MERRY_CORE_R15];
-  core->flags.regr = merry_obtain_flags_regr();
+  core->flags.regr = mvs_obtain_flags_regr();
   return mtrue;
 }
 
 merry_core_ihdlr(not) {
   mqword_t ind = core->IR.whole_word & MERRY_CORE_R15;
   core->REGISTER_FILE[ind] = ~core->REGISTER_FILE[ind];
-  core->flags.regr = merry_obtain_flags_regr();
+  core->flags.regr = mvs_obtain_flags_regr();
   return mtrue;
 }
 
@@ -1091,22 +1073,21 @@ merry_core_ihdlr(rshift_reg) {
 merry_core_ihdlr(cmp_imm) {
   mqword_t imm;
   core->PC += 8;
-  if (merry_core_memory_read_qword(core->iram, core->PC, &imm) !=
-      mtrue) {
+  if (merry_core_memory_read_qword(core->iram, core->PC, &imm) != mtrue) {
     MERRY_ERR("INSTRUCTION INCOMPLETE at PC=%zu", core->PC);
     return mfalse;
   }
-  merry_compare_two_values(
+  mvs_compare_two_values(
       imm, core->REGISTER_FILE[core->IR.whole_word & MERRY_CORE_R15]);
-  core->flags.regr = merry_obtain_flags_regr();
+  core->flags.regr = mvs_obtain_flags_regr();
   return mtrue;
 }
 
 merry_core_ihdlr(cmp_reg) {
-  merry_compare_two_values(
+  mvs_compare_two_values(
       core->REGISTER_FILE[(core->IR.whole_word >> 4) & MERRY_CORE_R15],
       core->REGISTER_FILE[core->IR.whole_word & MERRY_CORE_R15]);
-  core->flags.regr = merry_obtain_flags_regr();
+  core->flags.regr = mvs_obtain_flags_regr();
   return mtrue;
 }
 
@@ -1139,14 +1120,11 @@ merry_core_ihdlr(loadb) {
   mbyte_t imm;
   maddress_t addr;
   core->PC += 8;
-  if (merry_core_memory_read_qword(core->iram, core->PC, &addr) !=
-      mtrue) {
+  if (merry_core_memory_read_qword(core->iram, core->PC, &addr) != mtrue) {
     MERRY_ERR("INCOMPLETE INTRUCTION at PC=%zu", core->PC);
     return mfalse;
   }
-  if (merry_core_memory_read_byte(core->dram,
-                                  addr,
-                                  &imm) != mtrue) {
+  if (merry_core_memory_read_byte(core->dram, addr, &imm) != mtrue) {
     MERRY_ERR("INVALID OPERAND at PC=%zu", core->PC);
     return mfalse;
   }
@@ -1158,14 +1136,12 @@ merry_core_ihdlr(storeb) {
   register mbyte_t op1 = (core->IR.whole_word) & MERRY_CORE_R15;
   maddress_t addr;
   core->PC += 8;
-  if (merry_core_memory_read_qword(core->iram, core->PC, &addr) !=
-      mtrue) {
+  if (merry_core_memory_read_qword(core->iram, core->PC, &addr) != mtrue) {
     MERRY_ERR("INCOMPLETE INTRUCTION at PC=%zu", core->PC);
     return mfalse;
   }
-  if (merry_core_memory_write_byte(
-          core->dram, addr,
-          core->REGISTER_FILE[op1] & 0xFF) != mtrue) {
+  if (merry_core_memory_write_byte(core->dram, addr,
+                                   core->REGISTER_FILE[op1] & 0xFF) != mtrue) {
     MERRY_ERR("INVALID OPERAND at PC=%zu", core->PC);
     return mfalse;
   }
@@ -1177,14 +1153,11 @@ merry_core_ihdlr(loadw) {
   mword_t imm;
   maddress_t addr;
   core->PC += 8;
-  if (merry_core_memory_read_qword(core->iram, core->PC, &addr) !=
-      mtrue) {
+  if (merry_core_memory_read_qword(core->iram, core->PC, &addr) != mtrue) {
     MERRY_ERR("INCOMPLETE INTRUCTION at PC=%zu", core->PC);
     return mfalse;
   }
-  if (merry_core_memory_read_word(core->dram,
-                                  addr,
-                                  &imm) != mtrue) {
+  if (merry_core_memory_read_word(core->dram, addr, &imm) != mtrue) {
     MERRY_ERR("INVALID OPERAND at PC=%zu", core->PC);
     return mfalse;
   }
@@ -1196,14 +1169,12 @@ merry_core_ihdlr(storew) {
   register mbyte_t op1 = (core->IR.whole_word) & MERRY_CORE_R15;
   maddress_t addr;
   core->PC += 8;
-  if (merry_core_memory_read_qword(core->iram, core->PC, &addr) !=
-      mtrue) {
+  if (merry_core_memory_read_qword(core->iram, core->PC, &addr) != mtrue) {
     MERRY_ERR("INCOMPLETE INTRUCTION at PC=%zu", core->PC);
     return mfalse;
   }
   if (merry_core_memory_write_word(
-          core->dram, addr,
-          core->REGISTER_FILE[op1] & 0xFFFF) != mtrue) {
+          core->dram, addr, core->REGISTER_FILE[op1] & 0xFFFF) != mtrue) {
     MERRY_ERR("INVALID OPERAND at PC=%zu", core->PC);
     return mfalse;
   }
@@ -1214,15 +1185,12 @@ merry_core_ihdlr(loadd) {
   register mbyte_t op1 = (core->IR.whole_word) & MERRY_CORE_R15;
   maddress_t addr;
   core->PC += 8;
-  if (merry_core_memory_read_qword(core->iram, core->PC, &addr) !=
-      mtrue) {
+  if (merry_core_memory_read_qword(core->iram, core->PC, &addr) != mtrue) {
     MERRY_ERR("INCOMPLETE INTRUCTION at PC=%zu", core->PC);
     return mfalse;
   }
   mdword_t imm;
-  if (merry_core_memory_read_dword(core->dram,
-                                   addr,
-                                   &imm) != mtrue) {
+  if (merry_core_memory_read_dword(core->dram, addr, &imm) != mtrue) {
     MERRY_ERR("INVALID OPERAND at PC=%zu", core->PC);
     return mfalse;
   }
@@ -1234,14 +1202,12 @@ merry_core_ihdlr(stored) {
   register mbyte_t op1 = (core->IR.whole_word) & MERRY_CORE_R15;
   maddress_t addr;
   core->PC += 8;
-  if (merry_core_memory_read_qword(core->iram, core->PC, &addr) !=
-      mtrue) {
+  if (merry_core_memory_read_qword(core->iram, core->PC, &addr) != mtrue) {
     MERRY_ERR("INCOMPLETE INTRUCTION at PC=%zu", core->PC);
     return mfalse;
   }
   if (merry_core_memory_write_dword(
-          core->dram, addr,
-          core->REGISTER_FILE[op1] & 0xFFFFFFFF) != mtrue) {
+          core->dram, addr, core->REGISTER_FILE[op1] & 0xFFFFFFFF) != mtrue) {
     MERRY_ERR("INVALID OPERAND at PC=%zu", core->PC);
     return mfalse;
   }
@@ -1253,14 +1219,11 @@ merry_core_ihdlr(loadq) {
   mqword_t imm;
   maddress_t addr;
   core->PC += 8;
-  if (merry_core_memory_read_qword(core->iram, core->PC, &addr) !=
-      mtrue) {
+  if (merry_core_memory_read_qword(core->iram, core->PC, &addr) != mtrue) {
     MERRY_ERR("INCOMPLETE INTRUCTION at PC=%zu", core->PC);
     return mfalse;
   }
-  if (merry_core_memory_read_qword(core->dram,
-                                   addr,
-                                   &imm) != mtrue) {
+  if (merry_core_memory_read_qword(core->dram, addr, &imm) != mtrue) {
     MERRY_ERR("INVALID OPERAND at PC=%zu", core->PC);
     return mfalse;
   }
@@ -1272,13 +1235,11 @@ merry_core_ihdlr(storeq) {
   register mbyte_t op1 = (core->IR.whole_word) & MERRY_CORE_R15;
   maddress_t addr;
   core->PC += 8;
-  if (merry_core_memory_read_qword(core->iram, core->PC, &addr) !=
-      mtrue) {
+  if (merry_core_memory_read_qword(core->iram, core->PC, &addr) != mtrue) {
     MERRY_ERR("INCOMPLETE INTRUCTION at PC=%zu", core->PC);
     return mfalse;
   }
-  if (merry_core_memory_write_qword(core->dram,
-                                    addr,
+  if (merry_core_memory_write_qword(core->dram, addr,
                                     core->REGISTER_FILE[op1]) != mtrue) {
     MERRY_ERR("INVALID OPERAND at PC=%zu", core->PC);
     return mfalse;
@@ -1303,8 +1264,7 @@ merry_core_ihdlr(storeb_reg) {
   register mbyte_t op1 = (core->IR.whole_word >> 4) & MERRY_CORE_R15;
   register mbyte_t op2 = core->IR.whole_word & MERRY_CORE_R15;
   if (merry_core_memory_write_byte(core->dram, core->REGISTER_FILE[op2],
-                                   core->REGISTER_FILE[op1] & 0xFF) !=
-      mtrue) {
+                                   core->REGISTER_FILE[op1] & 0xFF) != mtrue) {
     MERRY_ERR("INVALID OPERAND at PC=%zu", core->PC);
     return mfalse;
   }
@@ -1390,14 +1350,11 @@ merry_core_ihdlr(atm_loadb) {
   mbyte_t imm;
   maddress_t addr;
   core->PC += 8;
-  if (merry_core_memory_read_qword(core->iram, core->PC, &addr) !=
-      mtrue) {
+  if (merry_core_memory_read_qword(core->iram, core->PC, &addr) != mtrue) {
     MERRY_ERR("INCOMPLETE INTRUCTION at PC=%zu", core->PC);
     return mfalse;
   }
-  if (merry_core_memory_read_byte_atm(core->dram,
-                                      addr,
-                                      &imm) != mtrue) {
+  if (merry_core_memory_read_byte_atm(core->dram, addr, &imm) != mtrue) {
     MERRY_ERR("INVALID OPERAND at PC=%zu", core->PC);
     return mfalse;
   }
@@ -1409,14 +1366,12 @@ merry_core_ihdlr(atm_storeb) {
   register mbyte_t op1 = (core->IR.whole_word) & MERRY_CORE_R15;
   maddress_t addr;
   core->PC += 8;
-  if (merry_core_memory_read_qword(core->iram, core->PC, &addr) !=
-      mtrue) {
+  if (merry_core_memory_read_qword(core->iram, core->PC, &addr) != mtrue) {
     MERRY_ERR("INCOMPLETE INTRUCTION at PC=%zu", core->PC);
     return mfalse;
   }
   if (merry_core_memory_write_byte_atm(
-          core->dram, addr,
-          core->REGISTER_FILE[op1] & 0xFF) != mtrue) {
+          core->dram, addr, core->REGISTER_FILE[op1] & 0xFF) != mtrue) {
     MERRY_ERR("INVALID OPERAND at PC=%zu", core->PC);
     return mfalse;
   }
@@ -1428,14 +1383,11 @@ merry_core_ihdlr(atm_loadw) {
   mword_t imm;
   maddress_t addr;
   core->PC += 8;
-  if (merry_core_memory_read_qword(core->iram, core->PC, &addr) !=
-      mtrue) {
+  if (merry_core_memory_read_qword(core->iram, core->PC, &addr) != mtrue) {
     MERRY_ERR("INCOMPLETE INTRUCTION at PC=%zu", core->PC);
     return mfalse;
   }
-  if (merry_core_memory_read_word_atm(core->dram,
-                                      addr,
-                                      &imm) != mtrue) {
+  if (merry_core_memory_read_word_atm(core->dram, addr, &imm) != mtrue) {
     MERRY_ERR("INVALID OPERAND at PC=%zu", core->PC);
     return mfalse;
   }
@@ -1447,14 +1399,12 @@ merry_core_ihdlr(atm_storew) {
   register mbyte_t op1 = (core->IR.whole_word) & MERRY_CORE_R15;
   maddress_t addr;
   core->PC += 8;
-  if (merry_core_memory_read_qword(core->iram, core->PC, &addr) !=
-      mtrue) {
+  if (merry_core_memory_read_qword(core->iram, core->PC, &addr) != mtrue) {
     MERRY_ERR("INCOMPLETE INTRUCTION at PC=%zu", core->PC);
     return mfalse;
   }
   if (merry_core_memory_write_word_atm(
-          core->dram, addr,
-          core->REGISTER_FILE[op1] & 0xFFFF) != mtrue) {
+          core->dram, addr, core->REGISTER_FILE[op1] & 0xFFFF) != mtrue) {
     MERRY_ERR("INVALID OPERAND at PC=%zu", core->PC);
     return mfalse;
   }
@@ -1466,14 +1416,11 @@ merry_core_ihdlr(atm_loadd) {
   mdword_t imm;
   maddress_t addr;
   core->PC += 8;
-  if (merry_core_memory_read_qword(core->iram, core->PC, &addr) !=
-      mtrue) {
+  if (merry_core_memory_read_qword(core->iram, core->PC, &addr) != mtrue) {
     MERRY_ERR("INCOMPLETE INTRUCTION at PC=%zu", core->PC);
     return mfalse;
   }
-  if (merry_core_memory_read_dword_atm(core->dram,
-                                       addr,
-                                       &imm) != mtrue) {
+  if (merry_core_memory_read_dword_atm(core->dram, addr, &imm) != mtrue) {
     MERRY_ERR("INVALID OPERAND at PC=%zu", core->PC);
     return mfalse;
   }
@@ -1485,14 +1432,12 @@ merry_core_ihdlr(atm_stored) {
   register mbyte_t op1 = (core->IR.whole_word) & MERRY_CORE_R15;
   maddress_t addr;
   core->PC += 8;
-  if (merry_core_memory_read_qword(core->iram, core->PC, &addr) !=
-      mtrue) {
+  if (merry_core_memory_read_qword(core->iram, core->PC, &addr) != mtrue) {
     MERRY_ERR("INCOMPLETE INTRUCTION at PC=%zu", core->PC);
     return mfalse;
   }
   if (merry_core_memory_write_dword_atm(
-          core->dram, addr,
-          core->REGISTER_FILE[op1] & 0xFFFFFFFF) != mtrue) {
+          core->dram, addr, core->REGISTER_FILE[op1] & 0xFFFFFFFF) != mtrue) {
     MERRY_ERR("INVALID OPERAND at PC=%zu", core->PC);
     return mfalse;
   }
@@ -1504,14 +1449,11 @@ merry_core_ihdlr(atm_loadq) {
   mqword_t imm;
   maddress_t addr;
   core->PC += 8;
-  if (merry_core_memory_read_qword(core->iram, core->PC, &addr) !=
-      mtrue) {
+  if (merry_core_memory_read_qword(core->iram, core->PC, &addr) != mtrue) {
     MERRY_ERR("INCOMPLETE INTRUCTION at PC=%zu", core->PC);
     return mfalse;
   }
-  if (merry_core_memory_read_qword_atm(core->dram,
-                                       addr,
-                                       &imm) != mtrue) {
+  if (merry_core_memory_read_qword_atm(core->dram, addr, &imm) != mtrue) {
     MERRY_ERR("INVALID OPERAND at PC=%zu", core->PC);
     return mfalse;
   }
@@ -1523,14 +1465,12 @@ merry_core_ihdlr(atm_storeq) {
   register mbyte_t op1 = (core->IR.whole_word) & MERRY_CORE_R15;
   maddress_t addr;
   core->PC += 8;
-  if (merry_core_memory_read_qword(core->iram, core->PC, &addr) !=
-      mtrue) {
+  if (merry_core_memory_read_qword(core->iram, core->PC, &addr) != mtrue) {
     MERRY_ERR("INCOMPLETE INTRUCTION at PC=%zu", core->PC);
     return mfalse;
   }
-  if (merry_core_memory_write_qword_atm(
-          core->dram, addr,
-          core->REGISTER_FILE[op1]) != mtrue) {
+  if (merry_core_memory_write_qword_atm(core->dram, addr,
+                                        core->REGISTER_FILE[op1]) != mtrue) {
     MERRY_ERR("INVALID OPERAND at PC=%zu", core->PC);
     return mfalse;
   }
@@ -1629,8 +1569,7 @@ merry_core_ihdlr(atm_storeq_reg) {
   register mbyte_t op1 = (core->IR.whole_word >> 4) & MERRY_CORE_R15;
   register mbyte_t op2 = core->IR.whole_word & MERRY_CORE_R15;
   if (merry_core_memory_write_qword_atm(core->dram, core->REGISTER_FILE[op2],
-                                        core->REGISTER_FILE[op1]) !=
-      mtrue) {
+                                        core->REGISTER_FILE[op1]) != mtrue) {
     MERRY_ERR("INVALID OPERAND at PC=%zu", core->PC);
     return mfalse;
   }
@@ -1674,14 +1613,13 @@ merry_core_ihdlr(cmpxchg) {
   register mbyte_t expected = core->IR.whole_word & 0xFF;
   mqword_t address;
   core->PC += 8;
-  if (merry_core_memory_read_qword(core->iram, core->PC, &address) !=
-      mtrue) {
+  if (merry_core_memory_read_qword(core->iram, core->PC, &address) != mtrue) {
     MERRY_ERR("INVALID OPERAND at PC=%zu", core->PC);
     return mfalse;
   }
-  mret_t ret =
+  mbool_t ret =
       merry_core_memory_cmpxchg(core->dram, address, desired, expected);
-  core->flags.regr = merry_obtain_flags_regr();
+  core->flags.regr = mvs_obtain_flags_regr();
   if (ret != mtrue) {
     MERRY_ERR("INVALID OPERAND at PC=%zu", core->PC);
     return mfalse;
@@ -1694,9 +1632,9 @@ merry_core_ihdlr(cmpxchg_reg) {
   register mbyte_t expected = core->IR.whole_word & 0xFF;
   mqword_t address =
       core->REGISTER_FILE[(core->IR.whole_word >> 16) & MERRY_CORE_R15];
-  mret_t ret =
+  mbool_t ret =
       merry_core_memory_cmpxchg(core->dram, address, desired, expected);
-  core->flags.regr = merry_obtain_flags_regr();
+  core->flags.regr = mvs_obtain_flags_regr();
   if (ret != mtrue) {
     MERRY_ERR("INVALID OPERAND at PC=%zu", core->PC);
     return mfalse;
@@ -1705,6 +1643,6 @@ merry_core_ihdlr(cmpxchg_reg) {
 }
 
 merry_core_ihdlr(invalid_inst) {
-  MWARN("UNKNOWN INSTRUCTION at PC=%zu", core->PC);
+  MERRY_WARN("UNKNOWN INSTRUCTION at PC=%zu", core->PC);
   return mtrue;
 }

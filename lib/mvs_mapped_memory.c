@@ -68,17 +68,19 @@ mResult_t mvs_mapped_memory_unmap(MVSMappedMemory *map) {
     return MRES_RESOURCE_STATE_INVALID;
   /*
    * NOTE: There is a bug here. Say two threads share one map(or any interface).
-   * Say these threads are T1 and T2. T1 may finish first and start freeing up resources.
-   * At the same time, T2 may also start freeing up its resources. Say T1 finishes its
-   * cleanup first and T2 just finished executing mvs_interface_check_freeable. Now, T2 will receive 
-   * stale information. When T2 makes the same call, the interface will be shared, so 
-   * res will be MRES_RESOURCE_SHARED. But right after that, T1 finishes its
-   * mvs_interface_disown call. Now only T2 owns the resource but it doesn't know about it.
-   * T2 will not free the resource because it thinks that the resource is still shared.
-   * The fix is to use the newly added LOCKING functionality
+   * Say these threads are T1 and T2. T1 may finish first and start freeing up
+   * resources. At the same time, T2 may also start freeing up its resources.
+   * Say T1 finishes its cleanup first and T2 just finished executing
+   * mvs_interface_check_freeable. Now, T2 will receive stale information. When
+   * T2 makes the same call, the interface will be shared, so res will be
+   * MRES_RESOURCE_SHARED. But right after that, T1 finishes its
+   * mvs_interface_disown call. Now only T2 owns the resource but it doesn't
+   * know about it. T2 will not free the resource because it thinks that the
+   * resource is still shared. The fix is to use the newly added LOCKING
+   * functionality
    * */
   mvs_interface_lock(map);
-  mresult_t res = mvs_interface_check_freeable(map);
+  mResult_t res = mvs_interface_check_freeable(map);
   if (res == MRES_SUCCESS) {
     mvs_interface_unlock(map); // no need to lock
 #ifdef _USE_LINUX_
@@ -170,22 +172,26 @@ mResult_t mvs_mapped_memory_mapf(MVSMappedMemory *map, mstr_t file_path,
     if ((res = mvs_file_open(map->mapped_mem.backing, file_path, file_flags)) !=
         MRES_SUCCESS) {
       mvs_file_destroy(map->mapped_mem.backing);
+      map->mapped_mem.backing = NULL;
       return res;
     }
     if ((res = mvs_file_seek(map->mapped_mem.backing, 0, SEEK_END,
                              &file_len)) != MRES_SUCCESS) {
       mvs_file_destroy(map->mapped_mem.backing);
+      map->mapped_mem.backing = NULL;
       return res;
     }
     if ((res = mvs_file_seek(map->mapped_mem.backing, 0, SEEK_SET, NULL)) !=
         MRES_SUCCESS) {
       mvs_file_destroy(map->mapped_mem.backing);
+      map->mapped_mem.backing = NULL;
       return res;
     }
     original_file_len = file_len;
     if (align) {
       if (!map->mapped_mem.align_param) {
         mvs_file_destroy(map->mapped_mem.backing);
+        map->mapped_mem.backing = NULL;
         return MRES_INVALID_ARGS;
       }
       file_len += (map->mapped_mem.align_param -
@@ -195,6 +201,7 @@ mResult_t mvs_mapped_memory_mapf(MVSMappedMemory *map, mstr_t file_path,
       mvs_mapped_memory_unmap(map);
     if ((res = mvs_mapped_memory_map(map, file_len)) != MRES_SUCCESS) {
       mvs_file_destroy(map->mapped_mem.backing);
+      map->mapped_mem.backing = NULL;
       return res;
     }
   }
@@ -262,17 +269,17 @@ mResult_t mvs_mapped_memory_destroy(MVSMappedMemory *map) {
   if (map->interface != MINTERFACE_TYPE_MAPPED_MEMORY)
     return MRES_RESOURCE_TYPE_INVALID;
   mvs_interface_lock(map);
-  mresult_t res = mvs_interface_check_freeable(map);
+  mResult_t res = mvs_interface_check_freeable(map);
   if (res == MRES_RESOURCE_SHARED) {
     mvs_interface_disown(map);
-	mvs_interface_unlock(map);
-	return MRES_SUCCESS;
+    mvs_interface_unlock(map);
+    return MRES_SUCCESS;
   } else if (res == MRES_SUCCESS) {
     mvs_interface_unlock(map);
     if (map->mapped_mem.addr_space)
       mvs_mapped_memory_unmap(map);
     mvs_interface_destroy(map);
-	return MRES_SUCCESS;
+    return MRES_SUCCESS;
   }
   mvs_interface_unlock(map);
   return res;

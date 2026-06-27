@@ -5,9 +5,9 @@
 #include <mvs_interface_flags.h>
 #include <mvs_interface_types.h>
 #include <mvs_platform.h>
+#include <mvs_protectors.h>
 #include <mvs_results.h>
 #include <mvs_types.h>
-#include <mvs_protectors.h>
 #include <stdlib.h>
 
 typedef struct MVSInterface MVSInterface;
@@ -19,7 +19,7 @@ struct MVSInterface {
   mbool_t configured; // Was the interface configured?
 
   mqword_t config; // This configuration cannot be changed once set during
-                       // intialization
+                   // intialization
   atm_mqword_t
       flags; // These are mutable flags to manipulate the interface's behavior
   atm_mqword_t state; // The state of the interface
@@ -79,7 +79,7 @@ mResult_t mvs_interface_create(MVSInterface **interface);
 mResult_t mvs_interface_configure(MVSInterface *interface, mqword_t conf);
 
 /*
- * For operations that involve changing the internal state of the interface or 
+ * For operations that involve changing the internal state of the interface or
  * freeing resources, the owners must lock the interface.
  * */
 mResult_t mvs_interface_lock(MVSInterface *interface);
@@ -123,8 +123,8 @@ mResult_t mvs_interface_share(MVSInterface **source, MVSInterface **dest);
 mResult_t mvs_interface_disown(MVSInterface *interface);
 
 /*
- * Check if the interface can be freed. Since the owner has to be careful not to free a 
- * shared resource while others might be using it, this is a must.
+ * Check if the interface can be freed. Since the owner has to be careful not to
+ * free a shared resource while others might be using it, this is a must.
  * */
 mResult_t mvs_interface_check_freeable(MVSInterface *interface);
 

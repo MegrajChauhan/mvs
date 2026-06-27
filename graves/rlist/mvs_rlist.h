@@ -21,7 +21,7 @@
 #include <string.h>
 
 typedef struct MVSRlist MVSRlist;
-typedef msize_t (*mentityRegister_t)(msize_t, GravesAPI);
+typedef EntityRegistryEntry (*mentityRegister_t)();
 
 struct MVSRlist {
   MVSDynamicListLinear *entity_libs;

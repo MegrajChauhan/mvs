@@ -56,7 +56,7 @@ mbool_t mvs_rlist_load_from_list_file(MVSRlist *rlist, mstr_t file_path) {
     return mfalse;
   }
   mvs_rlist_reader_consume(r);
-  msize_t iter = 0; // now this is going to act as the counter for how many
+  rlist->count = 0; // now this is going to act as the counter for how many
                     // entities were read
   while (mvs_rlist_reader_peek(r) != '\0') {
     while (mvs_rlist_reader_curr(r) == '\n')
@@ -76,6 +76,7 @@ mbool_t mvs_rlist_load_from_list_file(MVSRlist *rlist, mstr_t file_path) {
       fprintf(stderr, "[RLIST]: Expected a separator ','\n");
       return mfalse;
     }
+    mvs_rlist_reader_consume(r);
     diff = ed - st;
     char name[diff + 1 + 4 + 3];
     name[diff + 4 + 3] = 0;
@@ -117,14 +118,13 @@ mbool_t mvs_rlist_load_from_list_file(MVSRlist *rlist, mstr_t file_path) {
       mvs_dynamic_lib_destroy(lib);
       return mfalse;
     }
-    iter++;
+    rlist->count++;
   }
-  if (iter != len) {
+  if (rlist->count != len) {
     fprintf(stderr, "[RLIST]: Expected %zu entries but got only %zu\n", len,
-            iter);
+            rlist->count);
     return mfalse;
   }
-  rlist->count = len;
   mvs_rlist_reader_destroy(r);
   return mtrue;
 }

@@ -5,9 +5,9 @@
 
 #define _MIHDLR_FUNC_(name) merry_core_i##name
 
-_MERRY_DEFINE_FUNC_PTR_(mbool_t, mcihdlr_t, MerryCore *);
+typedef mbool_t (*cihdlr_t)(MerryCore *);
 
-mcihdlr_t HDLRS[256] = {
+cihdlr_t HDLRS[256] = {
     _MIHDLR_FUNC_(hlt),
     _MIHDLR_FUNC_(sysint),
     _MIHDLR_FUNC_(mint),

@@ -4,7 +4,7 @@
 typedef enum mcoreop_t mcoreop_t;
 
 enum mcoreop_t {
-  MCOP_HLT, 
+  MCOP_HLT,
   MCOP_SYSINT,
   MCOP_MINT, // 2
 

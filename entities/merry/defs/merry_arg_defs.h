@@ -8,7 +8,7 @@
   "Options Available:\n"                                                       \
   "-h                        Display this help message\n"                      \
   "-v                        Display Merry version\n"                          \
-  "-f [input_file]           Provide the input file for execution\n"           
+  "-f [input_file]           Provide the input file for execution\n"
 
 #define _MERRY_VERSION_MSG_ "Merry Virtual Machine: v0.0.0\n"
 

@@ -1,23 +1,22 @@
 #ifndef _MERRY_INP_READER_
 #define _MERRY_INP_READER_
 
+#include <api_graves.h>
 #include <merry_core_defs.h>
+#include <merry_logger.h>
 #include <mvs_helpers.h>
 #include <mvs_mapped_memory.h>
 #include <mvs_results.h>
 #include <mvs_types.h>
-#include <mvs_utils.h>
-#include <api_graves.h>
-#include <merry_logger.h>
 #include <stdlib.h>
 
 /*
  * The format will look something like this:
  * <IDENTIFICATION[Magic Numbers]> <ENDIANNESS OF THE INSTRUCTIONS AND DATA> ->
  * Identification Header[We will have a few bytes left to be used for something
- * else if it comes to that] 
- * <Instruction Section Length> The length of the instruction section 
- * <Data Section Length> The number of bytes that the Data Section has 
+ * else if it comes to that]
+ * <Instruction Section Length> The length of the instruction section
+ * <Data Section Length> The number of bytes that the Data Section has
  * <Debugging Information Table Length> -> A custom section
  * <Entry Point> -> The address to start executing from
  * <Instruction Section>
@@ -60,5 +59,26 @@ MerryInput *merry_input_init();
 mbool_t merry_input_read(MerryInput *inp, mstr_t path);
 
 void merry_input_destroy(MerryInput *inp);
+
+_MVS_ATTR_ALWAYS_INLINE_ mbptr_t merry_input_get_instructions(MerryInput *inp) {
+  return inp->instructions;
+}
+
+_MVS_ATTR_ALWAYS_INLINE_ mbptr_t merry_input_get_data(MerryInput *inp) {
+  return inp->data;
+}
+
+_MVS_ATTR_ALWAYS_INLINE_ msize_t
+merry_input_get_instruction_len(MerryInput *inp) {
+  return inp->instruction_len;
+}
+
+_MVS_ATTR_ALWAYS_INLINE_ msize_t merry_input_get_data_len(MerryInput *inp) {
+  return inp->data_len;
+}
+
+_MVS_ATTR_ALWAYS_INLINE_ msize_t merry_input_get_entry(MerryInput *inp) {
+  return inp->entry;
+}
 
 #endif

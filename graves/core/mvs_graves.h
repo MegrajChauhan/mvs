@@ -61,8 +61,6 @@ struct MVSGraves {
   MVSGravesSync sync;
   MVSGravesComps components;
   MVSGravesState state;
-  GravesAPI local_API; // For Local entities(I will need to define another
-                       // one for external entities)
 };
 
 /*

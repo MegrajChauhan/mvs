@@ -56,6 +56,7 @@ mbool_t mvs_graves_entity_list_add_entity(MVSGravesEntityList *list,
   }
   list->current_entity_count++;
   ent->identity.ID = ID;
+  ent->identity.UID = 0;
   if (list->current_entity_count >= list->total_entity_count)
     list->total_entity_count = mvs_dynamic_listl_cap_unsafe(list->entity_list);
   return mtrue;

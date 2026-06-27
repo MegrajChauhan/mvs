@@ -1,13 +1,13 @@
 #ifndef _MERRY_RAM_
 #define _MERRY_RAM_
 
+#include <merry_core_defs.h>
+#include <merry_logger.h>
 #include <mvs_config.h>
 #include <mvs_helpers.h>
 #include <mvs_list.h>
-#include <mvs_types.h>
 #include <mvs_mapped_memory.h>
-#include <merry_core_defs.h>
-#include <merry_logger.h>
+#include <mvs_types.h>
 #include <stdatomic.h>
 #include <stdlib.h>
 
@@ -47,51 +47,58 @@ struct MerryCoreRAM {
 MerryCoreRAM *merry_core_memory_init();
 
 mbool_t merry_core_memory_populate(MerryCoreRAM *mem, msize_t space_len,
-                                     mbptr_t addr_space);
+                                   mbptr_t addr_space);
 
 // Reads
 mbool_t merry_core_memory_read_byte(MerryCoreRAM *mem, maddress_t addr,
-                                      mbptr_t store_in);
+                                    mbptr_t store_in);
 mbool_t merry_core_memory_read_word(MerryCoreRAM *mem, maddress_t addr,
-                                      mwptr_t store_in);
+                                    mwptr_t store_in);
 mbool_t merry_core_memory_read_dword(MerryCoreRAM *mem, maddress_t addr,
-                                       mdptr_t store_in);
+                                     mdptr_t store_in);
 mbool_t merry_core_memory_read_qword(MerryCoreRAM *mem, maddress_t addr,
-                                       mqptr_t store_in);
+                                     mqptr_t store_in);
 mbool_t merry_core_memory_read_byte_atm(MerryCoreRAM *mem, maddress_t addr,
-                                          mbptr_t store_in);
+                                        mbptr_t store_in);
 mbool_t merry_core_memory_read_word_atm(MerryCoreRAM *mem, maddress_t addr,
-                                          mwptr_t store_in);
+                                        mwptr_t store_in);
 mbool_t merry_core_memory_read_dword_atm(MerryCoreRAM *mem, maddress_t addr,
-                                           mdptr_t store_in);
+                                         mdptr_t store_in);
 mbool_t merry_core_memory_read_qword_atm(MerryCoreRAM *mem, maddress_t addr,
-                                           mqptr_t store_in);
+                                         mqptr_t store_in);
 mbool_t merry_core_memory_read_bulk(MerryCoreRAM *mem, maddress_t addr,
-                                      msize_t len, mbptr_t store_in);
+                                    msize_t len, mbptr_t store_in);
 
 // Writes
 mbool_t merry_core_memory_write_byte(MerryCoreRAM *mem, maddress_t addr,
-                                       mbyte_t store);
+                                     mbyte_t store);
 mbool_t merry_core_memory_write_word(MerryCoreRAM *mem, maddress_t addr,
-                                       mword_t store);
+                                     mword_t store);
 mbool_t merry_core_memory_write_dword(MerryCoreRAM *mem, maddress_t addr,
-                                        mdword_t store);
+                                      mdword_t store);
 mbool_t merry_core_memory_write_qword(MerryCoreRAM *mem, maddress_t addr,
-                                        mqword_t store);
+                                      mqword_t store);
 mbool_t merry_core_memory_write_byte_atm(MerryCoreRAM *mem, maddress_t addr,
-                                           mbyte_t store);
+                                         mbyte_t store);
 mbool_t merry_core_memory_write_word_atm(MerryCoreRAM *mem, maddress_t addr,
-                                           mword_t store);
+                                         mword_t store);
 mbool_t merry_core_memory_write_dword_atm(MerryCoreRAM *mem, maddress_t addr,
-                                            mdword_t store);
+                                          mdword_t store);
 mbool_t merry_core_memory_write_qword_atm(MerryCoreRAM *mem, maddress_t addr,
-                                            mqword_t store);
+                                          mqword_t store);
 mbool_t merry_core_memory_write_bulk(MerryCoreRAM *mem, maddress_t addr,
-                                       msize_t len, mbptr_t store);
+                                     msize_t len, mbptr_t store);
 
 mbool_t merry_core_memory_cmpxchg(MerryCoreRAM *mem, maddress_t addr,
-                                    mbyte_t exp, mbyte_t des);
+                                  mbyte_t exp, mbyte_t des);
 
 void merry_core_memory_destroy(MerryCoreRAM *mem);
+
+_MVS_ATTR_ALWAYS_INLINE_
+memerr_t merry_core_memory_get_error(MerryCoreRAM *mem) {
+  memerr_t err = mem->err;
+  mem->err = MEM_ERR_NONE;
+  return err;
+}
 
 #endif

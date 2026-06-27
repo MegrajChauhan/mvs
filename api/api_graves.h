@@ -32,9 +32,9 @@ typedef apiRes_t (*gravesmr_t)(EntityIdentityHdlr, GravesRequest **);
  */
 typedef msize_t (*gravesrc_t)(msize_t ID, EntityRegistryEntry *entry);
 
-typedef void (*graveslog_t)(mstr_t , ...);
+typedef void (*gravesvlog_t)(EntityIdentityHdlr, mstr_t, va_list);
 
-typedef void (*gravesvlog_t)(mstr_t, va_list);
+typedef void (*graveslog_t)(EntityIdentityHdlr, mstr_t, ...);
 
 typedef apiRes_t (*gravesreqCS_t)(GravesRequest *);
 
@@ -48,8 +48,8 @@ typedef apiRes_t (*gravesreqTypeSE_t)(EntityIdentityHdlr, msize_t, mqword_t,
 struct GravesAPI {
   gravesmr_t make_request;
   gravesrc_t register_component;
-  graveslog_t LOG_DBG;
-  gravesvlog_t LOG_CUSTOM;
+  gravesvlog_t LOG_VCUSTOM;
+  graveslog_t LOG_CUSTOM;
   gravesreqCS_t check_request_status;
   gravesreqGR_t get_request_response;
   gravesreqGRes_t get_request_result;
@@ -58,6 +58,7 @@ struct GravesAPI {
 
 struct EntityContext {
   EntityIdentityHdlr self;
+  GravesAPI API;
   mstr_t *argv;
   msize_t argc;
   mbool_t slist;

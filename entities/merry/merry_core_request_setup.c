@@ -2,12 +2,10 @@
 
 #define _MCREQSETUP_(req) merry_core_req_setup##req
 
-typedef GravesRequest* (*mcreqsetup_t)(MerryCore *, MerryGravesRequest*);
+typedef GravesRequest *(*creqsetup_t)(MerryCore *, GravesAPI *);
 
-mcreqsetup_t SETUP_FUNCS[] = {
-	_MCREQSETUP_(something),
+creqsetup_t SETUP_FUNCS[] = {
+    _MCREQSETUP_(something),
 };
 
-merry_core_req_setupREQ(something) {
-   return NULL;
-}
+merry_core_req_setupREQ(something) { return NULL; }

@@ -4,12 +4,13 @@
 #include <api_types.h>
 #include <mvs_types.h>
 
-#define _API_MAKE_ENTITY_REGISTRY_ENTRY_(                                      \
-    _create, _destroy, _exec, _getdefsetup, _checksetup, _deducesetup, _prepare)         \
+#define _API_MAKE_ENTITY_REGISTRY_ENTRY_(_create, _destroy, _exec,             \
+                                         _getdefsetup, _checksetup,            \
+                                         _deducesetup, _prepare)               \
   (EntityRegistryEntry) {                                                      \
     .create = (_create), .destroy = (_destroy), .exec = (_exec),               \
     .get_default_setup = (_getdefsetup), .check_setup = (_checksetup),         \
-    .deduce_setup = (_deducesetup), .prepare = (_prepare)                                             \
+    .deduce_setup = (_deducesetup), .prepare = (_prepare)                      \
   }
 
 struct EntityContext;
@@ -26,7 +27,7 @@ typedef msize_t (*entcreate_t)(struct EntityContext *, mbptr_t *,
 
 /*
  * The entity should perform argument parsing and other configurations here.
- * Based on those operations, it should initialize remaining of its components 
+ * Based on those operations, it should initialize remaining of its components
  * and prepare for work
  * Returns:
  * 0 for success

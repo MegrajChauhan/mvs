@@ -132,9 +132,12 @@ _MVS_ATTR_INTERNAL_ mbool_t mvs_graves_populate_registry() {
       return mfalse;
     }
     msize_t ret;
-    if ((ret = registrar(i, graves.local_API)) != 0) {
-      fprintf(stderr, "[RLIST]: Registration of EID=%zu failed with return %zu",
-              i, ret);
+    EntityRegistryEntry entry;
+    entry = registrar();
+    if ((ret = mvs_register_component(i, &entry)) != 0) {
+      fprintf(stderr,
+              "[RLIST]: Registration of EID=%zu failed with return %zu\n", i,
+              ret);
       return mfalse;
     }
   }
@@ -143,16 +146,7 @@ _MVS_ATTR_INTERNAL_ mbool_t mvs_graves_populate_registry() {
 
 _MVS_ATTR_INTERNAL_ mbool_t mvs_graves_pre_init(mstr_t *argv, msize_t argc) {
   mvs_system_config_populate_default(&graves.state.config);
-  graves.local_API = (GravesAPI){
-      .make_request = mvs_graves_make_request,
-      .register_component = mvs_register_component,
-      .LOG_DBG = mvs_log_dbg,
-	  .LOG_CUSTOM = mvs_clog,
-      .check_request_status = mvs_request_check_status,
-      .get_request_response = mvs_request_get_response,
-      .get_request_result = mvs_request_get_result,
-      .make_request_SPAWN_ENTITY = mvs_create_req_SPAWN_ENTITY,
-  };
+
   if (!mvs_rlist_init(&graves.components.rlist))
     return mfalse;
   if (!mvs_rlist_load_from_list_file(&graves.components.rlist,
@@ -222,6 +216,20 @@ mvs_graves_make_slist_entity(MVSSlistCommand *c) {
   ctx.argv = &c->args;
   ctx.argc = 1;
   ctx.slist = mtrue;
+  /*
+   * Here, the functions will change based on configurations and stuff but
+   * that's for later
+   * */
+  ctx.API = (GravesAPI){
+      .make_request = mvs_graves_make_request,
+      .register_component = mvs_register_component,
+      .LOG_CUSTOM = mvs_log,
+      .LOG_VCUSTOM = mvs_vlog,
+      .check_request_status = mvs_request_check_status,
+      .get_request_response = mvs_request_get_response,
+      .get_request_result = mvs_request_get_result,
+      .make_request_SPAWN_ENTITY = mvs_create_req_SPAWN_ENTITY,
+  };
   if (!mvs_graves_entity_utils_init_entity_hotpath(
           e, &ctx, c->EID, MENTITY_LOCAL, c->config, c->properties, c->setup)) {
     mvs_log_err("<INIT>: Failed to initialize entity");
@@ -263,6 +271,16 @@ mvs_graves_make_command_entity(MVSEntitySpawnCommand *cmd) {
   ctx.argv = cmd->argv;
   ctx.argc = cmd->argc;
   ctx.slist = mfalse;
+  ctx.API = (GravesAPI){
+      .make_request = mvs_graves_make_request,
+      .register_component = mvs_register_component,
+      .LOG_CUSTOM = mvs_log,
+      .LOG_VCUSTOM = mvs_vlog,
+      .check_request_status = mvs_request_check_status,
+      .get_request_response = mvs_request_get_response,
+      .get_request_result = mvs_request_get_result,
+      .make_request_SPAWN_ENTITY = mvs_create_req_SPAWN_ENTITY,
+  };
   if (!mvs_graves_entity_utils_init_entity_hotpath(
           e, &ctx, cmd->EID, MENTITY_LOCAL, config, properties, setup)) {
     mvs_log_err("<INIT>: Failed to initialize entity");
@@ -443,6 +461,7 @@ _MVS_ATTR_INTERNAL_ void mvs_graves_destroy_components() {
 }
 
 _MVS_ATTR_INTERNAL_ void mvs_graves_self_destroy() {
+  mvs_logger_flush();
   mvs_graves_destroy_sync();
   mvs_graves_destroy_components();
 }
@@ -467,9 +486,10 @@ _MVS_ATTR_INTERNAL_ mthreadRet_t mvs_graves_entity_launcher_wait(mptr_t e) {
 _MVS_ATTR_INTERNAL_ mthreadRet_t mvs_graves_entity_launcher_nowait(mptr_t e) {
   MVSEntity *ent = (MVSEntity *)e;
   mvs_log_dbg("ENTITY[%zu:%zu]: running", ent->identity.ID, ent->identity.UID);
-  mvs_logger_init_state(&ent->identity);
   EntityRegistryEntry *entry = mvs_registry_get_entry(ent->EID);
   atomic_store_explicit(&ent->state, MENTITY_RUNNING, memory_order_release);
+  if (entry->prepare(ent->entity_repr) != 0)
+    goto __mvs_graves_entity_launcher_nowait_terminate;
   while (mtrue) {
     switch (entry->exec(ent->entity_repr)) {
     case 0:
@@ -580,7 +600,7 @@ _MVS_ATTR_INTERNAL_ void mvs_graves_run() {
       break;
     req = mvs_request_queue_manager_dequeue_request(
         graves.components.queue_manager);
-	if (!req)
+    if (!req)
       continue;
     mvs_log_dbg("Graves: Obtained new request");
     MVSEntity *entity;

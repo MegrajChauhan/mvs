@@ -2,8 +2,9 @@
 #define _MERRY_LOGGER_
 
 #include <api_graves.h>
+#include <string.h>
 
-void merry_logger_init(GravesAPI api, EntityContext *ctx);
+void merry_logger_init(EntityContext *ctx);
 
 void MERRY_ERR(mstr_t fmt, ...);
 void MERRY_NOTE(mstr_t fmt, ...);

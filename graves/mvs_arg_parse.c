@@ -232,7 +232,7 @@ _MVS_ATTR_INTERNAL_ mbool_t mvs_SPAWN_ENTITY_COMMAND(MVSArgParse *parser,
                 EID, INSTANCE_COUNT, ARG_COUNT);
         return mfalse;
       }
-	  mvs_arg_parse_consume_arg(parser);
+      mvs_arg_parse_consume_arg(parser);
       args = mvs_arg_parse_arg_slice(parser);
       mvs_arg_parse_consume_args(
           parser,

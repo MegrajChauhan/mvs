@@ -1,9 +1,9 @@
 #include <merry_input_reader.h>
 
-_MERRY_INTERNAL_ mbool_t merry_input_parse_header(MerryInput *inp) {
+_MVS_ATTR_INTERNAL_ mbool_t merry_input_parse_header(MerryInput *inp) {
   if (inp->flen < 48) {
     MERRY_ERR("Invalid File Structure. File Len is just %zu", inp->flen);
-	return mfalse;
+    return mfalse;
   }
 
   MVSHostMemLayout dlen, ilen, dbg_len, entry_point;
@@ -15,16 +15,18 @@ _MERRY_INTERNAL_ mbool_t merry_input_parse_header(MerryInput *inp) {
   mbptr_t tmp = inp->input_file;
 
   if (tmp[0] != 'M' || tmp[1] != 'I' || tmp[2] != 'F') {
-    MERRY_ERR("Unknown Input File Type received: The IDENTIFICATION bytes 'MIF' "
-         "expected but got %c%c%c",
-         tmp[0], tmp[1], tmp[2]);
-	return mfalse;
+    MERRY_ERR(
+        "Unknown Input File Type received: The IDENTIFICATION bytes 'MIF' "
+        "expected but got %c%c%c",
+        tmp[0], tmp[1], tmp[2]);
+    return mfalse;
   }
 
   if (tmp[3] != _MVS_HOST_ARCH_BYTE_ORDER_) {
-    MERRY_ERR("Mismatched ENDIANNESS. The host and the input file must have the "
-         "same endianness.");
-	return mfalse;
+    MERRY_ERR(
+        "Mismatched ENDIANNESS. The host and the input file must have the "
+        "same endianness.");
+    return mfalse;
   }
   tmp += 4;
 
@@ -39,13 +41,14 @@ _MERRY_INTERNAL_ mbool_t merry_input_parse_header(MerryInput *inp) {
 
   if (ilen.whole_word == 0) {
     MERRY_ERR("No instructions provided: Instruction section length is 0");
-	return mfalse;
+    return mfalse;
   }
   // Must be divisible by 8
   if (ilen.whole_word % 8 != 0) {
-    MERRY_ERR("Mis-aligned instruction section length: %zu is not divisible by 8",
-         ilen.whole_word);
-	return mfalse;
+    MERRY_ERR(
+        "Mis-aligned instruction section length: %zu is not divisible by 8",
+        ilen.whole_word);
+    return mfalse;
   }
 
   tmp += 8;
@@ -59,7 +62,7 @@ _MERRY_INTERNAL_ mbool_t merry_input_parse_header(MerryInput *inp) {
   dlen.bytes.b6 = tmp[6];
   dlen.bytes.b7 = tmp[7];
 
-  tmp += 8;  
+  tmp += 8;
 
   dbg_len.bytes.b0 = tmp[0];
   dbg_len.bytes.b1 = tmp[1];
@@ -70,7 +73,7 @@ _MERRY_INTERNAL_ mbool_t merry_input_parse_header(MerryInput *inp) {
   dbg_len.bytes.b6 = tmp[6];
   dbg_len.bytes.b7 = tmp[7];
 
-  tmp += 8;  
+  tmp += 8;
 
   entry_point.bytes.b0 = tmp[0];
   entry_point.bytes.b1 = tmp[1];
@@ -82,12 +85,13 @@ _MERRY_INTERNAL_ mbool_t merry_input_parse_header(MerryInput *inp) {
   entry_point.bytes.b7 = tmp[7];
 
   if ((ilen.whole_word + dlen.whole_word + dbg_len.whole_word) > inp->flen) {
-    MERRY_ERR("Input file header's information doesn't match with what was read");
-	return mfalse;
+    MERRY_ERR(
+        "Input file header's information doesn't match with what was read");
+    return mfalse;
   }
   if (entry_point.whole_word >= ilen.whole_word) {
     MERRY_ERR("Invalid entry point provided %X", entry_point.whole_word);
-	return mfalse;
+    return mfalse;
   }
 
   inp->data_len = dlen.whole_word;
@@ -102,10 +106,11 @@ MerryInput *merry_input_init() {
     MERRY_ERR("Failed to allocate memory for input reader");
     return NULL;
   }
-  if (mvs_mapped_memory_create(&inp->mapped, MVS_INTERFACE_CONF_SHAREABLE) != MRES_SUCCESS) {
+  if (mvs_mapped_memory_create(&inp->mapped, MVS_INTERFACE_CONF_SHAREABLE) !=
+      MRES_SUCCESS) {
     MERRY_ERR("Failed to initialize memory for input reader");
     free(inp);
-	return NULL;
+    return NULL;
   }
   inp->data = NULL;
   inp->data_len = 0;
@@ -128,7 +133,7 @@ mbool_t merry_input_read(MerryInput *inp, mstr_t path) {
 
   if (!merry_input_parse_header(inp)) {
     MERRY_ERR("While parsing input file %s", path);
-    goto MERRY_INP_PARSE_FAILED;
+	return mfalse;
   }
 
   inp->data_len =
@@ -140,12 +145,9 @@ mbool_t merry_input_read(MerryInput *inp, mstr_t path) {
   mvs_mapped_memory_obtain_ptr(inp->mapped, &inp->instructions, 40);
 
   mvs_mapped_memory_obtain_ptr(inp->mapped, &inp->data,
-                                     40 + inp->instruction_len);
+                               40 + inp->instruction_len);
 
   return mtrue;
-MERRY_INP_PARSE_FAILED:
-  mvs_mapped_memory_destroy(inp->mapped);
-  return mfalse;
 }
 
 void merry_input_destroy(MerryInput *inp) {

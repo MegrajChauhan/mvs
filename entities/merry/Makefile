@@ -1,6 +1,6 @@
 CC = gcc
 FLAGS = -Wall -Wextra -MMD -MP -g -fsanitize=address -fno-omit-frame-pointer -fPIC
-DIRS = ${DIRS_TO_INCLUDE} 
+DIRS = core defs utils ${DIRS_TO_INCLUDE} 
 SRC_DIR = ./
 INC_DIRS = ${addprefix -I, ${DIRS}}
 OUTPUT_DIR = ${BUILD_DIR}
@@ -11,7 +11,7 @@ OUTPUT_FILES_NAME = ${patsubst %.c, ${OUTPUT_DIR}%.o, ${FILES_TO_COMPILE}}
 DEPS=${patsubst %.c, ${OUTPUT_DEPS}%.d, ${FILES_TO_COMPILE}}
 
 all: directories ${OUTPUT_FILES_NAME}
-	${CC} -shared -o ${OBJ_DIR}/mock.so ${OUTPUT_FILES_NAME} -L${LINK_DIR} -Wl,-rpath,${LINK_DIR} ${LINK_OBJS}
+	${CC} -shared -o ${OBJ_DIR}/merry.so ${OUTPUT_FILES_NAME} -L${LINK_DIR} -Wl,-rpath,${LINK_DIR} ${LINK_OBJS}
 
 WATCH_PROJECT: directories ${OUTPUT_FILES_NAME}
 

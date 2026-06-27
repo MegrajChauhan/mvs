@@ -6,8 +6,8 @@
 #include <merry_core_defs.h>
 #include <merry_core_internals.h>
 #include <merry_core_registers.h>
-#include <merry_core_internals.h>
 #include <merry_logger.h>
+#include <mvs_flags_regr_access.h>
 
 struct MerryCore;
 
