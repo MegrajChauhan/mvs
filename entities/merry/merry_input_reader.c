@@ -106,7 +106,7 @@ MerryInput *merry_input_init() {
     MERRY_ERR("Failed to allocate memory for input reader");
     return NULL;
   }
-  if (mvs_mapped_memory_create(&inp->mapped, MVS_INTERFACE_CONF_SHAREABLE) !=
+  if (mvs_mapped_memory_create(&inp->mapped) !=
       MRES_SUCCESS) {
     MERRY_ERR("Failed to initialize memory for input reader");
     free(inp);

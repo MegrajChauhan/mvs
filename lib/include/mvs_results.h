@@ -15,12 +15,11 @@ enum mResult_t {
                          // resource
   MRES_RESOURCE_STATE_INVALID,  // the requested operand resources' state was
                                 // invalid
-  MRES_RESOURCE_TYPE_INVALID,   // the used operation doesn't take the provided
-                                // type of operand
   MRES_RESOURCE_NOT_CONFIGURED, // The used operand was not configured for the
                                 // requested operation
   MRES_RESOURCE_SIZE_LIMITED,   // the resource's size is too small for the
                                 // request
+  MRES_RESOURCE_ALREADY_IN_USE, // The requested resource is already in use
   MRES_CONTAINER_FULL, // any buffer used is full and cannot store any more data
   MRES_CONTAINER_EMPTY, // any buffer used is empty and cannot be read from
   // MRES_RESOURCE_NOT_EXISTS,    // operation failed because something was

@@ -211,6 +211,7 @@ mvs_graves_make_slist_entity(MVSSlistCommand *c) {
       }
     }
   }
+  // TODO: Move this down
   EntityContext ctx;
   ctx.self = &e->identity;
   ctx.argv = &c->args;

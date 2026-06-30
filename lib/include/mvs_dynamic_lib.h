@@ -2,14 +2,19 @@
 #define _MVS_DYNL_
 
 #include <mvs_config.h>
-#include <mvs_interface.h>
 #include <mvs_platform.h>
 #include <mvs_results.h>
 #include <mvs_types.h>
+#include <stdlib.h>
 
 // we don't know what type of function we might want
-typedef MVSInterface MVSDynamicLib;
+typedef struct MVSDynamicLib MVSDynamicLib;
 
+struct MVSDynamicLib {
+  mbool_t in_use;
+  mdlentry_t entry;
+};
+ 
 mResult_t mvs_dynamic_lib_create(MVSDynamicLib **lib);
 
 mResult_t mvs_dynamic_lib_load_library(MVSDynamicLib *lib, mstr_t path);

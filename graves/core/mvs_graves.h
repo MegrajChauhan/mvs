@@ -10,7 +10,6 @@
 #include <mvs_entity_registry.h>
 #include <mvs_graves_entity_list.h>
 #include <mvs_graves_entity_utils.h>
-#include <mvs_interface.h>
 #include <mvs_list.h>
 #include <mvs_logger.h>
 #include <mvs_protectors.h>

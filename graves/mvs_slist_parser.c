@@ -251,6 +251,7 @@ _MVS_ATTR_INTERNAL_ mbool_t mvs_slist_parser_deal_with_local_list_entries_entry(
   }
   if (!mvs_slist_parser_check_block_open(p, "local_list_entries entry")) {
     mvs_dynamic_listl_destroy(c->local_list);
+	c->local_list = NULL;
     return mfalse;
   }
   for (msize_t i = 0; i < len; i++) {
@@ -260,6 +261,7 @@ _MVS_ATTR_INTERNAL_ mbool_t mvs_slist_parser_deal_with_local_list_entries_entry(
                   "expected an ID of other entities for the local list",
                   p->file_path, tok.line, tok.col, ID);
       mvs_dynamic_listl_destroy(c->local_list);
+	  c->local_list = NULL;
       return mfalse;
     }
     memcpy(num, tok.num.st, tok.num.len);
@@ -271,6 +273,7 @@ _MVS_ATTR_INTERNAL_ mbool_t mvs_slist_parser_deal_with_local_list_entries_entry(
                   "entry ID=%zu is invalid",
                   p->file_path, tok.line, tok.col, ID, id);
       mvs_dynamic_listl_destroy(c->local_list);
+	  c->local_list = NULL;
       return mfalse;
     }
     /*
@@ -281,6 +284,7 @@ _MVS_ATTR_INTERNAL_ mbool_t mvs_slist_parser_deal_with_local_list_entries_entry(
   }
   if (!mvs_slist_parser_check_block_close(p, "local_list_entries entry")) {
     mvs_dynamic_listl_destroy(c->local_list);
+	c->local_list = NULL;
     return mfalse;
   }
   return mtrue;

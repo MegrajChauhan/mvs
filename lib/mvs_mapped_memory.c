@@ -1,26 +1,16 @@
 #include <mvs_mapped_memory.h>
 
-mResult_t mvs_mapped_memory_create(MVSMappedMemory **map, mqword_t conf) {
+mResult_t mvs_mapped_memory_create(MVSMappedMemory **map) {
   if (!map)
     return MRES_INVALID_ARGS;
-  MVSMappedMemory *m = NULL;
-  mResult_t res;
-  if (((res = mvs_interface_create(&m)) != MRES_SUCCESS))
-    return res;
-  if ((res = mvs_interface_configure(m, conf)) != MRES_SUCCESS) {
-    mvs_interface_destroy(m);
-    *map = NULL;
-    return res;
-  }
-  if ((res = mvs_interface_init(m, MINTERFACE_TYPE_MAPPED_MEMORY)) !=
-      MRES_SUCCESS) {
-    mvs_interface_destroy(m);
-    *map = NULL;
-    return res;
-  }
-  m->mapped_mem.addr_space = NULL;
-  m->mapped_mem.addr_space_len = 0;
-  m->mapped_mem.backing = NULL;
+  *map = NULL;
+  MVSMappedMemory *m = (MVSMappedMemory*)malloc(sizeof(MVSMappedMemory));
+  if (!m)
+    return MRES_SYS_FAILURE;
+  m->addr_space = NULL;
+  m->addr_space_len = 0;
+  m->backing = NULL;
+  m->in_use = mfalse;
   *map = m;
   return MRES_SUCCESS;
 }
@@ -29,82 +19,57 @@ mResult_t mvs_mapped_memory_add_align_param(MVSMappedMemory *map,
                                             msize_t align_param) {
   if (!map || !align_param)
     return MRES_INVALID_ARGS;
-  if (map->interface != MINTERFACE_TYPE_MAPPED_MEMORY)
-    return MRES_RESOURCE_TYPE_INVALID;
-  map->mapped_mem.align_param = align_param;
+  map->align_param = align_param;
   return MRES_SUCCESS;
 }
 
 mResult_t mvs_mapped_memory_map(MVSMappedMemory *map, msize_t len) {
   if (!map || len == 0)
     return MRES_INVALID_ARGS;
-  if (map->interface != MINTERFACE_TYPE_MAPPED_MEMORY)
-    return MRES_RESOURCE_TYPE_INVALID;
-  if (map->mapped_mem.addr_space)
+  if (map->in_use)
     return MRES_RESOURCE_STATE_INVALID;
 #ifdef _USE_LINUX_
   int f = MAP_ANONYMOUS | MAP_PRIVATE;
   int prot = PROT_READ | PROT_WRITE;
-  if ((map->mapped_mem.addr_space = mmap(NULL, len, prot, f, -1, 0)) == NULL)
+  if ((map->addr_space = mmap(NULL, len, prot, f, -1, 0)) == NULL)
     return MRES_SYS_FAILURE;
 #endif
-  map->mapped_mem.addr_space_len = len;
-  map->mapped_mem.offset = 0;
-  map->mapped_mem.flags.can_read = 1;
-  map->mapped_mem.flags.can_write = 1;
-  map->mapped_mem.flags.can_exec = 0;
-  map->mapped_mem.flags.shared = 0;
-  map->mapped_mem.flags.private = 1;
-  map->mapped_mem.flags.sync = 0;
+  map->addr_space_len = len;
+  map->offset = 0;
+  map->flags.can_read = 1;
+  map->flags.can_write = 1;
+  map->flags.can_exec = 0;
+  map->flags.shared = 0;
+  map->flags.private = 1;
+  map->flags.sync = 0;
+  map->in_use = mtrue;
   return MRES_SUCCESS;
 }
 
 mResult_t mvs_mapped_memory_unmap(MVSMappedMemory *map) {
   if (!map)
     return MRES_INVALID_ARGS;
-  if (map->interface != MINTERFACE_TYPE_MAPPED_MEMORY)
-    return MRES_RESOURCE_TYPE_INVALID;
-  if (!map->mapped_mem.addr_space)
+  if (!map->in_use)
     return MRES_RESOURCE_STATE_INVALID;
-  /*
-   * NOTE: There is a bug here. Say two threads share one map(or any interface).
-   * Say these threads are T1 and T2. T1 may finish first and start freeing up
-   * resources. At the same time, T2 may also start freeing up its resources.
-   * Say T1 finishes its cleanup first and T2 just finished executing
-   * mvs_interface_check_freeable. Now, T2 will receive stale information. When
-   * T2 makes the same call, the interface will be shared, so res will be
-   * MRES_RESOURCE_SHARED. But right after that, T1 finishes its
-   * mvs_interface_disown call. Now only T2 owns the resource but it doesn't
-   * know about it. T2 will not free the resource because it thinks that the
-   * resource is still shared. The fix is to use the newly added LOCKING
-   * functionality
-   * */
-  mvs_interface_lock(map);
-  mResult_t res = mvs_interface_check_freeable(map);
-  if (res == MRES_SUCCESS) {
-    mvs_interface_unlock(map); // no need to lock
 #ifdef _USE_LINUX_
-    munmap(map->mapped_mem.addr_space, map->mapped_mem.addr_space_len);
+  munmap(map->addr_space, map->addr_space_len);
 #endif
-    map->mapped_mem.addr_space = NULL;
-    if (map->mapped_mem.backing)
-      mvs_file_destroy(map->mapped_mem.backing);
-    mvs_interface_free(map);
-    return MRES_SUCCESS;
+  map->addr_space = NULL;
+  map->addr_space_len = 0;
+  if (map->backing) {
+    mvs_file_destroy(map->backing);
+	map->backing = NULL;
   }
-  mvs_interface_unlock(map);
-  return res;
+  return MRES_SUCCESS;
 }
 
 mResult_t mvs_mapped_memory_mapf(MVSMappedMemory *map, mstr_t file_path,
                                  msize_t offset, mqword_t flags) {
   if (!map)
     return MRES_INVALID_ARGS;
-  if (map->interface != MINTERFACE_TYPE_MAPPED_MEMORY)
-    return MRES_RESOURCE_TYPE_INVALID;
-  if (map->mapped_mem.backing)
-    return MRES_RESOURCE_STATE_INVALID;
-  if (!file_path && offset > map->mapped_mem.addr_space_len)
+  if (map->backing)
+    return MRES_RESOURCE_ALREADY_IN_USE;
+  if (!file_path && offset > map->addr_space_len)
     return MRES_RESOURCE_SIZE_LIMITED;
   int host_flag = 0;
   int host_mode = 0;
@@ -166,74 +131,75 @@ mResult_t mvs_mapped_memory_mapf(MVSMappedMemory *map, mstr_t file_path,
     if (r && w)
       file_flags = MVS_FILE_MODE_READ_WRITE;
     mResult_t res =
-        mvs_file_create(&map->mapped_mem.backing, 0); // no configuration
+        mvs_file_create(&map->backing); // no configuration
     if (res != MRES_SUCCESS)
       return res;
-    if ((res = mvs_file_open(map->mapped_mem.backing, file_path, file_flags)) !=
+    if ((res = mvs_file_open(map->backing, file_path, file_flags)) !=
         MRES_SUCCESS) {
-      mvs_file_destroy(map->mapped_mem.backing);
-      map->mapped_mem.backing = NULL;
+      mvs_file_destroy(map->backing);
+      map->backing = NULL;
       return res;
     }
-    if ((res = mvs_file_seek(map->mapped_mem.backing, 0, SEEK_END,
+    if ((res = mvs_file_seek(map->backing, 0, SEEK_END,
                              &file_len)) != MRES_SUCCESS) {
-      mvs_file_destroy(map->mapped_mem.backing);
-      map->mapped_mem.backing = NULL;
+      mvs_file_destroy(map->backing);
+      map->backing = NULL;
       return res;
     }
-    if ((res = mvs_file_seek(map->mapped_mem.backing, 0, SEEK_SET, NULL)) !=
+    if ((res = mvs_file_seek(map->backing, 0, SEEK_SET, NULL)) !=
         MRES_SUCCESS) {
-      mvs_file_destroy(map->mapped_mem.backing);
-      map->mapped_mem.backing = NULL;
+      mvs_file_destroy(map->backing);
+      map->backing = NULL;
       return res;
     }
     original_file_len = file_len;
     if (align) {
-      if (!map->mapped_mem.align_param) {
-        mvs_file_destroy(map->mapped_mem.backing);
-        map->mapped_mem.backing = NULL;
+      if (!map->align_param) {
+        mvs_file_destroy(map->backing);
+        map->backing = NULL;
         return MRES_INVALID_ARGS;
       }
-      file_len += (map->mapped_mem.align_param -
-                   (file_len % map->mapped_mem.align_param));
+      file_len += (map->align_param -
+                   (file_len % map->align_param));
     }
-    if (map->mapped_mem.addr_space)
+    if (map->addr_space)
       mvs_mapped_memory_unmap(map);
     if ((res = mvs_mapped_memory_map(map, file_len)) != MRES_SUCCESS) {
-      mvs_file_destroy(map->mapped_mem.backing);
-      map->mapped_mem.backing = NULL;
+      mvs_file_destroy(map->backing);
+      map->backing = NULL;
       return res;
     }
   }
 
 #ifdef _USE_LINUX_
   if (file_path) {
-    if ((map->mapped_mem.addr_space = mmap(
-             map->mapped_mem.addr_space, original_file_len, host_mode,
-             host_flag, map->mapped_mem.backing->file.fd, offset)) == NULL) {
-      mvs_file_destroy(map->mapped_mem.backing);
-      map->mapped_mem.backing = NULL;
+    if ((map->addr_space = mmap(
+             map->addr_space, original_file_len, host_mode,
+             host_flag, map->backing->fd, offset)) == NULL) {
+      mvs_file_destroy(map->backing);
+      map->backing = NULL;
       return MRES_SYS_FAILURE;
     }
-    map->mapped_mem.offset = offset;
-    map->mapped_mem.addr_space_len = original_file_len;
+    map->offset = offset;
+    map->addr_space_len = original_file_len;
   } else {
-    if ((map->mapped_mem.addr_space = mmap(map->mapped_mem.addr_space, offset,
+    if ((map->addr_space = mmap(map->addr_space, offset,
                                            host_mode, host_flag, -1, 0)) ==
         NULL) {
       return MRES_SYS_FAILURE;
     }
-    map->mapped_mem.offset = 0;
-    map->mapped_mem.addr_space_len = offset;
+    map->offset = 0;
+    map->addr_space_len = offset;
   }
 #endif
-  map->mapped_mem.flags.can_read = r;
-  map->mapped_mem.flags.can_write = w;
-  map->mapped_mem.flags.can_exec = e;
-  map->mapped_mem.flags.shared = s;
-  map->mapped_mem.flags.private = p;
-  map->mapped_mem.flags.sync =
+  map->flags.can_read = r;
+  map->flags.can_write = w;
+  map->flags.can_exec = e;
+  map->flags.shared = s;
+  map->flags.private = p;
+  map->flags.sync =
       syn; // Note that this flag doesn't do anything yet
+  map->in_use = mtrue;
   return MRES_SUCCESS;
 }
 
@@ -241,13 +207,11 @@ mResult_t mvs_mapped_memory_obtain_ptr(MVSMappedMemory *map, mbptr_t *ptr,
                                        msize_t off) {
   if (!map || !ptr)
     return MRES_INVALID_ARGS;
-  if (map->interface != MINTERFACE_TYPE_MAPPED_MEMORY)
-    return MRES_RESOURCE_TYPE_INVALID;
-  if (!map->mapped_mem.addr_space)
+  if (!map->in_use)
     return MRES_RESOURCE_STATE_INVALID;
-  if (off > map->mapped_mem.addr_space_len)
+  if (off > map->addr_space_len)
     return MRES_INVALID_ARGS;
-  *ptr = (mbptr_t)map->mapped_mem.addr_space + off;
+  *ptr = (mbptr_t)map->addr_space + off;
   return MRES_SUCCESS;
 }
 
@@ -255,32 +219,17 @@ mResult_t mvs_mapped_memory_obtain_map_size(MVSMappedMemory *map,
                                             msize_t *len) {
   if (!map || !len)
     return MRES_INVALID_ARGS;
-  if (map->interface != MINTERFACE_TYPE_MAPPED_MEMORY)
-    return MRES_RESOURCE_TYPE_INVALID;
-  if (!map->mapped_mem.addr_space)
+  if (!map->in_use)
     return MRES_RESOURCE_STATE_INVALID;
-  *len = map->mapped_mem.addr_space_len;
+  *len = map->addr_space_len;
   return MRES_SUCCESS;
 }
 
 mResult_t mvs_mapped_memory_destroy(MVSMappedMemory *map) {
   if (!map)
     return MRES_INVALID_ARGS;
-  if (map->interface != MINTERFACE_TYPE_MAPPED_MEMORY)
-    return MRES_RESOURCE_TYPE_INVALID;
-  mvs_interface_lock(map);
-  mResult_t res = mvs_interface_check_freeable(map);
-  if (res == MRES_RESOURCE_SHARED) {
-    mvs_interface_disown(map);
-    mvs_interface_unlock(map);
-    return MRES_SUCCESS;
-  } else if (res == MRES_SUCCESS) {
-    mvs_interface_unlock(map);
-    if (map->mapped_mem.addr_space)
-      mvs_mapped_memory_unmap(map);
-    mvs_interface_destroy(map);
-    return MRES_SUCCESS;
-  }
-  mvs_interface_unlock(map);
-  return res;
+  if (map->addr_space)
+    mvs_mapped_memory_unmap(map);
+  free(map);
+  return MRES_SUCCESS;
 }

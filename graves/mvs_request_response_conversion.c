@@ -5,7 +5,6 @@ apiReqResponse_t mvs_convert_result_to_req_response(mResult_t res) {
   case MRES_SUCCESS:
     return API_REQ_RESPONSE_NONE;
   case MRES_INVALID_ARGS:
-  case MRES_RESOURCE_TYPE_INVALID:
     return API_REQ_RESPONSE_INVALID_DATA;
   case MRES_RESOURCE_SIZE_LIMITED:
     return API_REQ_RESPONSE_RESOURCE_EXHAUSTED;

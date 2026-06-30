@@ -12,9 +12,10 @@ mResult_t mvs_interface_create(MVSInterface **interface) {
     return MRES_SYS_FAILURE;
   }
   (*interface)->configured = mfalse;
-  (*interface)->config = 0;
-  atomic_init(&(*interface)->state, 0);
-  atomic_init(&(*interface)->flags, 0);
+  (*interface)->configuration.config = 0;
+  atomic_init(&(*interface)->state.shared, mfalse);
+  atomic_init(&(*interface)->state.initialized, mfalse);
+  atomic_init(&(*interface)->properties.PROP_1, mfalse);
   atomic_init(&(*interface)->owner_count, 0);
   (*interface)->interface = MINTERFACE_TYPE_LIMIT;
   return MRES_SUCCESS;
@@ -26,7 +27,8 @@ mResult_t mvs_interface_configure(MVSInterface *interface, mqword_t conf) {
   if (interface->configured)
     return MRES_SUCCESS;
 
-  interface->config = conf;
+  // TODO: Verify configuration here
+  interface->configuration.config = conf;
   interface->configured = mtrue;
   return MRES_SUCCESS;
 }
@@ -51,8 +53,10 @@ mResult_t mvs_interface_unlock(MVSInterface *interface) {
 mResult_t mvs_interface_free(MVSInterface *interface) {
   if (!interface)
     return MRES_INVALID_ARGS;
+  if ( !interface->configured)
+    return MRES_SUCCESS; // no need to free
   if (interface->configured) {
-    if ((interface->state & MVS_INTERFACE_STATE_SHARED) &&
+    if (interface->configuration.shareable && atomic_load_explicit(&interface->configuration.shared, memory_order_relaxed) &&
         interface->owner_count)
       return MRES_RESOURCE_SHARED;
   }

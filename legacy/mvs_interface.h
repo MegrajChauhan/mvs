@@ -18,26 +18,28 @@ struct MVSInterface {
 
   mbool_t configured; // Was the interface configured?
 
-  mqword_t config; // This configuration cannot be changed once set during
-                   // intialization
-  atm_mqword_t
-      flags; // These are mutable flags to manipulate the interface's behavior
-  atm_mqword_t state; // The state of the interface
+  union {
+    struct {
+      mqword_t shareable: 1;
+	  mqword_t resb: 63;
+	} config_flags;
+    mqword_t config; // This configuration cannot be changed once set during
+                     // intialization
+  } configuration;
+  
+  struct {
+	atm_mbool_t PROP_1; // not defined yet
+  } properties;
+
+  struct {
+    atm_mbool_t initialized;
+	atm_mbool_t shared;
+  } state;
 
   atm_msize_t owner_count;
 
   union {
-    struct {
-      mfd_t fd;
-      struct {
-        msize_t read : 1;
-        msize_t write : 1;
-        msize_t append : 1;
-        msize_t new : 1; // Was the file created?
-        // msize_t trunc: 1;  // not yet implemented
-        msize_t resb : 59;
-      } flags;
-    } file;
+
     struct {
       mmap_t addr_space;
       msize_t addr_space_len;
@@ -61,10 +63,7 @@ struct MVSInterface {
         msize_t resb : 58;
       } flags;
     } mapped_mem;
-    struct {
-      mdlentry_t entry;
-    } dynamic_lib;
-  };
+ };
 };
 
 /*

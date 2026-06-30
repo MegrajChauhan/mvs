@@ -2,12 +2,24 @@
 #define _MVS_FILE_
 
 #include <mvs_file_defs.h>
-#include <mvs_interface.h>
 #include <mvs_results.h>
 #include <stdlib.h>
 #include <string.h>
 
-typedef MVSInterface MVSFile;
+typedef struct MVSFile MVSFile;
+
+struct MVSFile {
+  mbool_t in_use;
+  mfd_t fd;
+  struct {
+    msize_t read : 1;
+    msize_t write : 1;
+    msize_t append : 1;
+    msize_t new : 1; // Was the file created?
+    // msize_t trunc: 1;  // not yet implemented
+    msize_t resb : 59;
+  } flags;
+};
 
 /*
  * In MVS, these functions are called by individual threads themselves and since
@@ -15,7 +27,7 @@ typedef MVSInterface MVSFile;
  * the value of that errno.
  */
 
-mResult_t mvs_file_create(MVSFile **file, mqword_t conf);
+mResult_t mvs_file_create(MVSFile **file);
 
 /*
  * "modes" is for the file interface.

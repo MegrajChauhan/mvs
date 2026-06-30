@@ -20,7 +20,7 @@ void mvs_slist_reader_destroy(MVSSlistReader *r) {
 
 mbool_t mvs_slist_reader_init(MVSSlistReader *r, mstr_t file_path) {
   mvs_log_dbg("Preparing SLIST reader for file: %s", file_path);
-  if (mvs_mapped_memory_create(&r->file, 0) != MRES_SUCCESS) {
+  if (mvs_mapped_memory_create(&r->file) != MRES_SUCCESS) {
     mvs_log_err("Failed to initialize memory for SLIST file: PATH=%s",
                 file_path);
     return mfalse;

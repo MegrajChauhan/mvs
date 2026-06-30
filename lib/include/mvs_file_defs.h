@@ -1,7 +1,6 @@
 #ifndef _MVS_FILE_DEFS_
 #define _MVS_FILE_DEFS_
 
-#include <mvs_interface_flags.h>
 #include <mvs_platform.h>
 
 // Opening modes

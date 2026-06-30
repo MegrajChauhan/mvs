@@ -47,7 +47,7 @@ mbool_t merry_core_memory_populate(MerryCoreRAM *mem, msize_t space_len,
   if (space_len % _MERRY_CORE_PAGE_LEN_IN_BYTES_) {
     msize_t remaining = space_len % _MERRY_CORE_PAGE_LEN_IN_BYTES_;
     MVSMappedMemory *pg;
-    if (mvs_mapped_memory_create(&pg, MVS_INTERFACE_CONF_SHAREABLE) !=
+    if (mvs_mapped_memory_create(&pg) !=
         MRES_SUCCESS) {
       MERRY_ERR("Failed to populate RAM");
       mvs_dynamic_listl_destroy(mem->pg_list);

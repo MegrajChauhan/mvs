@@ -20,7 +20,7 @@ void mvs_rlist_reader_destroy(MVSRlistReader *r) {
 }
 
 mbool_t mvs_rlist_reader_init(MVSRlistReader *r, mstr_t file_path) {
-  if (mvs_file_create(&r->file, 0) != MRES_SUCCESS) {
+  if (mvs_file_create(&r->file) != MRES_SUCCESS) {
     fprintf(stderr, "Failed to allocate memory for file: PATH=%s\n", file_path);
     return mfalse;
   }

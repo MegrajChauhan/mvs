@@ -2,19 +2,39 @@
 #define _MERRY_MAPPED_MEMORY_
 
 #include <mvs_file.h>
-#include <mvs_interface.h>
 #include <mvs_mapped_memory_defs.h>
 #include <mvs_platform.h>
 #include <mvs_results.h>
 #include <stdlib.h>
 
-typedef struct MVSInterface MVSMappedMemory;
+typedef struct MVSMappedMemory MVSMappedMemory;
 
-/*
- * conf will configure the interface whereas flag defines the behavior of the
- * instance
- */
-mResult_t mvs_mapped_memory_create(MVSMappedMemory **map, mqword_t conf);
+struct MVSMappedMemory {
+  mbool_t in_use;
+  mmap_t addr_space;
+  msize_t addr_space_len;
+  msize_t offset;
+  msize_t align_param;
+  MVSFile *backing; // Is there a backing file for this mapped memory?
+
+      // if backing == NULL than, the mapping is anonymous
+  struct {
+    msize_t can_read : 1;
+    msize_t can_write : 1;
+    msize_t can_exec : 1; // This is ignored really
+
+    msize_t shared : 1;  // The updates on the address space is shared with
+                         // other processes sharing the same memory region
+    msize_t private : 1; // Opposite of shared
+    msize_t sync : 1; // This causes the changes made on the mapped memory
+                      // to be immediately reflected on the file(the
+                      // operation is synchronous)
+
+    msize_t resb : 58;
+  } flags;
+};
+
+mResult_t mvs_mapped_memory_create(MVSMappedMemory **map);
 
 mResult_t mvs_mapped_memory_add_align_param(MVSMappedMemory *map,
                                             msize_t align_param);

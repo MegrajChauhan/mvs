@@ -7,7 +7,7 @@ msize_t merry_core_create(EntityContext *ctx, mbptr_t *repr, msize_t conf) {
     ctx->API.LOG_CUSTOM(ctx->self, "Failed to allocate memory for the core");
     return 1;
   }
-  if (mvs_mapped_memory_create(&c->st_page, 0) != MRES_SUCCESS) {
+  if (mvs_mapped_memory_create(&c->st_page) != MRES_SUCCESS) {
     ctx->API.LOG_CUSTOM(ctx->self, "Failed to initialize the stack");
     free(c);
     return 1;

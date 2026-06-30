@@ -16,6 +16,7 @@
 #include <mvs_list.h>
 #include <mvs_logger.h>
 #include <mvs_rlist_reader.h>
+#include <mvs_helpers.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
